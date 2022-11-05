@@ -1,0 +1,14 @@
+@font-face {
+    font-family: gdt;
+    src: url("gdt.ttf");
+}
+.gdt {
+    font-family: gdt;
+}
+
+.label{  
+    display:inline-block;  
+    width:100px;
+
+    text-align:right;
+    }
