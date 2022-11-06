@@ -1,12 +1,13 @@
 import { Button, message, Space, Table, TableColumnsType, Tag } from 'antd'
 import React, {useEffect, useState } from 'react'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useNavigate } from 'react-router-dom'
 import { getComponentCriteriaTypes } from '../../api/comp'
 import { getExamList } from '../../api/exam'
 import { getSizeCountByComponentId, getSizeList } from '../../api/size'
 import ShowSizeList from '../component/ShowSizeList'
 import { ISize } from '../size/SizeList'
 import Criteria, { GelToleranceSymbol, IEntityRequired, SizedElementSymbol } from './Criteria'
+import Standard from './Standard'
 export interface IExam {
     Id: number,
     ExamDate: Date,
@@ -52,7 +53,40 @@ export default function ExamList() {
 interface DataType extends IExam {
     key: React.Key,
 }
-
+function generateExamTableColomns(){
+    const columns: TableColumnsType<DataType> = [
+        { title: "考核日期", key: 'ExamDate', dataIndex: 'ExamDate' },
+        { title: "考核时间", key: 'StartTime', dataIndex: 'StartTime' },
+        { title: "交件时间", key: 'FinishTime', dataIndex: 'FinishTime' },
+        { title: "考核项目", key: 'ExamTarget', dataIndex: 'ExamTarget' },
+        { title: '考核教师', key: 'ExamTeacher', dataIndex: 'ExamTeacher' },
+        { title: '考核零件', key: 'ExamComponent', dataIndex: 'ExamComponent' },
+        {
+            title: '零件精密等级', key: 'SizePrecisionLevel', render: (_: any, exam: IExam) => {
+                let level: string;
+                switch (exam.SizePrecisionLevel) {
+                    case 0:
+                        level = "精密f";
+                        break;
+                    case 1:
+                        level = "中等m";
+                        break;
+                    case 2:
+                        level = "粗糙c";
+                        break;
+                    case 3:
+                        level = "最粗v"
+                        break;
+                    default:
+                        level = "未知"
+                        break;
+                }
+                return <Tag>{level}</Tag>
+            }
+        }
+    ]
+    return columns;
+}
 
 function ExamTable(props:IProps) {
     const {exams} = props;
@@ -61,9 +95,9 @@ function ExamTable(props:IProps) {
     const [showCreterialModal, setShowCreterialModal]= useState(false);
     const [ExamComponent, setExamComponent] = useState(0);
     const [currentExamId, setCurrentExam] = useState(0);
+    const [showStandardModal, setShowStandardModal] = useState(false);
 
-
-    const initSizeList = async (exam: IExam) => {
+    const initSizeList = async (exam: IExam, showList:boolean=true) => {
         const c = await getSizeCountByComponentId(exam.ExamComponent);
         let { code, msg, data } = c.data;
         if (code !== 0) {
@@ -80,7 +114,7 @@ function ExamTable(props:IProps) {
             size.Color = size?.FirstType === 0 ? 'blue' : size?.FirstType === 1 ? 'red' : size?.FirstType === 2 ? 'green' : 'grey';
             return size
         })
-        setShowSizeList(true);
+        setShowSizeList(showList);
         setSizeList(res.data.data);
 
     }
@@ -93,48 +127,31 @@ function ExamTable(props:IProps) {
         setCurrentExam(exam.Id);
 
     }
+    const displaySetStandardModal = async(exam:IExam)=>{
+        setShowStandardModal(true);
+        setExamComponent(exam.ExamComponent);
+    }
+    const hiddenStandardModal = ()=>{
+        setShowStandardModal(false);
+    }
     const generateTableColumns = (examList: any) => {
         const columns: TableColumnsType<DataType> = [
-            { title: "考核日期", key: 'ExamDate', dataIndex: 'ExamDate' },
-            { title: "考核时间", key: 'StartTime', dataIndex: 'StartTime' },
-            { title: "交件时间", key: 'FinishTime', dataIndex: 'FinishTime' },
-            { title: "考核项目", key: 'ExamTarget', dataIndex: 'ExamTarget' },
-            { title: '考核教师', key: 'ExamTeacher', dataIndex: 'ExamTeacher' },
-            { title: '考核零件', key: 'ExamComponent', dataIndex: 'ExamComponent' },
-            {
-                title: '零件精密等级', key: 'SizePrecisionLevel', render: (_: any, exam: IExam) => {
-                    let level: string;
-                    switch (exam.SizePrecisionLevel) {
-                        case 0:
-                            level = "精密f";
-                            break;
-                        case 1:
-                            level = "中等m";
-                            break;
-                        case 2:
-                            level = "粗糙c";
-                            break;
-                        case 3:
-                            level = "最粗v"
-                            break;
-                        default:
-                            level = "未知"
-                            break;
-                    }
-                    return <Tag>{level}</Tag>
-                }
-            },
+            ...generateExamTableColomns(),
             {
                 title: "操作", key: "operation", render: (_: any, exam: IExam) => {
                     return (<Space>
 
                         <Button type='primary' key={"viewSize"}
                             onClick={() => initSizeList(exam)}
-                        >{"查看尺寸数据"}</Button>
+                        >查看尺寸数据</Button>
 
-                        <Button key={"creterial"} type='primary'
+                        <Button key={"criteria"} type='primary'
                             onClick={() => displayCreterialModal(exam)}>
                             设置评测标准
+                        </Button>
+                        <Button key={"standard"} type="primary"
+                            onClick={()=>displaySetStandardModal(exam)}>
+                            设置考核项评分
                         </Button>
                     </Space>)
                 }
@@ -157,6 +174,10 @@ function ExamTable(props:IProps) {
             ExamId={currentExamId}
             cancel={()=>setShowCreterialModal(false)}
             />
+            <Standard
+            visible={showStandardModal}
+            ExamComponent={ExamComponent}
+            cancel={hiddenStandardModal} />
             {exams && generateTableColumns(exams)}
             <Outlet />
         </div>

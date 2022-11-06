@@ -1,6 +1,6 @@
-import { Button, Space, Table, Tag } from 'antd';
-import React, { Component } from 'react';
-import { getComponent, getComponentCount, getComponentList } from '../../api/comp';
+import { Button, Space, Table, TableColumnsType, Tag } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { getComponentCount, getComponentList } from '../../api/comp';
 import { getSizeList } from '../../api/size';
 import { IComponent } from '../component/ComponentList';
 import AddSize from './AddSize';
@@ -22,278 +22,395 @@ export interface ISize {
     GeoToleranceVal?: string,
     SurfaceRoughnessType?: string,
     SurfaceRoughnessVal?: string,
-    OtherRequirements?:string,
+    OtherRequirements?: string,
     Deleted: boolean
     Color: string
 }
-interface IState {
-    sizeList: ISize[],
-    componentId: number,
-    loading: boolean,
-    total: number,
-    pageSize: number,
-    current: number,
-    size?: ISize,
-    componentList?: IComponent[], //筛选用
-    filteredComponent?: IComponent,
-    showUpdateSizeModal: boolean,
-    showAddSieModal:boolean
+interface DataType extends ISize {
+    key: React.Key,
 }
 
-export default class SizeList extends Component<any, IState> {
-    state = {
-        sizeList: [],
-        componentId: 0,
-        loading: true,
-        current: 1,
-        pageSize: 10,
-        total: 0,
-        size: undefined,
-        componentList: [],
-        showUpdateSizeModal: false,
-        showAddSieModal: false
+export function generateSizeTableColumns() {
+    const columns: TableColumnsType<DataType> = [
+        { title: "零件ID", key: 'ComponentId', dataIndex: 'ComponentId' },
+        { title: "尺寸ID", key: 'SizeId', dataIndex: 'Id' },
+        {
+            title: "项目", key: "FirstType", render: (_: any, size: ISize) => {
+                if (size.FirstType === 0) {
+                    return <Tag color={size.Color}>零件尺寸检验</Tag>
+                }
+                if (size.FirstType === 1) {
+                    return <Tag color={size.Color}>形位公差</Tag>
+                }
+                if (size.FirstType === 2) {
+                    return <Tag color={size.Color}>表面粗糙度</Tag>
+                }
+                if (size.FirstType === 3) {
+                    return <Tag color={size.Color}>其他</Tag>
+                }
+            }
+        },
+        {
+            title: '类型', key: 'SubType', render: (_: any, record: ISize) => {
+                if (record.FirstType === 0) {
+                    if (record.SecondType === 0) {
+                        return (<Tag>L</Tag>)
+                    }
+                    if (record.SecondType && record.SecondType === 1) {
+                        return (<Tag>D</Tag>)
+                    }
+                    if (record.SecondType && record.SecondType === 2) {
+                        return (<Tag>R</Tag>)
+                    }
+                    if (record.SecondType && record.SecondType === 3) {
+                        return (<Tag>∠</Tag>)
+                    }
+                }
+                if (record.FirstType === 1) {
+                    return (<Tag className='gdt'>{record.GeoToleranceType}</Tag>)
+                }
+                if (record.FirstType === 2) {
+                    return (<Tag>Ra</Tag>)
+                }
+                if (record.FirstType === 2) {
+                    return (<Tag>-</Tag>)
+                }
+            }
+        },
+        {
+            title: "基准值", key: 'baseValue', render: (_: any, record: ISize) => {
+                if (record.FirstType === 0) {
+                    return <Tag>{record.BaseSize}</Tag>
+                }
+                if (record.FirstType === 1) {
+                    return <Tag >{record.GeoToleranceVal}</Tag>
+                }
+                if (record.FirstType === 2) {
+                    return <Tag >{record.SurfaceRoughnessVal}</Tag>
+                }
+                if (record.FirstType === 3) {
+                    return <Tag >{record.OtherRequirements}</Tag>
+                }
+            },
+        },
+        {
+            title: "上偏差",
+            key: 'upDelta',
+            render: (_: any, record: ISize) => {
+                if (record.FirstType === 0) {
+                    return <Tag >{record.UpSize}</Tag>
+                }
+                if (record.FirstType === 1) {
+                    return <Tag>0</Tag>
+                }
+                if (record.FirstType === 2) {
+                    return (<Tag>-</Tag>)
+                }
+            }
+        },
+        {
+            title: "下偏差",
+            key: 'bottomDelta',
+            render: (_: any, record: ISize) => {
+                if (record.FirstType === 0) {
+                    return <Tag>{record.BottomSize}</Tag>
+                }
+                if (record.FirstType === 1) {
+                    return <Tag>{"-" + record.GeoToleranceVal}</Tag>
+                }
+                if (record.FirstType === 2) {
+                    return (<Tag>-</Tag>)
+                }
+            }
+        },
+        {
+            title: "上极限尺寸",
+            key: 'UpSize',
+            render: (_: any, record: ISize) => {
+                if (record.FirstType === 0) {
+                    if (record.BaseSize && record.UpSize) {
+                        return <Tag>{Number(record.BaseSize) + Number(record.UpSize)}</Tag>
+                    }
+                    return <Tag>{"NaN"}</Tag>
+                }
+                if (record.FirstType === 1) {
+                    return <Tag>{record.GeoToleranceVal}</Tag>
+                }
+                if (record.FirstType === 2) {
+                    return (<Tag>-</Tag>)
+                }
+            }
+        },
+        {
+            title: "下极限尺寸",
+            key: 'bottomSize',
+            render: (_: any, record: ISize) => {
+                if (record.FirstType === 0) {
+                    if (record.BaseSize && record.BottomSize) {
+                        return <Tag>{Number(record.BaseSize) + Number(record.BottomSize)}</Tag>
+                    }
+                    return <Tag>{"NaN"}</Tag>
+                }
+                if (record.FirstType === 1) {
+                    return <Tag>0</Tag>
+                }
+                if (record.FirstType === 2) {
+                    return (<Tag>-</Tag>)
+                }
+            }
+        }
+    ]
+    return columns;
+}
 
-    }
-    getSizeList = async (pg: number = 1, lim: number = 10, componentId: number = 0) => {
-        let cId = this.state.componentId;
-        if (componentId !== 0) {
-            cId = componentId
-        }
-        const res = await getSizeList(pg, lim, cId);
+export default function SizeList() {
+    const [sizeList, setSizeList] = useState<ISize[]>([]);
+    const [componentId, setComponentId] = useState(0);
+    const [loading, setLoading] = useState(true);
+    const [pageSize, setPageSize] = useState(10);
+    const [total, setTotal] = useState(0);
+    const [size, setSize] = useState<ISize | undefined>(undefined);
+    const [componentList, setComponentList] = useState<IComponent[]>([]);
+    const [showUpdateSizeModal, setShowUpdateSizeModal] = useState(false);
+    const [showAddSieModal, setShowAddSieModal] = useState(false);
+
+    const getSizeListFunc = async (pg: number = 1, lim: number = 10, compId: number = 0) => {
+        const res = await getSizeList(pg, lim, compId);
         const { data, limit, total } = res.data;
-        if (this.state.componentList.length === 0) {
-            const componentList = await this.getComponentListForFilter();
-            this.setState({ componentList: componentList })
+        if (componentList.length === 0) {
+            const componentList = await getComponentListForFilter();
+            setComponentList(componentList);
         }
-        data.map((size:ISize)=>{
-            size.Color = size?.FirstType === 0? 'blue':size?.FirstType === 1? 'red': size?.FirstType === 2?'green': 'grey';
+        data.map((size: ISize) => {
+            size.Color = size?.FirstType === 0 ? 'blue' : size?.FirstType === 1 ? 'red' : size?.FirstType === 2 ? 'green' : 'grey';
             return size
         })
-        this.setState({
-            sizeList: data,
-            pageSize: limit,
-            total: total,
-            loading: false
-        })
+        setSizeList(data);
+        setPageSize(limit);
+        setTotal(total);
+        setLoading(false);
     }
 
-    getComponent = async (id: number = 0) => {
-        if (id === 0) {
-            return '';
-        }
-        const res = await getComponent(id);
-        const componentName = res.data.ComponentName;
-        return componentName
-    }
-    onChange = async (pagenation: any, filters?: any) => {
-        let componentId = this.state.componentId
+    const onChange = async (pagenation: any, filters?: any) => {
+        let cId = componentId
         if (filters) {
             console.log(`filter触发刷新数据:${JSON.stringify(filters)}`);
             if (filters.ComponentId) {
-                componentId = filters.ComponentId[0];
-                this.setState({
-                    componentId: filters.ComponentId[0]
-                })
+                cId = filters.ComponentId[0];
             }
             if (!filters.ComponentId) {
-                componentId = 0;
-                this.setState({ componentId: 0 });
+                cId = 0;
             }
+            setComponentId(cId);
         }
-        this.getSizeList(pagenation.current, 10, componentId);
+        getSizeListFunc(pagenation.current, 10, cId);
     }
 
-    componentDidMount = () => {
-        this.getSizeList();
-    }
+    useEffect(() => { getSizeListFunc() }, [])
 
-    getComponentListForFilter = async () => {
+    const getComponentListForFilter = async () => {
         const res1 = await getComponentCount();
         const { count } = res1.data.data;
         const res = await getComponentList(1, count);
         const { data } = res.data;
         return data;
     }
-    showUpdateSizeModal = (size: ISize) => {
-        console.log(`show modal, size: ${JSON.stringify(size)}`)
-        this.setState({
-            showUpdateSizeModal: true,
-            size: size
-        })
+    const displayUpdateSizeModal = (size: ISize) => {
+        console.log(`show modal, size: ${JSON.stringify(size)}`);
+        setShowUpdateSizeModal(true);
+        setSize(size);
     }
-    hideUpdateSizeModal = (refresh?: boolean) => {
+    const hideUpdateSizeModal = (refresh?: boolean) => {
         if (refresh) {
-            this.getSizeList()
+            getSizeListFunc();
         }
-        this.setState({
-            showUpdateSizeModal: false
-        })
+        setShowUpdateSizeModal(false);
     }
-    showAddSizeModal = ()=>{
-        this.setState({
-            showAddSieModal: true
-        })
+    const displayShowAddSizeModal = () => {
+        setShowAddSieModal(true);
     }
-    hideAddSizeModal = (refresh?:boolean)=>{
-        if (refresh){
-            this.getSizeList()
+    const hideAddSizeModal = (refresh?: boolean) => {
+        if (refresh) {
+            getSizeListFunc();
         }
-        this.setState({
-            showAddSieModal: false
-        })
+        setShowAddSieModal(false);
     }
-    render() {
-        return (
-            <div>
-                <Button type='primary' onClick={this.showAddSizeModal} >添加尺寸</Button>
-                <AddSize 
-                visible={this.state.showAddSieModal}
-                componentList={this.state.componentList}
-                callback={this.hideAddSizeModal}
-                />
-                <EditSize
-                    visible={this.state.showUpdateSizeModal}
-                    size={this.state.size}
-                    cancel={this.hideUpdateSizeModal}
-                />
-                <Table
-                    loading={this.state.loading}
-                    dataSource={[...this.state.sizeList]}
-                    rowKey={"Id"}
-                    pagination={{ position: ["bottomCenter"], total: this.state.total, pageSize: this.state.pageSize, showSizeChanger: false }}
-                    onChange={this.onChange}
+    const generateSizeTable = (sizes: any) => {
+        const columns: TableColumnsType<DataType> = [
+            ...generateSizeTableColumns(),
+            {
+                title: "操作", key: "operation", render: (_: any, size: ISize) => (
+                    <Space>
+                        <Button type='primary'
+                            onClick={() => { displayUpdateSizeModal(size) }}
+                        >编辑</Button>
+                        <DeleteSize size={size} refresh={onChange} />
+                    </Space>
+                )
+            }
+        ];
+        sizes.sort((a:ISize, b:ISize)=>{return a.FirstType - b.FirstType})
+        return <Table
+            loading={loading}
+            dataSource={sizes}
+            columns={columns}
+            pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}
+            scroll={{ y: 400 }}
+            onChange={onChange} />
 
-                >
-                    <Table.Column
-                        title={'零件ID'}
-                        dataIndex={'ComponentId'}
-                        filters={this.state.componentList.map((component: IComponent) => ({ text: component.Id, value: component.Id }))}
-                        filterMultiple={false}
-                    // onFilter={(value: string, record:ISize) =>String(record.ComponentId) === value}
-                    // onFilter={this.showFilterdSizeList}
-                    />
-                    <Table.Column title={'尺寸ID'} dataIndex={'Id'} />
-                    <Table.Column title="项目" key="FirstType" render={(size: ISize) => {
+    }
+    return (
+        <div>
+            <Button type='primary' onClick={displayShowAddSizeModal} >添加尺寸</Button>
+            <AddSize
+                visible={showAddSieModal}
+                componentList={componentList}
+                callback={hideAddSizeModal}
+            />
+            <EditSize
+                visible={showUpdateSizeModal}
+                size={size}
+                cancel={hideUpdateSizeModal}
+            />
+            {sizeList && generateSizeTable(sizeList)}
+            {/* <Table
+                loading={loading}
+                dataSource={[...sizeList]}
+                rowKey={"Id"}
+                pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}
+                onChange={onChange}
 
-                        if (size.FirstType === 0) {
-                            return <Tag color={size.Color}>零件尺寸检验</Tag>
+            >
+                <Table.Column
+                    title={'零件ID'}
+                    dataIndex={'ComponentId'}
+                    filters={componentList.map((component: IComponent) => ({ text: component.Id, value: component.Id }))}
+                    filterMultiple={false}
+                // onFilter={(value: string, record:ISize) =>String(record.ComponentId) === value}
+                // onFilter={this.showFilterdSizeList}
+                />
+                <Table.Column title={'尺寸ID'} dataIndex={'Id'} />
+                <Table.Column title="项目" key="FirstType" render={(size: ISize) => {
+
+                    if (size.FirstType === 0) {
+                        return <Tag color={size.Color}>零件尺寸检验</Tag>
+                    }
+                    if (size.FirstType === 1) {
+                        return <Tag color={size.Color}>形位公差</Tag>
+                    }
+                    if (size.FirstType === 2) {
+                        return <Tag color={size.Color}>表面粗糙度</Tag>
+                    }
+                    if (size.FirstType === 3) {
+                        return <Tag color={size.Color}>其他</Tag>
+                    }
+                }} />
+                <Table.Column title='类型' key='SubType' render={(record: ISize) => {
+                    if (record.FirstType === 0) {
+                        if (record.SecondType === 0) {
+                            return (<Tag>L</Tag>)
                         }
-                        if (size.FirstType === 1) {
-                            return <Tag color={size.Color}>形位公差</Tag>
+                        if (record.SecondType && record.SecondType === 1) {
+                            return (<Tag>D</Tag>)
                         }
-                        if (size.FirstType === 2) {
-                            return <Tag color={size.Color}>表面粗糙度</Tag>
+                        if (record.SecondType && record.SecondType === 2) {
+                            return (<Tag>R</Tag>)
                         }
-                        if (size.FirstType === 3) {
-                            return <Tag color={size.Color}>其他</Tag>
+                        if (record.SecondType && record.SecondType === 3) {
+                            return (<Tag>∠</Tag>)
                         }
-                    }} />
-                    <Table.Column title='类型' key='SubType' render={(record: ISize) => {
+                    }
+                    if (record.FirstType === 1) {
+                        return (<Tag className='gdt'>{record.GeoToleranceType}</Tag>)
+                    }
+                    if (record.FirstType === 2) {
+                        return (<Tag>Ra</Tag>)
+                    }
+                }} />
+                <Table.Column title="基准值" key='baseValue' render={(record: ISize) => {
+                    if (record.FirstType === 0) {
+                        return <Tag>{record.BaseSize}</Tag>
+                    }
+                    if (record.FirstType === 1) {
+                        return <Tag >{record.GeoToleranceVal}</Tag>
+                    }
+                    if (record.FirstType === 2) {
+                        return <Tag >{record.SurfaceRoughnessVal}</Tag>
+                    }
+                }} />
+                <Table.Column
+                    title="上偏差"
+                    key='upDelta'
+                    render={(record: ISize) => {
                         if (record.FirstType === 0) {
-                            if (record.SecondType === 0) {
-                                return (<Tag>L</Tag>)
-                            }
-                            if (record.SecondType && record.SecondType === 1) {
-                                return (<Tag>D</Tag>)
-                            }
-                            if (record.SecondType && record.SecondType === 2) {
-                                return (<Tag>R</Tag>)
-                            }
-                            if (record.SecondType && record.SecondType === 3) {
-                                return (<Tag>∠</Tag>)
-                            }
+                            return <Tag >{record.UpSize}</Tag>
                         }
                         if (record.FirstType === 1) {
-                            return (<Tag className='gdt'>{record.GeoToleranceType}</Tag>)
+                            return <Tag>0</Tag>
                         }
                         if (record.FirstType === 2) {
-                            return (<Tag>Ra</Tag>)
+                            return (<Tag>-</Tag>)
                         }
                     }} />
-                    <Table.Column title="基准值" key='baseValue' render={(record: ISize) => {
+                <Table.Column
+                    title="下偏差"
+                    key='bottomDelta'
+                    render={(record: ISize) => {
                         if (record.FirstType === 0) {
-                            return <Tag>{record.BaseSize}</Tag>
+                            return <Tag>{record.BottomSize}</Tag>
                         }
                         if (record.FirstType === 1) {
-                            return <Tag >{record.GeoToleranceVal}</Tag>
+                            return <Tag>{"-" + record.GeoToleranceVal}</Tag>
                         }
                         if (record.FirstType === 2) {
-                            return <Tag >{record.SurfaceRoughnessVal}</Tag>
+                            return (<Tag>-</Tag>)
                         }
                     }} />
-                    <Table.Column
-                        title="上偏差"
-                        key='upDelta'
-                        render={(record: ISize) => {
-                            if (record.FirstType === 0) {
-                                return <Tag >{record.UpSize}</Tag>
+                <Table.Column
+                    title="上极限尺寸"
+                    key='UpSize'
+                    render={(record: ISize) => {
+                        if (record.FirstType === 0) {
+                            if (record.BaseSize && record.UpSize) {
+                                return <Tag>{Number(record.BaseSize) + Number(record.UpSize)}</Tag>
                             }
-                            if (record.FirstType === 1) {
-                                return <Tag>0</Tag>
+                            return <Tag>{"NaN"}</Tag>
+                        }
+                        if (record.FirstType === 1) {
+                            return <Tag>{record.GeoToleranceVal}</Tag>
+                        }
+                        if (record.FirstType === 2) {
+                            return (<Tag>-</Tag>)
+                        }
+                    }} />
+                <Table.Column
+                    title="下极限尺寸"
+                    key='bottomSize'
+                    render={(record: ISize) => {
+                        if (record.FirstType === 0) {
+                            if (record.BaseSize && record.BottomSize) {
+                                return <Tag>{Number(record.BaseSize) + Number(record.BottomSize)}</Tag>
                             }
-                            if (record.FirstType === 2) {
-                                return (<Tag>-</Tag>)
-                            }
-                        }} />
-                    <Table.Column
-                        title="下偏差"
-                        key='bottomDelta'
-                        render={(record: ISize) => {
-                            if (record.FirstType === 0) {
-                                return <Tag>{record.BottomSize}</Tag>
-                            }
-                            if (record.FirstType === 1) {
-                                return <Tag>{ "-" + record.GeoToleranceVal}</Tag>
-                            }
-                            if (record.FirstType === 2) {
-                                return (<Tag>-</Tag>)
-                            }
-                        }} />
-                    <Table.Column
-                        title="上极限尺寸"
-                        key='UpSize'
-                        render={(record: ISize) => {
-                            if (record.FirstType === 0) {
-                                if (record.BaseSize && record.UpSize) {
-                                    return <Tag>{Number(record.BaseSize) + Number(record.UpSize)}</Tag>
-                                }
-                                return <Tag>{"NaN"}</Tag>
-                            }
-                            if (record.FirstType === 1) {
-                                return <Tag>{record.GeoToleranceVal}</Tag>
-                            }
-                            if (record.FirstType === 2) {
-                                return (<Tag>-</Tag>)
-                            }
-                        }} />
-                    <Table.Column
-                        title="下极限尺寸"
-                        key='bottomSize'
-                        render={(record: ISize) => {
-                            if (record.FirstType === 0) {
-                                if (record.BaseSize && record.BottomSize) {
-                                    return <Tag>{Number(record.BaseSize) + Number(record.BottomSize)}</Tag>
-                                }
-                                return <Tag>{"NaN"}</Tag>
-                            }
-                            if (record.FirstType === 1) {
-                                return <Tag>0</Tag>
-                            }
-                            if (record.FirstType === 2) {
-                                return (<Tag>-</Tag>)
-                            }
-                        }} />
+                            return <Tag>{"NaN"}</Tag>
+                        }
+                        if (record.FirstType === 1) {
+                            return <Tag>0</Tag>
+                        }
+                        if (record.FirstType === 2) {
+                            return (<Tag>-</Tag>)
+                        }
+                    }} />
 
-                    <Table.Column title="操作" key="operation" render={(size: ISize) => (
-                        <Space>
-                            <Button type='primary'
-                                onClick={() => { this.showUpdateSizeModal(size) }}
-                            >编辑</Button>
-                            <DeleteSize size={size} refresh={this.onChange} />
-                        </Space>
-                    )} />
-                </Table>
-            </div>
-        )
-    }
+                <Table.Column title="操作" key="operation" render={(size: ISize) => (
+                    <Space>
+                        <Button type='primary'
+                            onClick={() => { displayUpdateSizeModal(size) }}
+                        >编辑</Button>
+                        <DeleteSize size={size} refresh={onChange} />
+                    </Space>
+                )} />
+            </Table> */}
+        </div>
+    )
+
 }
