@@ -1,5 +1,5 @@
 import { Button, message, Space, Table, TableColumnsType, Tag } from 'antd'
-import React, {useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { getComponentCriteriaTypes } from '../../api/comp'
 import { getExamList } from '../../api/exam'
@@ -53,7 +53,7 @@ export default function ExamList() {
 interface DataType extends IExam {
     key: React.Key,
 }
-function generateExamTableColomns(){
+function generateExamTableColomns() {
     const columns: TableColumnsType<DataType> = [
         { title: "考核日期", key: 'ExamDate', dataIndex: 'ExamDate' },
         { title: "考核时间", key: 'StartTime', dataIndex: 'StartTime' },
@@ -87,17 +87,77 @@ function generateExamTableColomns(){
     ]
     return columns;
 }
+export const sizeScopeToDelta:number[][] = [
+    [0.05, 0.05, 0.1, 0.15, 0.2, 0.3, 0.5, NaN],
+    [0.1, 0.1, 0.2, 0.3, 0.5, 0.8, 1.2, 2],
+    [0.2, 0.3, 0.5, 0.8, 1.2, 2, 3, 4],
+    [NaN, 0.5, 1, 1.5, 2.5, 4, 6, 8]
+];
 
-function ExamTable(props:IProps) {
-    const {exams} = props;
+export function getPricisionLevelIndexBySize(size: number){
+    let idx = -1;
+    if (size && size >= 0.5 && size < 3) {
+        idx = 0
+    }
+    else if (size && size >= 3 && size < 6) {
+        idx = 1
+    }
+    else if (size && size >= 6 && size < 30) {
+        idx = 2
+    }
+    else if (size && size >= 30 && size < 120) {
+        idx = 3
+    }
+    else if (size && size >= 120 && size < 400) {
+        idx = 4
+    }
+    else if (size && size >= 400 && size < 1000) {
+        idx = 5
+    }
+    else if (size && size >= 1000 && size < 2000) {
+        idx = 6
+    }
+    else if (size && size >= 2000 && size < 4000) {
+        idx = 7
+    }
+    return idx;
+}
+
+export function getCalculatedSizeForExam(exam: IExam, sizes: ISize[], sizeScopeToDelta:number[][]){
+    const { SizePrecisionLevel } = exam;
+   
+    const newSize = sizes.map(size => {
+        //非尺寸数据直接返回
+        if (size.FirstType !== 0 || !size.BaseSize) {
+            return size
+        }
+        //上下delta有一个不为0 直接返回
+        if(size.UpSize && size.UpSize * 1000 > 0 || (size.BottomSize && size.BottomSize * 1000 > 0)){
+            return size;
+        }
+        let temp = { ...size };
+        const idx= getPricisionLevelIndexBySize(size.BaseSize);
+        
+        const delta = sizeScopeToDelta[SizePrecisionLevel][idx];
+        temp.UpSize = delta;
+        temp.BottomSize = -delta;
+        return temp;
+    })
+    return newSize;
+
+}
+
+function ExamTable(props: IProps) {
+    const { exams } = props;
     const [showSizeList, setShowSizeList] = useState(false);
-    const [sizeList, setSizeList] = useState([]);
-    const [showCreterialModal, setShowCreterialModal]= useState(false);
+    const [sizeList, setSizeList] = useState<ISize[]>([]);
+    const [showCreterialModal, setShowCreterialModal] = useState(false);
     const [ExamComponent, setExamComponent] = useState(0);
     const [currentExamId, setCurrentExam] = useState(0);
     const [showStandardModal, setShowStandardModal] = useState(false);
 
-    const initSizeList = async (exam: IExam, showList:boolean=true) => {
+
+    const initSizeList = async (exam: IExam, showList: boolean = true) => {
         const c = await getSizeCountByComponentId(exam.ExamComponent);
         let { code, msg, data } = c.data;
         if (code !== 0) {
@@ -114,8 +174,9 @@ function ExamTable(props:IProps) {
             size.Color = size?.FirstType === 0 ? 'blue' : size?.FirstType === 1 ? 'red' : size?.FirstType === 2 ? 'green' : 'grey';
             return size
         })
+        const calculatedSize = getCalculatedSizeForExam(exam, sizeList, sizeScopeToDelta);
         setShowSizeList(showList);
-        setSizeList(res.data.data);
+        setSizeList(calculatedSize);
 
     }
     const hideShowSizeList = (refresh?: boolean) => {
@@ -127,11 +188,11 @@ function ExamTable(props:IProps) {
         setCurrentExam(exam.Id);
 
     }
-    const displaySetStandardModal = async(exam:IExam)=>{
+    const displaySetStandardModal = async (exam: IExam) => {
         setShowStandardModal(true);
-        setExamComponent(exam.ExamComponent);
+        setCurrentExam(exam.Id);
     }
-    const hiddenStandardModal = ()=>{
+    const hiddenStandardModal = () => {
         setShowStandardModal(false);
     }
     const generateTableColumns = (examList: any) => {
@@ -150,7 +211,7 @@ function ExamTable(props:IProps) {
                             设置评测标准
                         </Button>
                         <Button key={"standard"} type="primary"
-                            onClick={()=>displaySetStandardModal(exam)}>
+                            onClick={() => displaySetStandardModal(exam)}>
                             设置考核项评分
                         </Button>
                     </Space>)
@@ -169,18 +230,18 @@ function ExamTable(props:IProps) {
                 sizeList={sizeList}
             />
             <Criteria
-            visible={showCreterialModal}
-            ExamComponent={ExamComponent}
-            ExamId={currentExamId}
-            cancel={()=>setShowCreterialModal(false)}
+                visible={showCreterialModal}
+                ExamComponent={ExamComponent}
+                ExamId={currentExamId}
+                cancel={() => setShowCreterialModal(false)}
             />
             <Standard
-            visible={showStandardModal}
-            ExamComponent={ExamComponent}
-            cancel={hiddenStandardModal} />
+                visible={showStandardModal}
+                ExamId={currentExamId}
+                cancel={hiddenStandardModal} />
             {exams && generateTableColumns(exams)}
             <Outlet />
         </div>
     )
-    
+
 }

@@ -24,3 +24,17 @@ export const saveExamCriteria = (criteria:any,ExamId:number)=>{
         params: {ExamId:ExamId}
     })
 }
+export const getExamById = (Id: number)=>{
+    return request({
+        url:`/exam/${Id}`,
+        method: 'get',
+    })
+}
+export const saveExamScores =(scores: any, ExamId: number)=>{
+    return request({
+        url:'/exam/scores',
+        method: 'post',
+        data: {scores: scores},
+        params: {ExamId: ExamId}
+    })
+}
