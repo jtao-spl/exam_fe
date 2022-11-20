@@ -28,7 +28,7 @@ export const SaveComponentName = (name: string, componentId: number)=>{
     return res;
 }
 
-export const getComponent = (id:number)=>{
+export const getComponentById = (id:number)=>{
     return request({
         url:`/component/${id}`,
         method: 'get',

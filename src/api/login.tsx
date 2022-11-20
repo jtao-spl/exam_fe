@@ -1,9 +1,9 @@
 import request from '../utils/request';
 
-export const login = (name:string, password:string)=>{
+export const login = (Id:number, password:string)=>{
     return request({
         url:'/login',
         method: 'post',
-        data: {name: name, password: password},
+        data: {id: Id, password: password},
     })
 }

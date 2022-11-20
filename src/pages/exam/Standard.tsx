@@ -33,6 +33,13 @@ export default function Standard(props: IPropsInput) {
             SizeScore.push({SizeId: size.Id, Score: Sizes[index].Score});
         })
         const res = await saveExamScores(SizeScore, ExamId);
+        const {code, msg} = res.data;
+        if(code !== 0){
+            message.error(`保存配分失败，系统错误: ${msg}`);
+            return
+        }
+        message.info(`保存成功`);
+        cancel()
 
     }
     const getSizes = async (ExamId: number): Promise<ISize[] | undefined> => {
@@ -47,7 +54,7 @@ export default function Standard(props: IPropsInput) {
             return;
         }
         const exam = examRes.data.data;
-        const sizes = await getSizeList(1, 100, exam.Id);
+        const sizes = await getSizeList(1, 100, exam.ComponentId);
         let { code, msg, data } = sizes.data;
         if (code !== 0) {
             message.error(`查询尺寸数据失败，系统错误:${msg}`);

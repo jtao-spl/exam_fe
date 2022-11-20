@@ -8,7 +8,7 @@ const ComponentList = lazy(() => import('../pages/component/ComponentList'));
 const SizeList = lazy(() => import('../pages/size/SizeList'));
 const Page404 = lazy(() => import('../pages/Page404'));
 const ExamList = lazy(() => import('../pages/exam/ExamList'));
-
+const Exams = lazy(()=>import('../pages/student/Exams'))
 export interface IRouter {
     title: React.ReactNode,
     path: string,
@@ -82,32 +82,22 @@ export const unAuthRoutes: IRouter[] = [
         element: <Page404 />
     }
 ]
-// const router:RouteObject[] = routers.map(r=>{
-//     return ({
-//         path: r.path,
-//         element: r.element,
-//     })
-// });
-
-// export const generateRoutes = (r:IRouter[]) =>{
-
-// }
-// [
-//     {
-//         path: '/login',
-//         element: <Login />,
-//     },
-//     {
-//         path: '/component',
-//         element: <CustomComponent />,
-//         children: [
-
-//         ]
-//     },
-//     {
-//         path:'*',
-//         element: <Page404 />
-//     }
-// ]
+export const studentRoutes:IRouter[] = [
+    {
+        title: '考核信息',
+        path: '/stu',
+        key: 'student',
+        icon: <PartitionOutlined />,
+        children:[
+            {
+                title: <Link to='/stu/exams'>考核列表</Link>,
+                path: 'exams',
+                key: 'student_exams',
+                icon: <PartitionOutlined />,
+                element: <Exams />
+            },
+        ]
+    },
+]
 
 export default routers
