@@ -22,8 +22,8 @@ export const saveComponentClip = (file: any, componentId: number)=>{
 export const SaveComponentName = (name: string, componentId: number)=>{
     const res = request({
         url:`/component/${componentId}`,
-        method: 'post',
-        data: {ComponentName: name}, 
+        method: 'patch',
+        data: {ComponentName: name, Status: 2}, 
     });
     return res;
 }
@@ -54,4 +54,11 @@ export const getComponentCriteriaTypes = (id: number)=>{
         method: 'get',
         params: {ComponentId: id}
     });
+}
+export const updateComponentStatus = (id: number, status: number)=>{
+    return request({
+        url: `/component/${id}`,
+        method: 'patch',
+        data: {Status: status}, 
+    })
 }

@@ -8,9 +8,6 @@ const layout = {
     labelCol: { span: 4 },
     wrapperCol: { span: 16 },
 };
-const tailLayout = {
-    wrapperCol: { offset: 8, span: 16 },
-};
 
 interface IProps {
     component?: IComponent
@@ -91,7 +88,7 @@ export default function EditComponentFC(props:IProps) {
                         <Input />
                     </Form.Item>
 
-                    <Form.Item {...tailLayout}>
+                    <Form.Item>
                         <Button type="primary" htmlType="submit">
                             保存名称
                         </Button>

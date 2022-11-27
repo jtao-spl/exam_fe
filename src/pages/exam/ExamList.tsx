@@ -1,13 +1,13 @@
 import { Button, message, Popconfirm, Space, Table, TableColumnsType, Tag } from 'antd'
 import React, { useEffect, useState } from 'react'
-import { Outlet, useNavigate } from 'react-router-dom'
-import { getComponentCriteriaTypes } from '../../api/comp'
+// import { Outlet, useNavigate } from 'react-router-dom'
+// import { getComponentCriteriaTypes } from '../../api/comp'
 import { getExamList, setExamStatusApi } from '../../api/exam'
 import { getSizeCountByComponentId, getSizeList } from '../../api/size'
 import ShowSizeList from '../component/ShowSizeList'
 import { ISize } from '../size/SizeList'
-import Criteria, { GelToleranceSymbol, IEntityRequired, SizedElementSymbol } from './Criteria'
-import Standard from './Standard'
+// import Criteria, { GelToleranceSymbol, IEntityRequired, SizedElementSymbol } from './Criteria'
+// import Standard from './Standard'
 interface ScoreItem {
     Score: number,
     SizeId: number
@@ -30,7 +30,8 @@ interface IProps {
     exams?: IExam[],
     total: number,
     pageSize: number,
-    loading: boolean
+    loading: boolean,
+    callback: ()=>void
 }
 
 
@@ -61,7 +62,7 @@ export default function ExamList() {
 
     return (
         <div>
-            <ExamTable exams={exams} total={total} pageSize={pageSize} loading={loading} />
+            <ExamTable exams={exams} total={total} pageSize={pageSize} loading={loading} callback={()=>getList()}/>
         </div>
     )
 }
@@ -177,13 +178,13 @@ export function getCalculatedSizeForExam(exam: IExam, sizes: ISize[], sizeScopeT
 }
 
 function ExamTable(props: IProps) {
-    const { exams, total, pageSize, loading } = props;
+    const { exams, total, pageSize, loading, callback } = props;
     const [showSizeList, setShowSizeList] = useState(false);
     const [sizeList, setSizeList] = useState<ISize[]>([]);
-    const [showCreterialModal, setShowCreterialModal] = useState(false);
-    const [ExamComponent, setExamComponent] = useState(0);
-    const [currentExamId, setCurrentExam] = useState(0);
-    const [showStandardModal, setShowStandardModal] = useState(false);
+    // const [showCreterialModal, setShowCreterialModal] = useState(false);
+    // const [ExamComponent, setExamComponent] = useState(0);
+    // const [currentExamId, setCurrentExam] = useState(0);
+    // const [showStandardModal, setShowStandardModal] = useState(false);
 
 
     const initSizeList = async (exam: IExam, showList: boolean = true) => {
@@ -211,19 +212,19 @@ function ExamTable(props: IProps) {
     const hideShowSizeList = (refresh?: boolean) => {
         setShowSizeList(false);
     }
-    const displayCreterialModal = (exam: IExam) => {
-        setShowCreterialModal(true);
-        setExamComponent(exam.ExamComponent);
-        setCurrentExam(exam.Id);
+    // const displayCreterialModal = (exam: IExam) => {
+    //     setShowCreterialModal(true);
+    //     setExamComponent(exam.ExamComponent);
+    //     setCurrentExam(exam.Id);
 
-    }
-    const displaySetStandardModal = async (exam: IExam) => {
-        setShowStandardModal(true);
-        setCurrentExam(exam.Id);
-    }
-    const hiddenStandardModal = () => {
-        setShowStandardModal(false);
-    }
+    // }
+    // const displaySetStandardModal = async (exam: IExam) => {
+    //     setShowStandardModal(true);
+    //     setCurrentExam(exam.Id);
+    // }
+    // const hiddenStandardModal = () => {
+    //     setShowStandardModal(false);
+    // }
 
     const publishExam = async (exam: IExam) => {
         if (exam.CriteriaId === -1) {
@@ -245,6 +246,7 @@ function ExamTable(props: IProps) {
             return
         }
         message.success(`操作成功`)
+        callback()
     }
 
     const generateTableColumns = (examList: any) => {
@@ -258,14 +260,14 @@ function ExamTable(props: IProps) {
                             onClick={() => initSizeList(exam)}
                         >查看尺寸数据</Button>
 
-                        <Button disabled={exam.CriteriaId !== -1} key={"criteria"} type='primary'
+                        {/* <Button disabled={exam.CriteriaId !== -1} key={"criteria"} type='primary'
                             onClick={() => displayCreterialModal(exam)}>
                             设置评测标准
                         </Button>
                         <Button key={"standard"} type="primary" disabled={exam.Data !== null}
                             onClick={() => displaySetStandardModal(exam)}>
                             设置考核项评分
-                        </Button>
+                        </Button> */}
                         <Popconfirm disabled={exam.Status !== 0}
                             title="下发考核后考核对学生可见，确认发放？"
                             onConfirm={() => publishExam(exam)}
@@ -300,7 +302,7 @@ function ExamTable(props: IProps) {
                 cancel={hideShowSizeList}
                 sizeList={sizeList}
             />
-            <Criteria
+            {/* <Criteria
                 visible={showCreterialModal}
                 ExamComponent={ExamComponent}
                 ExamId={currentExamId}
@@ -309,9 +311,8 @@ function ExamTable(props: IProps) {
             <Standard
                 visible={showStandardModal}
                 ExamId={currentExamId}
-                cancel={hiddenStandardModal} />
+                cancel={hiddenStandardModal} /> */}
             {exams && generateTableColumns(exams)}
-            <Outlet />
         </div>
     )
 

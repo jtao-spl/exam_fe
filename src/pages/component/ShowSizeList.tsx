@@ -35,10 +35,11 @@ export default function ShowSizeListFC(props:IProps) {
         open={visible}
         footer={null}
         onCancel={onCancel}
-        >   <Button type='primary' onClick={()=>navigate('/size')}>去编辑</Button>
+        >  
+         {/* <Button type='primary' onClick={()=>navigate('/size')}>去编辑</Button> */}
             {generateTable(sizeList)}
-            注1：此处仅展示数据，更改数据请到【尺寸列表】。<br />
-            注2：自由公差线性尺寸的等级可在创建考核时设置。
+            {/* 注1：此处仅展示数据，更改数据请到【尺寸列表】。<br />
+            注2：自由公差线性尺寸的等级可在创建考核时设置。 */}
         </Modal>
     </div>
   )
