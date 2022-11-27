@@ -1,4 +1,4 @@
-import { Button, Form, InputNumber, message, Modal, Space, Tag } from 'antd';
+import { Button, Form, InputNumber, message, Modal, Space, TableColumnsType, Tag } from 'antd';
 
 import React, { Fragment, useEffect, useRef, useState } from 'react';
 import { getComponentCriteriaTypes } from '../../api/comp';
@@ -10,11 +10,13 @@ import SurfaceRoughnessInput from './criteriaInput/SurfaceRoughnessInput';
 import OtherInput from './criteriaInput/OtherInput';
 import { saveExamCriteria } from '../../api/exam';
 
+import '../size/font.css';
+
 interface IProps {
   visible: boolean,
   ExamComponent: number,
   ExamId: number,
-  cancel: () => void,
+  cancel: (refresh:boolean) => void,
 
 }
 
@@ -114,11 +116,89 @@ const MapFunc = (entities: IEntity[], result: Map<string, string>) => {
 }
 let GeoSymbolNameMap = new Map<string, string>();
 MapFunc(GeoToleranceEntity, GeoSymbolNameMap);
+
+export interface ICriteria {
+  Id: number,
+  CriteriaId: number,
+  FirstType: number,
+  SizeType?: number,
+  SizeDelta?: number,
+  SizeDeductScore?: number,
+  GeoType?: string,
+  GeoBase?: string,
+  GeoDelta?: number,
+  GeoDeductScore?: number,
+  SurfaceRoughnessDesc?: string,
+  OtherDesc?: string
+}
+
+interface DataType extends ICriteria {
+  key: React.Key
+}
+export function generateCriteriaColumns() {
+  const columns: TableColumnsType<DataType> = [
+    {
+      title: "类型", key: 'type', render: (_: any, criteria: ICriteria) => {
+        if (criteria.FirstType === 0 && criteria.SizeType !== undefined) {
+          return <Tag> {SizedEntity[criteria.SizeType]['name']}</Tag>;
+        }
+        if (criteria.FirstType === 1 && criteria.GeoType) {
+          const currentElement = GeoToleranceEntity.filter(item => item['symbol'] === criteria.GeoType);
+          if (currentElement.length >= 1) {
+            return <Tag > {currentElement[0]['name']}</Tag>
+          }
+        }
+        if (criteria.FirstType === 2) {
+          return <Tag >表面粗糙度</Tag>
+        }
+        if (criteria.FirstType === 3) {
+          return <div>其他</div>
+        }
+      }
+    },
+    {
+      title: "符号", key: 'symbol', render: (_: any, criteria: ICriteria) => {
+        if (criteria.FirstType === 0 && criteria.SizeType !== undefined) {
+          return <Tag> {SizedEntity[criteria.SizeType]['symbol']}</Tag>;
+        }
+        if (criteria.FirstType === 1 && criteria.GeoType) {
+          return <Tag className='gdt'>{criteria.GeoType}</Tag>
+        }
+        if (criteria.FirstType === 2) {
+          return <Tag >Ra</Tag>
+        }
+        if (criteria.FirstType === 3 ) {
+          return <div></div>
+        }
+      }
+    },
+    {
+      title: '评测标准', key: 'criteriainfo', render: (_: any, criteria) => {
+        if (criteria.FirstType === 0 && criteria.SizeDelta && criteria.SizeDeductScore) {
+          return <Tag>偏差范围以得分，偏差范围外每超差{criteria.SizeDelta}扣{criteria.GeoDeductScore}分，配分扣完为止</Tag>
+        }
+        if (criteria.FirstType === 1 && criteria.GeoBase && criteria.GeoDelta && criteria.GeoDeductScore) {
+          return <Tag>低于{criteria.GeoBase}得分，高于{criteria.GeoBase}每超差{criteria.GeoDelta}扣{criteria.GeoDeductScore}分，配分扣完为止</Tag>
+        }
+        if (criteria.FirstType === 2) {
+          return <Tag>样块对比目测，符合要求得分</Tag>
+        }
+        if (criteria.FirstType === 3 && criteria.OtherDesc) {
+          return <Tag>{criteria.OtherDesc}</Tag>
+        }
+      }
+    }
+  ]
+
+  return columns;
+}
+
+
 export default function Creterial(props: IProps) {
   const { visible, ExamComponent, ExamId, cancel } = props;
 
-  const onCancel = () => {
-    cancel();
+  const onCancel = (refresh:boolean) => {
+    cancel(refresh);
   }
 
 
@@ -150,7 +230,7 @@ export default function Creterial(props: IProps) {
 
   }
 
-  const fillData = (data: IEntityRequired[])=>{
+  const fillData = (data: IEntityRequired[]) => {
     console.log(`into fillData: data ${JSON.stringify(data)}`);
     const sized = data.filter((item: IEntityRequired) =>
       SizedElementSymbol.includes(item.type) && item.required
@@ -158,7 +238,7 @@ export default function Creterial(props: IProps) {
     const geo = data.filter((item: IEntityRequired) =>
       GelToleranceSymbol.includes(item.type) && item.required
     )
-    const surfaceRoughnessRequired = data.filter((item: IEntityRequired) => item.type === "Ra" && item.required).length>=0?true:false;
+    const surfaceRoughnessRequired = data.filter((item: IEntityRequired) => item.type === "Ra" && item.required).length >= 0 ? true : false;
     form.setFieldsValue({
       SizedElement: genFields(sized, SizedElementSymbol),
       GeoElement: genFields(geo, GelToleranceSymbol),
@@ -194,7 +274,7 @@ export default function Creterial(props: IProps) {
       return
     }
     message.success(`保存成功`);
-    onCancel();
+    onCancel(true);
 
   };
 
@@ -205,13 +285,13 @@ export default function Creterial(props: IProps) {
         footer={null}
         width={"80vw"}
         open={visible}
-        onCancel={onCancel}
+        onCancel={()=>onCancel(false)}
       >
         <Form form={form} name="dynamic_form_nest_item" onFinish={onFinish} autoComplete="off"
         >
           <SizedInput SizedEntity={SizedEntity} />
           <GeoToleranceInput GeoToleranceEntity={GeoToleranceEntity} />
-          <SurfaceRoughnessInput  form={form} />
+          <SurfaceRoughnessInput form={form} />
           <OtherInput />
           <Form.Item>
             <Button type="primary" htmlType="submit">

@@ -37,7 +37,7 @@ interface IProps {
 }
 
 const format = "HH:mm";
-const SizePrecisionLevel = ['精密f', '中等m','粗糙c','最粗v']
+export const SizePrecisionLevel = ['精密f', '中等m','粗糙c','最粗v']
 
 
 export default function AddExamFC(props:IProps) {

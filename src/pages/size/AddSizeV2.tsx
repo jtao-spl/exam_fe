@@ -16,19 +16,16 @@ const gdtSymbleArray: Array<string> = ["u", "c", "e", "g", "k", "d", "f", "b", "
 const sizeSymbolArray: Array<string> = ['L', 'D', 'R', '∠']
 interface IProps {
     visible: boolean
-    componentList: IComponent[]
+    componentId: number
     callback: (refresh?: boolean) => void
 }
-export default function AddSize(props: IProps) {
-    const { visible, componentList, callback } = props;
+export default function AddSizeV2(props: IProps) {
+    const { visible, componentId, callback } = props;
     const [showAddSizedInput, setShowAddSizedInput] = useState(false);
     const [showAddGeoToleranceInput, setShowAddGeoToleranceInput] = useState(false);
     const [showAddSurfaceRoughnessInput, setShowAddSurfaceRoughnessInput] = useState(false);
     const [showAddOtherReqirementInput, setShowAddOtherReqirementInput] = useState(false);
 
-    const handleChange = (values: number) => {
-        console.log(`选中零件信息：${JSON.stringify(values)}`);
-    }
     const cancel = () => {
         callback()
     }
@@ -92,21 +89,9 @@ export default function AddSize(props: IProps) {
                         <Form.Item
                             label="所属零件"
                             name="ComponentId"
-                            required={true}
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "请选择关联零件"
-                                }
-                            ]}
+                            initialValue={componentId}
                         >
-                            <Select style={{ width: 120 }} onChange={handleChange}>
-                                {
-                                    componentList.map((comp: IComponent, index: number) =>
-                                        <Option key={index} value={comp.Id}>{`${comp.Id}:${comp.ComponentName}`}</Option>
-                                    )
-                                }
-                            </Select>
+                            <Tag>{componentId}</Tag>
                         </Form.Item>
                     </Popover>
                     <Popover
@@ -147,7 +132,7 @@ export default function AddSize(props: IProps) {
                                     },
                                 ]}
                             >
-                                <Select style={{ width: 120 }} onChange={handleChange}>
+                                <Select style={{ width: 120 }}>
                                     {
                                         sizeSymbolArray.map((symbol: string, index: number) =>
                                             <Option key={symbol} value={index}><Tag color="blue">{symbol}</Tag></Option>
@@ -206,7 +191,7 @@ export default function AddSize(props: IProps) {
                                         message: "请选择公差类型"
                                     }
                                 ]}>
-                                <Select style={{ width: 120 }} onChange={handleChange}>
+                                <Select style={{ width: 120 }}>
                                     {
                                         gdtSymbleArray.map((symbol: string) =>
                                             <Option key={symbol} value={symbol}><Tag color="red" className='gdt'>{symbol}</Tag></Option>

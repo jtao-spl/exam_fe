@@ -27,6 +27,9 @@ export const updateSize = (size: ISize, values: any) => {
     if (FirstType === 2) {
         data = { ComponentId: ComponentId, SurfaceRoughnessVal: values.SurfaceRoughnessVal }
     }
+    if (FirstType === 3) {
+        data = { ComponentId: ComponentId, OtherRequirements: values.OtherRequirements }
+    }
     return request({
         url: `/size/${Id}`,
         method: 'put',

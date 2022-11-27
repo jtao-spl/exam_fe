@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import './App.less';
+// import './App.less';
 import View from './components/View';
 
 const App: FC = () => (

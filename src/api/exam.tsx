@@ -9,11 +9,20 @@ export const saveExam = (exam:IExam)=>{
     })
 }
 
-export const getExamList = (page: number, limit:number=10, ExamComponent:number=0)=>{
+export const getExamList = (page: number, limit:number=10, ExamComponent:number=0, Status?: number)=>{
+    let params:{
+        page:number, 
+        limit:number,
+        ExamComponent: number,
+        Status?: number
+    } = {page: page, limit:limit, ExamComponent: ExamComponent}
+    if (Status){
+        params = {Status: Status, ... params}
+    }
     return request({
         url: '/exam',
         method:'get',
-        params: {page: page, limit:limit, ExamComponent: ExamComponent}
+        params: params
     })
 }
 export const saveExamCriteria = (criteria:any,ExamId:number)=>{
@@ -22,5 +31,33 @@ export const saveExamCriteria = (criteria:any,ExamId:number)=>{
         method: 'post',
         data: criteria,
         params: {ExamId:ExamId}
+    })
+}
+export const getExamCriteriaApi = (CriteriaId: number)=>{
+    return request({
+        url:'/exam/criteria',
+        method: 'get',
+        params: {CriteriaId:CriteriaId}
+    })
+}
+export const getExamById = (Id: number)=>{
+    return request({
+        url:`/exam/${Id}`,
+        method: 'get',
+    })
+}
+export const saveExamScores =(scores: any, ExamId: number)=>{
+    return request({
+        url:'/exam/scores',
+        method: 'post',
+        data: {scores: scores},
+        params: {ExamId: ExamId}
+    })
+}
+export const setExamStatusApi=(examId: number, Status: number)=>{
+    return request({
+        url: `/exam/${examId}`,
+        method:'patch',
+        data: {Status: Status}
     })
 }

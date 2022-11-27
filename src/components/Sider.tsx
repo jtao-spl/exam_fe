@@ -1,11 +1,9 @@
 import { Menu, MenuProps } from 'antd';
 import Sider from 'antd/lib/layout/Sider';
-import SubMenu from 'antd/lib/menu/SubMenu';
 import { MenuInfo } from 'rc-menu/lib/interface';
-import React, { Component } from 'react';
-import { UserOutlined } from '@ant-design/icons';
-import routers, { IRouter } from '../router';
-import { Link } from 'react-router-dom';
+import React from 'react';
+import routers, { IRouter, studentRoutes } from '../router';
+import { get } from '../utils/storage';
 
 
 type MenuItem = Required<MenuProps>['items'][number];
@@ -34,11 +32,11 @@ const generateMenu = (routers?: IRouter[]): MenuItem[] | undefined => {
 }
 
 const items: MenuProps['items'] = generateMenu(routers);
+const studentItems: MenuProps['items'] = generateMenu(studentRoutes)
 export default function SiderLayout() {
   const onClick = (info: MenuInfo) => {
     console.log(info);
   }
-  
   return (
     <Sider width={200} className="site-layout-background">
       <Menu
@@ -46,7 +44,7 @@ export default function SiderLayout() {
         defaultSelectedKeys={['1']}
         defaultOpenKeys={['sub1']}
         style={{ height: '100%', borderRight: 0 }}
-        items={items}
+        items={get('role') === '3'? studentItems: items}
         onClick={onClick} />
 
 
