@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
-import { IExam } from '../exam/ExamList';
+import { getCalculatedSizeForExam, IExam, sizeScopeToDelta } from '../exam/ExamList';
 import { useParams } from "react-router-dom";
-import { Button, Card, Collapse, message, Space, Table, TableColumnsType, Tag } from 'antd';
+import { Button, Card, Collapse, Form, InputNumber, message, Space, Table, TableColumnsType, Tag } from 'antd';
 import { getExamById, getExamCriteriaApi } from '../../api/exam';
 import { getComponentById } from '../../api/comp';
 import { getSizeCountByComponentId, getSizeList } from '../../api/size';
@@ -87,8 +87,14 @@ export default function Exam() {
         setComponent(component);
 
         const sizes = await getSizes(exam?.ExamComponent);
-        if (sizes) {
-          setSizes(sizes);
+        const sizeList = sizes.map((size: ISize) => {
+          size.Color = size?.FirstType === 0 ? 'blue' : size?.FirstType === 1 ? 'red' : size?.FirstType === 2 ? 'green' : 'grey';
+          return size
+        })
+        sizeList.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType });
+        const newSizes = getCalculatedSizeForExam(exam, sizeList, sizeScopeToDelta);
+        if (newSizes) {
+          setSizes(newSizes);
         }
       }
     }
@@ -112,8 +118,36 @@ interface IProps {
 }
 function ExamCard(props: IProps) {
   const { exam, component, sizes, criterias } = props;
+  const [form] = Form.useForm();
+  form.resetFields(["table"]);
+  form.setFieldsValue({
+    table: sizes
+  });
+  const onFinish = async (values: any) => {
+    console.log(`submit values: ${values}`)
+    // const Sizes: { Score: number }[] = values.Sizes;
+    // const table: ISize[] = values.table;
+    // const total = Sizes.reduce((a, b) => ({ Score: a.Score + b.Score }));
+    // if (total.Score !== 100) {
+    //     message.error(`分数总和不为100. 当前总和为:${total.Score}.请修改.`);
+    //     return
+    // }
+    // let SizeScore: { SizeId: number, Score: number }[] = [];
+    // table.map((size, index: number) => {
+    //     SizeScore.push({ SizeId: size.Id, Score: Sizes[index].Score });
+    // })
+    // const res = await saveExamScores(SizeScore, ExamId);
+    // const { code, msg } = res.data;
+    // if (code !== 0) {
+    //     message.error(`保存配分失败，系统错误: ${msg}`);
+    //     return
+    // }
+    // message.info(`保存成功`);
+    // setTimeout(callback, 1000)
+
+}
   return (
-    <Collapse accordion>
+    <Collapse>
       <Collapse.Panel header="考核详情" key="1">
         <Card title='基本信息'
         >
@@ -145,7 +179,20 @@ function ExamCard(props: IProps) {
         </Card>
       </Collapse.Panel>
       <Collapse.Panel header="自测数据" key="2">
-
+        <div>
+              <Form form={form} onFinish={onFinish}>
+                  <Form.Item name="table"
+                      valuePropName='dataSource'
+                  >
+                      <Table bordered columns={generateInputColumns()} pagination={false} scroll={{ x: "100%" }} />
+                  </Form.Item>
+                  <Form.Item>
+                      <Button htmlType="submit" type="primary">
+                          保存
+                      </Button>
+                  </Form.Item>
+              </Form>
+          </div>
       </Collapse.Panel>
     </Collapse>
   )
@@ -156,30 +203,59 @@ function generateCriteriaTable(criterias: any) {
   return <Table dataSource={criterias} columns={columns} pagination={false}></Table>
 }
 
-const generateSizeTable = (sizes: any, exam:IExam) => {
+const generateSizeTable = (sizes: any, exam: IExam) => {
   const columns = generateSizeTableColumns();
-  const filterdColumns = columns.filter(column=>column.key !== 'ComponentId' && column.key !=='SizeId')
+  const filterdColumns = columns.filter(column => column.key !== 'ComponentId' && column.key !== 'SizeId')
   const c: TableColumnsType<any> = [
-      ...filterdColumns,
-      {
-        title: '配分',
-        key: 'score',
-        render: (_: any, size: ISize)=>{
-          const sizeId = size.Id;
-          const scoreItem = exam.Data?.scores.filter(item=>item.SizeId === sizeId);
-          if (scoreItem && scoreItem.length >0){
-            return scoreItem[0].Score;
-          }
-          return 0
+    ...filterdColumns,
+    {
+      title: '配分',
+      key: 'score',
+      render: (_: any, size: ISize) => {
+        const sizeId = size.Id;
+        const scoreItem = exam.Data?.scores.filter(item => item.SizeId === sizeId);
+        if (scoreItem && scoreItem.length > 0) {
+          return scoreItem[0].Score;
         }
+        return 0
       }
+    }
   ];
   sizes.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType })
   return <Table
-      dataSource={sizes}
-      columns={columns}
-      pagination={false}
-      scroll={{ y: 400 }}
-   />
+    dataSource={sizes}
+    columns={c}
+    pagination={false}
+    scroll={{ y: 400 }}
+  />
 
+}
+
+const generateInputColumns = () => {
+  const fullColumns = generateSizeTableColumns();
+  const columns: TableColumnsType<any> = [
+      ...fullColumns,
+      {
+          title: '自测值',
+          key: 'selfSize',
+          render: (_: any, size: ISize, index) => {
+              return (
+                  <Form.Item name={['Sizes', index, "SelfSize"]}
+                      required={true}
+                      rules={[{
+                          required: true,
+                          message: '请输入测量尺寸'
+                      }]}>
+                      <InputNumber min={0} step={0.01} />
+                  </Form.Item>
+              )
+          },
+      },
+      {
+        title: '自测得分',
+        key: 'selfScore',
+        dataIndex: 'selfScore'
+    }
+  ]
+  return columns;
 }

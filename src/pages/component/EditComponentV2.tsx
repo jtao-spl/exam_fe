@@ -1,6 +1,6 @@
 import { Button, Form, Input, message, Space, Steps, Table, TableColumnsType, Upload } from 'antd';
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { getComponentById, saveComponentClip, SaveComponentName, updateComponentStatus } from '../../api/comp';
 import { UploadOutlined } from '@ant-design/icons';
 import { generateSizeTableColumns, ISize } from '../size/SizeList';
@@ -37,6 +37,7 @@ export const getComponent = async (id: number) => {
 
 export default function EditComponentV2() {
     const params = useParams();
+    const navigate = useNavigate();
 
     let id = 0;
     if (params.id) {
@@ -56,7 +57,7 @@ export default function EditComponentV2() {
     const setCurrentByComponentStatus = async (id: number) => {
         const res = await getComponent(id);
         if(res){
-            setCurrent(res.Status)
+            setCurrent(res.Status - 1)
         }
     }
 
@@ -72,6 +73,7 @@ export default function EditComponentV2() {
             return
         }
         message.success(`数据修正完成`);
+        setTimeout(()=>navigate('/component'), 1000);
     }
     const displayUpdateSizeModal = (size: ISize) => {
         console.log(`show modal, size: ${JSON.stringify(size)}`);
@@ -139,10 +141,11 @@ export default function EditComponentV2() {
         }
     ]
     const items = steps.map((item) => ({ key: item.title, title: item.title }));
+    console.log(`current: ${current}`)
     return (
 
         <>
-            {current > steps.length && <ComponentDetail />}
+            {current >= steps.length && <ComponentDetail />}
             {current < steps.length && <>
                 < Steps current={current} items={items} />
                 <div className="steps-content">{steps[current].component}</div>
