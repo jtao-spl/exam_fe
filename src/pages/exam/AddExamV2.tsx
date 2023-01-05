@@ -1,7 +1,7 @@
 import { Form, Button, Tag, Input, Space, Select, message, TimePicker, DatePicker, Steps, } from 'antd';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
-import { saveExam } from '../../api/exam';
+import { getExamTarget, saveExam } from '../../api/exam';
 import CriteriaV2 from './CriteriaV2';
 import StandardV2 from './StandardV2';
 
@@ -43,11 +43,28 @@ export default function AddExamFC() {
 
     const [current, setCurrent] = useState(0);
     const [examId, setExamId] = useState(0);
+    const [examTargets, setExamTargets] = useState<string[]>([]);
+
+    const fetchTarget = async () => {
+        const res = await getExamTarget();
+        const { code, msg, data } = res.data;
+        if (code !== 0) {
+            message.error(`获取考核项目失败，系统错误：${msg}`);
+            return
+        }
+        console.log(`获取考核项目：${JSON.stringify(data)}`);
+        setExamTargets(data.map((item: { Name: string }) => item.Name));
+    }
+
+    useEffect(() => {
+        fetchTarget();
+    }, [])
     const steps = [
         {
             title: '考核信息',
             component: <ExamBasicInfo
                 componentId={location.state.id}
+                examTargets={examTargets}
                 callback={(id: number) => { setExamId(id); setCurrent(current + 1) }} />
 
         },
@@ -62,7 +79,7 @@ export default function AddExamFC() {
             title: '项目配分',
             component: <StandardV2
                 ExamId={examId}
-                callback={()=>navigate('/exam')}
+                callback={() => navigate('/exam')}
             />
         }
     ]
@@ -76,10 +93,12 @@ export default function AddExamFC() {
 }
 interface IProps {
     componentId: number,
+    examTargets: string[]
     callback: (id: number) => void
 }
 function ExamBasicInfo(props: IProps) {
-    const { componentId, callback } = props;
+    const { componentId, examTargets, callback } = props;
+    const navigate = useNavigate();
     const addExam = async (values: any) => {
         console.log(`提交数据： ${JSON.stringify(values)}`);
         const res = await saveExam(values);
@@ -139,7 +158,17 @@ function ExamBasicInfo(props: IProps) {
                     name="ExamTarget"
                     initialValue={"钳工"}
                 >
-                    <Tag>钳工</Tag>
+                    <Space>
+                        <Select style={{ width: 240 }}
+                        >
+                            {
+                                examTargets.map((Name: string, index: number) =>
+                                    <Select.Option key={index} value={Name}>{Name}</Select.Option>
+                                )
+                            }
+                        </Select>
+                        <Button type='primary' onClick={()=>navigate('/exam/target/create')} >新建</Button>
+                    </Space>
                 </Form.Item>
                 <Form.Item
                     label="考核零件"

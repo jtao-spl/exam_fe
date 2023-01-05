@@ -17,12 +17,12 @@ function Login() {
             message.error(`${msg}`);
             return
         }
-        if(status === 0){
+        if (status === 0) {
             setShowModal(true);
             setId(Id);
         }
-        else{
-        navigate('/component');
+        else {
+            navigate('/component');
         }
     };
 
@@ -53,10 +53,10 @@ function Login() {
                     </Button>
                 </Form.Item>
             </Form>
-            <ChangePasswordModal 
-            showModal={showModal}
-            Id={Id}
-           />
+            <ChangePasswordModal
+                showModal={showModal}
+                Id={Id}
+            />
         </div>
 
     );
@@ -73,23 +73,23 @@ export function Logout() {
         </div>
     )
 }
-interface IProps{
+interface IProps {
     showModal: boolean,
     Id: number
 }
 
-function ChangePasswordModal(props:IProps){
-    const {showModal, Id} = props;
+function ChangePasswordModal(props: IProps) {
+    const { showModal, Id } = props;
     const navigate = useNavigate();
     return (
         <Modal
-        open={showModal}
-        title="您的密码为初始状态，请立即修改"
-        closable={false}
-        okText='去修改'
-        cancelText='暂不修改'
-        onOk={()=>navigate('/auth/modify',{state: Id})}
-        onCancel={()=>navigate('/stu/exams')}
+            open={showModal}
+            title="您的密码为初始状态，请立即修改"
+            closable={false}
+            okText='去修改'
+            cancelText='暂不修改'
+            onOk={() => navigate('/auth/modify', { state: Id })}
+            onCancel={() => navigate('/stu/exams')}
         >
             123
         </Modal>

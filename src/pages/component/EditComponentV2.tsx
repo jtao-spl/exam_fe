@@ -56,7 +56,7 @@ export default function EditComponentV2() {
 
     const setCurrentByComponentStatus = async (id: number) => {
         const res = await getComponent(id);
-        if(res){
+        if (res) {
             setCurrent(res.Status - 1)
         }
     }
@@ -73,7 +73,7 @@ export default function EditComponentV2() {
             return
         }
         message.success(`数据修正完成`);
-        setTimeout(()=>navigate('/component'), 1000);
+        setTimeout(() => navigate('/component'), 1000);
     }
     const displayUpdateSizeModal = (size: ISize) => {
         console.log(`show modal, size: ${JSON.stringify(size)}`);
@@ -122,6 +122,9 @@ export default function EditComponentV2() {
             title: '尺寸校准',
             component: (<div>
                 <Button type='primary' onClick={displayShowAddSizeModal} >添加尺寸</Button>
+                <div>
+                    注：未注倒角数量暂无法识别，需要手动修正。
+                </div>
                 <AddSizeV2
                     visible={showAddSieModal}
                     componentId={id}
@@ -327,6 +330,7 @@ function ShowSizeList(props: IProps2) {
         ];
         sizes.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType })
         return <Table
+            rowKey={record=>record.Id}
             dataSource={sizes}
             columns={columns}
             pagination={false}

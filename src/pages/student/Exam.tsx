@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from 'react'
 import { getCalculatedSizeForExam, IExam, sizeScopeToDelta } from '../exam/ExamList';
 import { useParams } from "react-router-dom";
-import { Button, Card, Collapse, Form, InputNumber, message, Space, Table, TableColumnsType, Tag } from 'antd';
+import { Button, Card, Collapse, Form, InputNumber, message, Space, Table, TableColumnsType } from 'antd';
 import { getExamById, getExamCriteriaApi } from '../../api/exam';
 import { getComponentById } from '../../api/comp';
 import { getSizeCountByComponentId, getSizeList } from '../../api/size';
 import { IComponent } from '../component/ComponentList';
 import { generateSizeTableColumns, ISize } from '../size/SizeList';
 import { REACT_APP_BASE_API } from '../../config/default';
-import { generateCriteriaColumns, ICriteria } from '../exam/Criteria';
+import { generateCriteriaColumns, ICriteria } from '../exam/CriteriaV2';
 
 export default function Exam() {
   const [exam, setExam] = useState<IExam>();
@@ -200,7 +200,7 @@ function ExamCard(props: IProps) {
 
 function generateCriteriaTable(criterias: any) {
   const columns: TableColumnsType<any> = [...generateCriteriaColumns()]
-  return <Table dataSource={criterias} columns={columns} pagination={false}></Table>
+  return <Table rowKey={record=>record.Id} dataSource={criterias} columns={columns} pagination={false}></Table>
 }
 
 const generateSizeTable = (sizes: any, exam: IExam) => {

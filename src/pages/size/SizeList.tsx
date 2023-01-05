@@ -23,6 +23,8 @@ export interface ISize {
     SurfaceRoughnessType?: string,
     SurfaceRoughnessVal?: string,
     OtherRequirements?: string,
+    UnDeclaredChamferCount?: number,
+    UnDeclaredChamferTotalVal?: number
     Deleted: boolean
     Color: string
 }
@@ -46,7 +48,7 @@ export function generateSizeTableColumns() {
                     return <Tag color={size.Color}>表面粗糙度</Tag>
                 }
                 if (size.FirstType === 3) {
-                    return <Tag color={size.Color}>其他</Tag>
+                    return <Tag color={size.Color}>未注倒角</Tag>
                 }
             }
         },
@@ -72,7 +74,7 @@ export function generateSizeTableColumns() {
                 if (record.FirstType === 2) {
                     return (<Tag>Ra</Tag>)
                 }
-                if (record.FirstType === 2) {
+                if (record.FirstType === 3) {
                     return (<Tag>-</Tag>)
                 }
             }
@@ -89,7 +91,7 @@ export function generateSizeTableColumns() {
                     return <Tag >{record.SurfaceRoughnessVal}</Tag>
                 }
                 if (record.FirstType === 3) {
-                    return <Tag >{record.OtherRequirements}</Tag>
+                    return <Tag >{record.UnDeclaredChamferCount || record.OtherRequirements}</Tag>
                 }
             },
         },
@@ -101,7 +103,7 @@ export function generateSizeTableColumns() {
                     return <Tag >{record.UpSize}</Tag>
                 }
                 if (record.FirstType === 1) {
-                    return <Tag>0</Tag>
+                    return <Tag>-</Tag>
                 }
                 if (record.FirstType === 2) {
                     return (<Tag>-</Tag>)
@@ -116,7 +118,7 @@ export function generateSizeTableColumns() {
                     return <Tag>{record.BottomSize}</Tag>
                 }
                 if (record.FirstType === 1) {
-                    return <Tag>{"-" + record.GeoToleranceVal}</Tag>
+                    return <Tag>-</Tag>
                 }
                 if (record.FirstType === 2) {
                     return (<Tag>-</Tag>)
@@ -134,7 +136,7 @@ export function generateSizeTableColumns() {
                     return <Tag>{"NaN"}</Tag>
                 }
                 if (record.FirstType === 1) {
-                    return <Tag>{record.GeoToleranceVal}</Tag>
+                    return <Tag>-</Tag>
                 }
                 if (record.FirstType === 2) {
                     return (<Tag>-</Tag>)
@@ -152,7 +154,7 @@ export function generateSizeTableColumns() {
                     return <Tag>{"NaN"}</Tag>
                 }
                 if (record.FirstType === 1) {
-                    return <Tag>0</Tag>
+                    return <Tag>-</Tag>
                 }
                 if (record.FirstType === 2) {
                     return (<Tag>-</Tag>)
@@ -169,7 +171,7 @@ export default function SizeList() {
     const [loading, setLoading] = useState(true);
     const [pageSize, setPageSize] = useState(10);
     const [total, setTotal] = useState(0);
-    const [size, setSize] = useState<ISize | undefined>(undefined);
+    const [size, setSize] = useState<ISize>();
     const [componentList, setComponentList] = useState<IComponent[]>([]);
     const [showUpdateSizeModal, setShowUpdateSizeModal] = useState(false);
     const [showAddSieModal, setShowAddSieModal] = useState(false);
@@ -249,7 +251,7 @@ export default function SizeList() {
                 )
             }
         ];
-        sizes.sort((a:ISize, b:ISize)=>{return a.FirstType - b.FirstType})
+        sizes.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType })
         return <Table
             loading={loading}
             dataSource={sizes}
@@ -273,143 +275,7 @@ export default function SizeList() {
                 cancel={hideUpdateSizeModal}
             />
             {sizeList && generateSizeTable(sizeList)}
-            {/* <Table
-                loading={loading}
-                dataSource={[...sizeList]}
-                rowKey={"Id"}
-                pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}
-                onChange={onChange}
-
-            >
-                <Table.Column
-                    title={'零件ID'}
-                    dataIndex={'ComponentId'}
-                    filters={componentList.map((component: IComponent) => ({ text: component.Id, value: component.Id }))}
-                    filterMultiple={false}
-                // onFilter={(value: string, record:ISize) =>String(record.ComponentId) === value}
-                // onFilter={this.showFilterdSizeList}
-                />
-                <Table.Column title={'尺寸ID'} dataIndex={'Id'} />
-                <Table.Column title="项目" key="FirstType" render={(size: ISize) => {
-
-                    if (size.FirstType === 0) {
-                        return <Tag color={size.Color}>零件尺寸检验</Tag>
-                    }
-                    if (size.FirstType === 1) {
-                        return <Tag color={size.Color}>形位公差</Tag>
-                    }
-                    if (size.FirstType === 2) {
-                        return <Tag color={size.Color}>表面粗糙度</Tag>
-                    }
-                    if (size.FirstType === 3) {
-                        return <Tag color={size.Color}>其他</Tag>
-                    }
-                }} />
-                <Table.Column title='类型' key='SubType' render={(record: ISize) => {
-                    if (record.FirstType === 0) {
-                        if (record.SecondType === 0) {
-                            return (<Tag>L</Tag>)
-                        }
-                        if (record.SecondType && record.SecondType === 1) {
-                            return (<Tag>D</Tag>)
-                        }
-                        if (record.SecondType && record.SecondType === 2) {
-                            return (<Tag>R</Tag>)
-                        }
-                        if (record.SecondType && record.SecondType === 3) {
-                            return (<Tag>∠</Tag>)
-                        }
-                    }
-                    if (record.FirstType === 1) {
-                        return (<Tag className='gdt'>{record.GeoToleranceType}</Tag>)
-                    }
-                    if (record.FirstType === 2) {
-                        return (<Tag>Ra</Tag>)
-                    }
-                }} />
-                <Table.Column title="基准值" key='baseValue' render={(record: ISize) => {
-                    if (record.FirstType === 0) {
-                        return <Tag>{record.BaseSize}</Tag>
-                    }
-                    if (record.FirstType === 1) {
-                        return <Tag >{record.GeoToleranceVal}</Tag>
-                    }
-                    if (record.FirstType === 2) {
-                        return <Tag >{record.SurfaceRoughnessVal}</Tag>
-                    }
-                }} />
-                <Table.Column
-                    title="上偏差"
-                    key='upDelta'
-                    render={(record: ISize) => {
-                        if (record.FirstType === 0) {
-                            return <Tag >{record.UpSize}</Tag>
-                        }
-                        if (record.FirstType === 1) {
-                            return <Tag>0</Tag>
-                        }
-                        if (record.FirstType === 2) {
-                            return (<Tag>-</Tag>)
-                        }
-                    }} />
-                <Table.Column
-                    title="下偏差"
-                    key='bottomDelta'
-                    render={(record: ISize) => {
-                        if (record.FirstType === 0) {
-                            return <Tag>{record.BottomSize}</Tag>
-                        }
-                        if (record.FirstType === 1) {
-                            return <Tag>{"-" + record.GeoToleranceVal}</Tag>
-                        }
-                        if (record.FirstType === 2) {
-                            return (<Tag>-</Tag>)
-                        }
-                    }} />
-                <Table.Column
-                    title="上极限尺寸"
-                    key='UpSize'
-                    render={(record: ISize) => {
-                        if (record.FirstType === 0) {
-                            if (record.BaseSize && record.UpSize) {
-                                return <Tag>{Number(record.BaseSize) + Number(record.UpSize)}</Tag>
-                            }
-                            return <Tag>{"NaN"}</Tag>
-                        }
-                        if (record.FirstType === 1) {
-                            return <Tag>{record.GeoToleranceVal}</Tag>
-                        }
-                        if (record.FirstType === 2) {
-                            return (<Tag>-</Tag>)
-                        }
-                    }} />
-                <Table.Column
-                    title="下极限尺寸"
-                    key='bottomSize'
-                    render={(record: ISize) => {
-                        if (record.FirstType === 0) {
-                            if (record.BaseSize && record.BottomSize) {
-                                return <Tag>{Number(record.BaseSize) + Number(record.BottomSize)}</Tag>
-                            }
-                            return <Tag>{"NaN"}</Tag>
-                        }
-                        if (record.FirstType === 1) {
-                            return <Tag>0</Tag>
-                        }
-                        if (record.FirstType === 2) {
-                            return (<Tag>-</Tag>)
-                        }
-                    }} />
-
-                <Table.Column title="操作" key="operation" render={(size: ISize) => (
-                    <Space>
-                        <Button type='primary'
-                            onClick={() => { displayUpdateSizeModal(size) }}
-                        >编辑</Button>
-                        <DeleteSize size={size} refresh={onChange} />
-                    </Space>
-                )} />
-            </Table> */}
+            
         </div>
     )
 

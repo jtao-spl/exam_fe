@@ -19,6 +19,14 @@ export const saveComponentClip = (file: any, componentId: number)=>{
     });
     return res;
 }
+
+export const downloadOriginFile =(componentId: number)=>{
+    const res = request({
+        url:`clip/${componentId}/download`,
+        method: 'post'
+    })
+}
+
 export const SaveComponentName = (name: string, componentId: number)=>{
     const res = request({
         url:`/component/${componentId}`,

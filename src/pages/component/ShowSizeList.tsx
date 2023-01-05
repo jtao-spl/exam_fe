@@ -1,5 +1,5 @@
-import { Badge, Button, Modal, Table, TableColumnsType, Tag } from 'antd'
-import React, { Component } from 'react'
+import { Modal, Table } from 'antd'
+import React from 'react'
 import { generateSizeTableColumns, ISize } from '../size/SizeList'
 
 import '../size/font.css';
@@ -23,7 +23,7 @@ export default function ShowSizeListFC(props:IProps) {
     const generateTable = (sizeList:any) =>{
         const columns = generateSizeTableColumns();
         sizeList.sort((a:ISize, b:ISize)=>{return a.FirstType - b.FirstType})
-        return <Table columns={columns} dataSource={sizeList} pagination={false} scroll={{ y: 400 }} />;
+        return <Table rowKey={record=>record.Id} columns={columns} dataSource={sizeList} pagination={false} scroll={{ y: 400 }} />;
       }
 
   return (

@@ -1,5 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route, BrowserRouter } from 'react-router-dom';
+import AddExamTarget from '../pages/exam/AddExamTarget';
+import StudentUpload from '../pages/upload/StudentUpload';
 
 import routers, { studentRoutes, unAuthRoutes } from '../router';
 import LayoutComponent from './Layout';
@@ -32,9 +34,12 @@ export default function View() {
             <Route path='/exam' key='examlist' >
               <Route index={true} element={<ExamList />} />
               <Route path='create' element={<AddExamV2 />} />
+              <Route path='target/create' element={<AddExamTarget />} />
             </Route>
             <Route path='/auth/modify' key='mod pass' element={<ChangePassword />} />
-            
+            <Route path='/management/student' key='man_stu'>
+              <Route path='upload' key='ustu' element={<StudentUpload />}> </Route>
+            </Route>
 
           </Route>
           {unAuthRoutes.map(r => (<Route path={r.path} key={r.key} element={r.element} ></Route>))}

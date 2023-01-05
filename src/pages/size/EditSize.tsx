@@ -1,5 +1,5 @@
-import { Button, Form, Input, message, Modal, Space, Tag } from 'antd'
-import React, { Component } from 'react'
+import { Button, Form, Input, InputNumber, message, Modal, Space, Tag } from 'antd'
+import React from 'react'
 import { ISize } from './SizeList';
 
 import './font.css';
@@ -249,14 +249,14 @@ export default function EditSize(props:IProps) {
                             label="项目类型"
                             name="FirstType"
                         >
-                            <Tag color={size?.Color}>其他</Tag>
+                            <Tag color={size?.Color}>未注倒角</Tag>
                         </Form.Item>
                        
                         <Form.Item
-                            label="其他要求"
+                            label="未注倒角"
                             name="OtherRequirements"
                         >
-                            <Input />
+                            <InputNumber />
                         </Form.Item>
                         <Form.Item>
                             <Space size={"large"} >

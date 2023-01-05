@@ -13,7 +13,7 @@ service.interceptors.request.use(
     config => {
         NProgress.start();
         if (config && config.headers) {
-            console.log(`config in axios: ${JSON.stringify(config)}`);
+            // console.log(`config in axios: ${JSON.stringify(config)}`);
             const { url } = config;
             if (url && (!url.startsWith('/login') || !url.startsWith('/register'))) {
                 //当请求路径不是这两个的时候, 添加token请求头
@@ -35,7 +35,7 @@ service.interceptors.response.use(
     response => {
         NProgress.done();
         if (response.status === 200) {
-            console.log(`response in axios interceptor: ${JSON.stringify(response)}`);
+            // console.log(`response in axios interceptor: ${JSON.stringify(response)}`);
             const { code, msg, token, role } = response.data;
             if (token){
                 set(`user_token`, token);

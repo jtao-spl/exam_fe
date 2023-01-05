@@ -56,7 +56,7 @@ function StudentExam(props:IProps){
                     return (<Space direction='vertical'>
 
                         <Button type='primary' key={"viewSize"}
-                            onClick={() => navigate(`/stu/exam/${exam.Id}`,  { state: exam })}
+                            onClick={() => navigate(`/stu/exam/${exam.Id}`)}
                         >查看详情</Button>
 
                     </Space>)
@@ -64,6 +64,7 @@ function StudentExam(props:IProps){
             }
         ]
         return <Table
+            rowKey={record=>record.Id}
             dataSource={exams}
             columns={columns}
             pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}

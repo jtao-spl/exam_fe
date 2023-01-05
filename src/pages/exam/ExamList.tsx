@@ -162,7 +162,7 @@ export function getCalculatedSizeForExam(exam: IExam, sizes: ISize[], sizeScopeT
             return size
         }
         //上下delta有一个不为0 直接返回
-        if (size.UpSize && size.UpSize * 1000 > 0 || (size.BottomSize && size.BottomSize * 1000 > 0)) {
+        if ((size.UpSize && size.UpSize * 1000 > 0) || (size.BottomSize && size.BottomSize * 1000 > 0)) {
             return size;
         }
         let temp = { ...size };
@@ -287,6 +287,7 @@ function ExamTable(props: IProps) {
             }
         ]
         return <Table
+            rowKey={record=>record.Id}
             dataSource={examList}
             columns={columns}
             pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}

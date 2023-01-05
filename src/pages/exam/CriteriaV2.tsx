@@ -1,6 +1,6 @@
 import { Button, Form,  message, TableColumnsType, Tag } from 'antd';
 
-import React, {  useEffect } from 'react';
+import React, {  useEffect, useState } from 'react';
 import { getComponentCriteriaTypes } from '../../api/comp';
 
 import '../size/font.css';
@@ -25,6 +25,8 @@ export interface IEntity {
 }
 export interface IEntityRequired {
     type: string,
+    count: number,
+    size?: string, //表面粗糙度的尺寸
     required: boolean
 }
 const SizedEntity: IEntity[] = [
@@ -126,8 +128,10 @@ export interface ICriteria {
     GeoBase?: string,
     GeoDelta?: number,
     GeoDeductScore?: number,
-    SurfaceRoughnessDesc?: string,
-    OtherDesc?: string
+    SurfaceRoughnessVal?:string,
+    SurfaceRoughnessScore?: number,
+    UnDeclaredChamferCount?: number,
+    UnDeclaredChamferTotalVal?:number
 }
 
 interface DataType extends ICriteria {
@@ -150,7 +154,7 @@ export function generateCriteriaColumns() {
                     return <Tag >表面粗糙度</Tag>
                 }
                 if (criteria.FirstType === 3) {
-                    return <div>其他</div>
+                    return <div>未注倒角</div>
                 }
             }
         },
@@ -163,7 +167,7 @@ export function generateCriteriaColumns() {
                     return <Tag className='gdt'>{criteria.GeoType}</Tag>
                 }
                 if (criteria.FirstType === 2) {
-                    return <Tag >Ra</Tag>
+                    return <Tag >Ra{criteria.SurfaceRoughnessVal}</Tag>
                 }
                 if (criteria.FirstType === 3) {
                     return <div></div>
@@ -181,8 +185,8 @@ export function generateCriteriaColumns() {
                 if (criteria.FirstType === 2) {
                     return <Tag>样块对比目测，符合要求得分</Tag>
                 }
-                if (criteria.FirstType === 3 && criteria.OtherDesc) {
-                    return <Tag>{criteria.OtherDesc}</Tag>
+                if (criteria.FirstType === 3 && criteria.UnDeclaredChamferCount && criteria.UnDeclaredChamferCount > 0) {
+                    return <Tag>共计{criteria.UnDeclaredChamferCount}处，总共{criteria.UnDeclaredChamferTotalVal}分</Tag>
                 }
             }
         }
@@ -194,7 +198,7 @@ export function generateCriteriaColumns() {
 
 export default function CreteriaV2(props: IProps) {
     const { ExamComponent, ExamId,callback } = props;
-
+    const [surfaceRoughness, setSurfaceRoughness] = useState<IEntityRequired[]>([]);
     const [form] = Form.useForm();
     const genFields = (items: IEntityRequired[], targetSymbols: string[]) => {
         return items.map((item) => {
@@ -208,6 +212,20 @@ export default function CreteriaV2(props: IProps) {
             })
         })
     }
+
+    const genSurfFields = (items: IEntityRequired[])=>{
+        return items.map((item:IEntityRequired, index:number)=>{
+            return ({
+                count: item.count, //设置字段，在form.list下的form.item中指定的字段值,
+                size: item.size,
+                fieldKey: index,
+                isListField: true,
+                key: index,
+                name: index,
+            })
+        })
+    }
+
     const getCriteriaMap = async (ComponentId: number) => {
         if (ComponentId === 0) {
             return [];
@@ -231,11 +249,12 @@ export default function CreteriaV2(props: IProps) {
         const geo = data.filter((item: IEntityRequired) =>
             GelToleranceSymbol.includes(item.type) && item.required
         )
-        const surfaceRoughnessRequired = data.filter((item: IEntityRequired) => item.type === "Ra" && item.required).length >= 0 ? true : false;
+        const surfaceRoughness = data.filter((item: IEntityRequired) => item.type === "Ra" && item.required);
+        setSurfaceRoughness(surfaceRoughness);
         form.setFieldsValue({
             SizedElement: genFields(sized, SizedElementSymbol),
             GeoElement: genFields(geo, GelToleranceSymbol),
-            surfaceRoughnessRequired: surfaceRoughnessRequired
+            surfaceRoughnessElement: genSurfFields(surfaceRoughness)
         });
         // //踩坑记录：本来已经await请求拿到结果了，
         // //但是在设置form数据的时候由于先调了一遍setState  
@@ -278,7 +297,7 @@ export default function CreteriaV2(props: IProps) {
             >
                 <SizedInput SizedEntity={SizedEntity} />
                 <GeoToleranceInput GeoToleranceEntity={GeoToleranceEntity} />
-                <SurfaceRoughnessInput form={form} />
+                <SurfaceRoughnessInput surfaceRoughness={surfaceRoughness}/>
                 <OtherInput />
                 <Form.Item>
                     <Button type="primary" htmlType="submit">

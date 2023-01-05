@@ -1,63 +1,78 @@
 import { IExam } from '../pages/exam/ExamList';
 import request from '../utils/request';
 
-export const saveExam = (exam:IExam)=>{
+export const saveExam = (exam: IExam) => {
     return request({
         url: '/exam',
-        method:'post',
+        method: 'post',
         data: exam
     })
 }
 
-export const getExamList = (page: number, limit:number=10, ExamComponent:number=0, Status?: number)=>{
-    let params:{
-        page:number, 
-        limit:number,
+export const getExamList = (page: number, limit: number = 10, ExamComponent: number = 0, Status?: number) => {
+    let params: {
+        page: number,
+        limit: number,
         ExamComponent: number,
         Status?: number
-    } = {page: page, limit:limit, ExamComponent: ExamComponent}
-    if (Status){
-        params = {Status: Status, ... params}
+    } = { page: page, limit: limit, ExamComponent: ExamComponent }
+    if (Status) {
+        params = { Status: Status, ...params }
     }
     return request({
         url: '/exam',
-        method:'get',
+        method: 'get',
         params: params
     })
 }
-export const saveExamCriteria = (criteria:any,ExamId:number)=>{
+export const saveExamCriteria = (criteria: any, ExamId: number) => {
     return request({
-        url:'/exam/criteria',
+        url: '/exam/criteria',
         method: 'post',
         data: criteria,
-        params: {ExamId:ExamId}
+        params: { ExamId: ExamId }
     })
 }
-export const getExamCriteriaApi = (CriteriaId: number)=>{
+export const getExamCriteriaApi = (CriteriaId: number) => {
     return request({
-        url:'/exam/criteria',
+        url: '/exam/criteria',
         method: 'get',
-        params: {CriteriaId:CriteriaId}
+        params: { CriteriaId: CriteriaId }
     })
 }
-export const getExamById = (Id: number)=>{
+export const getExamById = (Id: number) => {
     return request({
-        url:`/exam/${Id}`,
+        url: `/exam/${Id}`,
         method: 'get',
     })
 }
-export const saveExamScores =(scores: any, ExamId: number)=>{
+export const saveExamScores = (scores: any, ExamId: number) => {
     return request({
-        url:'/exam/scores',
+        url: '/exam/scores',
         method: 'post',
-        data: {scores: scores},
-        params: {ExamId: ExamId}
+        data: { scores: scores },
+        params: { ExamId: ExamId }
     })
 }
-export const setExamStatusApi=(examId: number, Status: number)=>{
+export const setExamStatusApi = (examId: number, Status: number) => {
     return request({
         url: `/exam/${examId}`,
-        method:'patch',
-        data: {Status: Status}
+        method: 'patch',
+        data: { Status: Status }
+    })
+}
+
+export const saveExamTarget = (Name: string) => {
+    return request({
+        url: `/exam/target`,
+        method: 'post',
+        data: { Name: Name }
+    })
+}
+
+export const getExamTarget = () => {
+    return request({
+        url: `/exam/target`,
+        method: 'get'
     })
 }

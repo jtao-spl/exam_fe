@@ -1,6 +1,6 @@
 import { Form, InputNumber, Space, Tag } from 'antd'
 import React from 'react'
-import { IEntity } from '../Criteria'
+import { IEntity } from '../CriteriaV2'
 interface IProps {
   GeoToleranceEntity: IEntity[]
 }
