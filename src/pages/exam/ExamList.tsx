@@ -6,6 +6,7 @@ import { getExamList, setExamStatusApi } from '../../api/exam'
 import { getSizeCountByComponentId, getSizeList } from '../../api/size'
 import ShowSizeList from '../component/ShowSizeList'
 import { ISize } from '../size/SizeList'
+import PublishExam from './PublishExam'
 // import Criteria, { GelToleranceSymbol, IEntityRequired, SizedElementSymbol } from './Criteria'
 // import Standard from './Standard'
 interface ScoreItem {
@@ -31,7 +32,7 @@ interface IProps {
     total: number,
     pageSize: number,
     loading: boolean,
-    callback: ()=>void
+    callback: () => void
 }
 
 
@@ -62,7 +63,7 @@ export default function ExamList() {
 
     return (
         <div>
-            <ExamTable exams={exams} total={total} pageSize={pageSize} loading={loading} callback={()=>getList()}/>
+            <ExamTable exams={exams} total={total} pageSize={pageSize} loading={loading} callback={() => getList()} />
         </div>
     )
 }
@@ -101,19 +102,21 @@ export function generateExamTableColomns() {
                 return <Tag>{level}</Tag>
             }
         },
-        {title:'考核状态', key:'ExamStatus', render:(_: any, exam: IExam)=>{
-            let label:string;
-            if (exam.Status === 0){
-                label = `未发放`;
+        {
+            title: '考核状态', key: 'ExamStatus', render: (_: any, exam: IExam) => {
+                let label: string;
+                if (exam.Status === 0) {
+                    label = `未发放`;
+                }
+                else if (exam.Status === 1) {
+                    label = `进行中`;
+                }
+                else {
+                    label = `已结束`;
+                }
+                return <Tag>{label}</Tag>
             }
-            else if (exam.Status === 1){
-                label= `进行中`;
-            }
-            else {
-                label=`已结束`;
-            }
-            return <Tag>{label}</Tag>
-        }}
+        }
     ]
     return columns;
 }
@@ -181,6 +184,8 @@ function ExamTable(props: IProps) {
     const { exams, total, pageSize, loading, callback } = props;
     const [showSizeList, setShowSizeList] = useState(false);
     const [sizeList, setSizeList] = useState<ISize[]>([]);
+    const [showPublishModal, setShowPublishModal] = useState(false);
+    const [currentExam, setCurrentExam] = useState<IExam>();
     // const [showCreterialModal, setShowCreterialModal] = useState(false);
     // const [ExamComponent, setExamComponent] = useState(0);
     // const [currentExamId, setCurrentExam] = useState(0);
@@ -268,13 +273,10 @@ function ExamTable(props: IProps) {
                             onClick={() => displaySetStandardModal(exam)}>
                             设置考核项评分
                         </Button> */}
-                        <Popconfirm disabled={exam.Status !== 0}
-                            title="下发考核后考核对学生可见，确认发放？"
-                            onConfirm={() => publishExam(exam)}
-                            onCancel={() => { message.info(`取消下发成功`) }}
-                        >
-                            <Button disabled={exam.Status !== 0} type="primary">下发考核</Button>
-                        </Popconfirm>
+                        <Button disabled={exam.Status !== 0} type="primary" onClick={() => {
+                            setCurrentExam(exam);
+                            setShowPublishModal(true);
+                        }}>下发考核</Button>
                         <Popconfirm disabled={exam.Status !== 1}
                             title="收卷后考核学生不可继续提交，确认收卷？"
                             onConfirm={() => setExamStatus(exam, 2)}
@@ -287,11 +289,11 @@ function ExamTable(props: IProps) {
             }
         ]
         return <Table
-            rowKey={record=>record.Id}
+            rowKey={record => record.Id}
             dataSource={examList}
             columns={columns}
             pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}
-            scroll={{ y: 400 }} 
+            scroll={{ y: 400 }}
             loading={loading} />
     }
 
@@ -303,6 +305,18 @@ function ExamTable(props: IProps) {
                 cancel={hideShowSizeList}
                 sizeList={sizeList}
             />
+            {currentExam &&
+                <PublishExam
+                    visible={showPublishModal}
+                    cancel={() => setShowPublishModal(false)}
+                    exam={currentExam}
+                    callback={() => {
+                        setShowPublishModal(false);
+                        callback()
+                    }}
+                />
+            }
+
             {/* <Criteria
                 visible={showCreterialModal}
                 ExamComponent={ExamComponent}

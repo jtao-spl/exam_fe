@@ -54,11 +54,24 @@ export const saveExamScores = (scores: any, ExamId: number) => {
         params: { ExamId: ExamId }
     })
 }
-export const setExamStatusApi = (examId: number, Status: number) => {
+
+/**
+ * 下发考核时需要指定年级he班级
+ * @param examId 考核id
+ * @param Status 考核状态  0 未发放 1 已发放  2 已收卷
+ * @param Grade 年级
+ * @param Class 班级
+ * @returns 
+ */
+export const setExamStatusApi = (examId: number, Status: number, Grade?: number, Class?: number) => {
+    let data: { Status: number, Grade?: number, Class?: Number } = { Status: Status }
+    if (Grade && Class) {
+        data = { ...data, Grade: Grade, Class: Class }
+    }
     return request({
         url: `/exam/${examId}`,
         method: 'patch',
-        data: { Status: Status }
+        data: data
     })
 }
 

@@ -17,8 +17,8 @@ export default function StudentUpload() {
                 const arr = res.map((item: any) => {
                     // 利用时间戳+索引，生成唯一的ID，也可以直接使用index
                     const newItem = {
-                        Grade: String(item['年级']),
-                        Class: String(item['班级']),
+                        Grade: item['年级'],
+                        Class: item['班级'],
                         Name: String(item['姓名']),
                         StudentId: item['学号']
                     }

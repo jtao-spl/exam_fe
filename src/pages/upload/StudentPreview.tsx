@@ -1,8 +1,8 @@
 import { Button, Space, Table, TableColumnsType } from 'antd'
 import React from 'react'
 export interface IStudentInfo {
-    Grade: string,
-    Class: string,
+    Grade: number,
+    Class: number,
     Name: string,
     StudentId: number
 }
