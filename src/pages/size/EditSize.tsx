@@ -19,6 +19,7 @@ export default function EditSize(props:IProps) {
         cancel()
     }
     const updateSizeFunc = async (values: any) => {
+        console.log(`更新尺寸： values ${JSON.stringify(values)}`)
         if (!size) {
             message.error(`更新零件尺寸异常：当前未指定任何尺寸`);
             return
@@ -210,7 +211,13 @@ export default function EditSize(props:IProps) {
                             label="粗糙度值"
                             name="SurfaceRoughnessVal"
                         >
-                            <Input />
+                            <Tag color={size?.Color}>{size?.SurfaceRoughnessVal}</Tag>
+                        </Form.Item>
+                        <Form.Item
+                            label="数量"
+                            name="SurfaceRoughnessCount"
+                        >
+                            <InputNumber defaultValue={size?.SurfaceRoughnessCount}/>
                         </Form.Item>
                         <Form.Item>
                             <Space size={"large"} >
@@ -253,8 +260,8 @@ export default function EditSize(props:IProps) {
                         </Form.Item>
                        
                         <Form.Item
-                            label="未注倒角"
-                            name="OtherRequirements"
+                            label="数量"
+                            name="UnDeclaredChamferCount"
                         >
                             <InputNumber />
                         </Form.Item>

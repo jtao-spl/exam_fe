@@ -63,9 +63,9 @@ export default function Standard(props: IPropsInput) {
 
         const sizeList = data.map((size: ISize) => {
             size.Color = size?.FirstType === 0 ? 'blue' : size?.FirstType === 1 ? 'red' : size?.FirstType === 2 ? 'green' : 'grey';
-            if(size.FirstType === 3){
-                size.OtherRequirements = '***';
-            }
+            // if(size.FirstType === 3){
+            //     size.UnDeclaredChamferCount = '***';
+            // }
             return size
         })
         console.log(`examRes.data.data:${JSON.stringify(examRes.data.data)}, sizeList: ${JSON.stringify(sizeList)}`)

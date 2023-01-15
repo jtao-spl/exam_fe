@@ -48,6 +48,7 @@ export default function ComponentList() {
         loading={loading}
         dataSource={componentList}
         rowKey={'Id'}
+        scroll={{ y: 400 }}
         pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}
         onChange={onChange}
       >
@@ -63,14 +64,14 @@ export default function ComponentList() {
         <Table.Column title={'操作'} render={(component: IComponent) => (<Space>
           <Button type="primary"
             disabled={component.Status ===4}
-            onClick={() => navigate(`/component/${component.Id}`)}
+            onClick={() => navigate(`/teacher/component/${component.Id}`)}
           >编辑</Button>
           <Button type="primary"
             disabled={component.Status !==4}
-            onClick={() => navigate(`/component/${component.Id}`)}
+            onClick={() => navigate(`/teacher/component/${component.Id}`)}
           >查看详情</Button>
           <Button type="primary" disabled={component.Status !== 4}
-            onClick={() => { navigate('/exam/create', {state: {id: component.Id}}) }}
+            onClick={() => { navigate('/teacher/exam/create', {state: {id: component.Id}}) }}
           >新建考核</Button>
           <DeleteComponentFC ComponentId={component.Id} onDelete={onChange} />
         </Space>

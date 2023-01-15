@@ -79,7 +79,7 @@ export default function AddExamFC() {
             title: '项目配分',
             component: <StandardV2
                 ExamId={examId}
-                callback={() => navigate('/exam')}
+                callback={() => navigate('/teacher/exam')}
             />
         }
     ]
@@ -167,7 +167,7 @@ function ExamBasicInfo(props: IProps) {
                                 )
                             }
                         </Select>
-                        <Button type='primary' onClick={()=>navigate('/exam/target/create')} >新建</Button>
+                        <Button type='primary' onClick={()=>navigate('/teacher/exam/target/create')} >新建</Button>
                     </Space>
                 </Form.Item>
                 <Form.Item

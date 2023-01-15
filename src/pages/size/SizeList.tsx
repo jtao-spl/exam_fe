@@ -22,7 +22,7 @@ export interface ISize {
     GeoToleranceVal?: string,
     SurfaceRoughnessType?: string,
     SurfaceRoughnessVal?: string,
-    OtherRequirements?: string,
+    SurfaceRoughnessCount?: number,
     UnDeclaredChamferCount?: number,
     UnDeclaredChamferTotalVal?: number
     Deleted: boolean
@@ -31,6 +31,12 @@ export interface ISize {
 interface DataType extends ISize {
     key: React.Key,
 }
+// export interface ISizeWithExtAttr extends ISize{
+//     count: number
+// }
+// interface DataTypeExt extends ISizeWithExtAttr{
+//     key: React.Key
+// }
 
 export function generateSizeTableColumns() {
     const columns: TableColumnsType<DataType> = [
@@ -72,7 +78,7 @@ export function generateSizeTableColumns() {
                     return (<Tag className='gdt'>{record.GeoToleranceType}</Tag>)
                 }
                 if (record.FirstType === 2) {
-                    return (<Tag>Ra</Tag>)
+                    return (<Tag>Ra{record.SurfaceRoughnessVal}</Tag>)
                 }
                 if (record.FirstType === 3) {
                     return (<Tag>-</Tag>)
@@ -80,7 +86,7 @@ export function generateSizeTableColumns() {
             }
         },
         {
-            title: "基准值", key: 'baseValue', render: (_: any, record: ISize) => {
+            title: "基准值/数量", key: 'baseValue', render: (_: any, record: ISize) => {
                 if (record.FirstType === 0) {
                     return <Tag>{record.BaseSize}</Tag>
                 }
@@ -88,10 +94,10 @@ export function generateSizeTableColumns() {
                     return <Tag >{record.GeoToleranceVal}</Tag>
                 }
                 if (record.FirstType === 2) {
-                    return <Tag >{record.SurfaceRoughnessVal}</Tag>
+                    return <Tag >{record.SurfaceRoughnessCount}处</Tag>
                 }
                 if (record.FirstType === 3) {
-                    return <Tag >{record.UnDeclaredChamferCount || record.OtherRequirements}</Tag>
+                    return <Tag >{record.UnDeclaredChamferCount}处</Tag>
                 }
             },
         },
@@ -164,6 +170,163 @@ export function generateSizeTableColumns() {
     ]
     return columns;
 }
+
+/**
+ * 数据聚合展示的表格，表面粗糙度和未注倒角 按数量进行算分
+ * @returns 
+ */
+// export function generateAggreatedSizeTableColumns() {
+//     const columns: TableColumnsType<DataTypeExt> = [
+//         { title: "零件ID", key: 'ComponentId', dataIndex: 'ComponentId' },
+//         { title: "尺寸ID", key: 'SizeId', dataIndex: 'Id' },
+//         {
+//             title: "项目", key: "FirstType", render: (_: any, size: ISizeWithExtAttr) => {
+//                 if (size.FirstType === 0) {
+//                     return <Tag color={size.Color}>零件尺寸检验</Tag>
+//                 }
+//                 if (size.FirstType === 1) {
+//                     return <Tag color={size.Color}>形位公差</Tag>
+//                 }
+//                 if (size.FirstType === 2) {
+//                     return <Tag color={size.Color}>表面粗糙度</Tag>
+//                 }
+//                 if (size.FirstType === 3) {
+//                     return <Tag color={size.Color}>未注倒角</Tag>
+//                 }
+//             }
+//         },
+//         {
+//             title: '类型', key: 'SubType', render: (_: any, record: ISizeWithExtAttr) => {
+//                 if (record.FirstType === 0) {
+//                     if (record.SecondType === 0) {
+//                         return (<Tag>L</Tag>)
+//                     }
+//                     if (record.SecondType && record.SecondType === 1) {
+//                         return (<Tag>D</Tag>)
+//                     }
+//                     if (record.SecondType && record.SecondType === 2) {
+//                         return (<Tag>R</Tag>)
+//                     }
+//                     if (record.SecondType && record.SecondType === 3) {
+//                         return (<Tag>∠</Tag>)
+//                     }
+//                 }
+//                 if (record.FirstType === 1) {
+//                     return (<Tag className='gdt'>{record.GeoToleranceType}</Tag>)
+//                 }
+//                 if (record.FirstType === 2) {
+//                     return (<Tag>Ra{record.SurfaceRoughnessVal}</Tag>)
+//                 }
+//                 if (record.FirstType === 3) {
+//                     return (<Tag>-</Tag>)
+//                 }
+//             }
+//         },
+//         {
+//             title: "基准值", key: 'baseValue', render: (_: any, record: ISizeWithExtAttr) => {
+//                 if (record.FirstType === 0) {
+//                     return <Tag>{record.BaseSize}</Tag>
+//                 }
+//                 if (record.FirstType === 1) {
+//                     return <Tag >{record.GeoToleranceVal}</Tag>
+//                 }
+//                 if (record.FirstType === 2) {
+//                     return <Tag >{record.count}处</Tag>
+//                 }
+//                 if (record.FirstType === 3) {
+//                     return <Tag >{record.UnDeclaredChamferCount}处</Tag>
+//                 }
+//             },
+//         },
+//         {
+//             title: "上偏差",
+//             key: 'upDelta',
+//             render: (_: any, record: ISizeWithExtAttr) => {
+//                 if (record.FirstType === 0) {
+//                     return <Tag >{record.UpSize}</Tag>
+//                 }
+//                 if (record.FirstType === 1) {
+//                     return <Tag>-</Tag>
+//                 }
+//                 if (record.FirstType === 2) {
+//                     return (<Tag>-</Tag>)
+//                 }
+//             }
+//         },
+//         {
+//             title: "下偏差",
+//             key: 'bottomDelta',
+//             render: (_: any, record: ISizeWithExtAttr) => {
+//                 if (record.FirstType === 0) {
+//                     return <Tag>{record.BottomSize}</Tag>
+//                 }
+//                 if (record.FirstType === 1) {
+//                     return <Tag>-</Tag>
+//                 }
+//                 if (record.FirstType === 2) {
+//                     return (<Tag>-</Tag>)
+//                 }
+//             }
+//         },
+//         {
+//             title: "上极限尺寸",
+//             key: 'UpSize',
+//             render: (_: any, record: ISizeWithExtAttr) => {
+//                 if (record.FirstType === 0) {
+//                     if (record.BaseSize && record.UpSize) {
+//                         return <Tag>{Number(record.BaseSize) + Number(record.UpSize)}</Tag>
+//                     }
+//                     return <Tag>{"NaN"}</Tag>
+//                 }
+//                 if (record.FirstType === 1) {
+//                     return <Tag>-</Tag>
+//                 }
+//                 if (record.FirstType === 2) {
+//                     return (<Tag>-</Tag>)
+//                 }
+//             }
+//         },
+//         {
+//             title: "下极限尺寸",
+//             key: 'bottomSize',
+//             render: (_: any, record: ISizeWithExtAttr) => {
+//                 if (record.FirstType === 0) {
+//                     if (record.BaseSize && record.BottomSize) {
+//                         return <Tag>{Number(record.BaseSize) + Number(record.BottomSize)}</Tag>
+//                     }
+//                     return <Tag>{"NaN"}</Tag>
+//                 }
+//                 if (record.FirstType === 1) {
+//                     return <Tag>-</Tag>
+//                 }
+//                 if (record.FirstType === 2) {
+//                     return (<Tag>-</Tag>)
+//                 }
+//             }
+//         }
+//     ]
+//     return columns;
+// }
+// /**
+//  * 将尺寸列表中的表面粗糙度按值进行数量的聚合
+//  * @param sizes 
+//  * @returns 
+//  */
+// export function aggregateSizes(sizes:ISize[]):ISizeWithExtAttr[]{
+//     const surf = sizes.filter((size:ISize)=>size.FirstType === 2);
+//     const other = sizes.filter((size:ISize)=>size.FirstType !== 2);
+//     const surfSize = surf.map((size:ISize)=>size.SurfaceRoughnessVal?size.SurfaceRoughnessVal: '')
+//     const uniqSize = Array.from(new Set(surfSize));
+//     let surfAgg:ISizeWithExtAttr[] = []
+//     uniqSize.forEach((val:string)=>{
+//         const current = surf.filter((size:ISize)=>size.SurfaceRoughnessVal === val);
+//         if(current.length > 0){
+//             return surfAgg.push({...current[0], count:current.length})
+//         }
+//     })
+//     const otherExt = other.map((size:ISize)=>({...size, count: 1}));
+//     return [...surfAgg, ...otherExt];
+// }
 
 export default function SizeList() {
     const [sizeList, setSizeList] = useState<ISize[]>([]);
@@ -246,7 +409,7 @@ export default function SizeList() {
                         <Button type='primary'
                             onClick={() => { displayUpdateSizeModal(size) }}
                         >编辑</Button>
-                        <DeleteSize size={size} refresh={onChange} />
+                        <DeleteSize size={size} refresh={onChange} isAggSizeDeletable={true}/>
                     </Space>
                 )
             }

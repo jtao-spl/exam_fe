@@ -5,10 +5,10 @@ import { ISize } from './SizeList'
 interface IProps {
   size?: ISize
   refresh: (id: number) => void
-
+  isAggSizeDeletable: boolean
 }
 export default function DeleteSize(props: IProps) {
-  const { size, refresh } = props;
+  const { size, refresh, isAggSizeDeletable } = props;
   const confirmDeleteSize = async () => {
     if (!size?.Id) {
       message.error(`删除失败，无法确定删除的尺寸id`);
@@ -27,16 +27,22 @@ export default function DeleteSize(props: IProps) {
   const cancel = () => {
     message.info('取消删除操作');
   }
+  if (!size) {
+    return (<div></div>)
+  }
 
   return (
     <div>
-      <Popconfirm
-        title="删除后已存储的相关考核项数据会出现不一致，确认删除？"
-        onConfirm={confirmDeleteSize}
-        onCancel={cancel}
-      >
-        <Button type="primary" danger>删除</Button>
-      </Popconfirm>
+      {[2, 3].includes(size.FirstType) && !isAggSizeDeletable && <Button type="primary" danger disabled={true}>删除</Button>}
+      {(![2, 3].includes(size.FirstType) || isAggSizeDeletable) &&
+        <Popconfirm
+          title="删除后已存储的相关考核项数据会出现不一致，确认删除？"
+          onConfirm={confirmDeleteSize}
+          onCancel={cancel}
+        >
+          <Button type="primary" danger disabled={[2, 3].includes(size.FirstType) && !isAggSizeDeletable}>删除</Button>
+        </Popconfirm>
+      }
     </div>
   )
 

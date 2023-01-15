@@ -59,7 +59,7 @@ export default function PublishExam(props: IProps) {
             return;
         }
         message.info(`考核下发成功`);
-        callback()
+        callback();
     }
     return (
         <div>

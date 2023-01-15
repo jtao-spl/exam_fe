@@ -19,7 +19,7 @@ service.interceptors.request.use(
                 //当请求路径不是这两个的时候, 添加token请求头
                 // config.headers.Authorization = get('token');
                 const user_token = get('user_token');
-                if (user_token){
+                if (user_token) {
                     config.headers['Authorization'] = `Bearer ${get('user_token')}`;
                 }
             }
@@ -36,17 +36,24 @@ service.interceptors.response.use(
         NProgress.done();
         if (response.status === 200) {
             // console.log(`response in axios interceptor: ${JSON.stringify(response)}`);
-            const { code, msg, token, role } = response.data;
-            if (token){
+            const { code, msg, token, role, Id } = response.data;
+            if (token) {
                 set(`user_token`, token);
                 set(`role`, role);
+                set(`Id`, Id)
             }
             if (code === 6) {
                 message.warning(`${msg}`);
+                // setTimeout(() => {
+                //     window.location.href = '/login'
+                // }, 1000);
                 // window.location.href='/login'
             } else if (code === 400) {
                 clear();
                 // window.location.href='/login';
+                // setTimeout(() => {
+                //     window.location.href = '/login'
+                // }, 1000);
                 message.warning(`登录态已过期，请重新登录。`);
             }
             return response;

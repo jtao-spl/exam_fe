@@ -129,6 +129,7 @@ export interface ICriteria {
     GeoDelta?: number,
     GeoDeductScore?: number,
     SurfaceRoughnessVal?:string,
+    SurfaceRoughnessCount?:number,
     SurfaceRoughnessScore?: number,
     UnDeclaredChamferCount?: number,
     UnDeclaredChamferTotalVal?:number
@@ -199,6 +200,7 @@ export function generateCriteriaColumns() {
 export default function CreteriaV2(props: IProps) {
     const { ExamComponent, ExamId,callback } = props;
     const [surfaceRoughness, setSurfaceRoughness] = useState<IEntityRequired[]>([]);
+    const [unDeclaredChamferCount, setUnDeclaredChamferCount] = useState(0);
     const [form] = Form.useForm();
     const genFields = (items: IEntityRequired[], targetSymbols: string[]) => {
         return items.map((item) => {
@@ -249,12 +251,17 @@ export default function CreteriaV2(props: IProps) {
         const geo = data.filter((item: IEntityRequired) =>
             GelToleranceSymbol.includes(item.type) && item.required
         )
+        const other = data.filter((item: IEntityRequired)=>item.type==='other' && item.required)
+        if(other.length > 0){
+            setUnDeclaredChamferCount(other[0].count)
+        }
         const surfaceRoughness = data.filter((item: IEntityRequired) => item.type === "Ra" && item.required);
         setSurfaceRoughness(surfaceRoughness);
         form.setFieldsValue({
             SizedElement: genFields(sized, SizedElementSymbol),
             GeoElement: genFields(geo, GelToleranceSymbol),
-            surfaceRoughnessElement: genSurfFields(surfaceRoughness)
+            surfaceRoughnessElement: genSurfFields(surfaceRoughness),
+            UnDeclaredChamferCount: other.length > 0? other[0].count: 0
         });
         // //踩坑记录：本来已经await请求拿到结果了，
         // //但是在设置form数据的时候由于先调了一遍setState  
@@ -298,7 +305,7 @@ export default function CreteriaV2(props: IProps) {
                 <SizedInput SizedEntity={SizedEntity} />
                 <GeoToleranceInput GeoToleranceEntity={GeoToleranceEntity} />
                 <SurfaceRoughnessInput surfaceRoughness={surfaceRoughness}/>
-                <OtherInput />
+                <OtherInput count={unDeclaredChamferCount}/>
                 <Form.Item>
                     <Button type="primary" htmlType="submit">
                         保存

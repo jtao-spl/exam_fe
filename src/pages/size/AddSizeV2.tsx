@@ -231,7 +231,19 @@ export default function AddSizeV2(props: IProps) {
                                     },
                                 ]}
                             >
-                                <Input />
+                                <InputNumber />
+                            </Form.Item>
+                            <Form.Item
+                                label="数量"
+                                name="SurfaceRoughnessCount"
+                                rules={[
+                                    {
+                                        required: true,
+                                        message: '请输入数量',
+                                    },
+                                ]}
+                            >
+                                <InputNumber defaultValue={1} step={1}/>
                             </Form.Item>
                         </>
                     }
@@ -240,7 +252,7 @@ export default function AddSizeV2(props: IProps) {
                         <>
                             <Form.Item
                                 label="数量"
-                                name="OtherRequirements"
+                                name="UnDeclaredChamferCount"
                                 rules={[
                                     {
                                         required: true,

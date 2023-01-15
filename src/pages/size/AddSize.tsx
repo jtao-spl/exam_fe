@@ -1,4 +1,4 @@
-import { Modal, Select, Form, Tag, Input, Space, Button, Popover, message } from 'antd'
+import { Modal, Select, Form, Tag, Input, Space, Button, Popover, message, InputNumber } from 'antd'
 import React, { Component, useState } from 'react';
 import { IComponent } from '../component/ComponentList';
 
@@ -130,7 +130,7 @@ export default function AddSize(props: IProps) {
                                 <Option value={0}><Tag color="blue">零件尺寸检验</Tag></Option>
                                 <Option value={1}><Tag color="red">形位公差</Tag></Option>
                                 <Option value={2}><Tag color="green">表面粗糙度</Tag></Option>
-                                <Option value={3}><Tag color="grey">其他</Tag></Option>
+                                <Option value={3}><Tag color="grey">未注倒角</Tag></Option>
                             </Select>
 
                         </Form.Item>
@@ -255,8 +255,8 @@ export default function AddSize(props: IProps) {
                         showAddOtherReqirementInput &&
                         <>
                             <Form.Item
-                                label="其他要求"
-                                name="OtherRequirements"
+                                label="未注倒角"
+                                name="UnDeclaredChamferCount"
                                 rules={[
                                     {
                                         required: true,
@@ -264,7 +264,7 @@ export default function AddSize(props: IProps) {
                                     },
                                 ]}
                             >
-                                <Input placeholder='每次请只输入一条要求' />
+                                <InputNumber placeholder='请输入数量' />
                             </Form.Item>
                         </>
                     }
