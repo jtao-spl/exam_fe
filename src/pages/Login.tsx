@@ -11,7 +11,7 @@ function Login() {
     const onFinish = async (values: any) => {
         const { Id, password } = values;
         const res = await login(Id, password);
-        const { code, msg, status, role } = res.data;
+        const { code, msg, status } = res.data;
         console.log(`response of login:${JSON.stringify(res.data)}`)
         if (code !== 0) {
             message.error(`${msg}`);
@@ -22,15 +22,8 @@ function Login() {
             setId(Id);
         }
         else {
-            if (role === 1) {
-                navigate('/admin/teacher/list');
-            }
-            if (role === 2) {
-                navigate('/teacher/component/list');
-            }
-            if (role === 3) {
-                navigate('/student/exams')
-            }
+            const page = getHomePage()
+            navigate(page)
         }
     };
 
@@ -91,15 +84,8 @@ function ChangePasswordModal(props: IProps) {
             cancelText='暂不修改'
             onOk={() => navigate('/auth/modify', { state: Id })}
             onCancel={() => {
-                const role = get('role');
-                console.log(`role: ${role}`)
-                if (role === '2') {
-                    navigate('/teacher/component/list')
-                } else if (role === '1') {
-                    navigate('/admin/teacher/list')
-                } else {
-                    navigate('/student/exams')
-                }
+                const page = getHomePage()
+                navigate(page)
             }}
         />
     )
@@ -121,5 +107,20 @@ export const ShowLoginUser = () => {
         return (<Space style={{ float: "right" }}>
             <Tag onClick={() => navigate('/login')}>请登录</Tag>
         </Space>)
+    }
+}
+
+/**
+ * 根据角色判断返回的主页
+ * @returns 
+ */
+export const getHomePage = () => {
+    const role = get('role');
+    if (role === '2') {
+        return '/teacher/component/list'
+    } else if (role === '1') {
+        return '/admin/teacher/list'
+    } else {
+        return '/student/exams'
     }
 }

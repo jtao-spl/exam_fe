@@ -1,3 +1,4 @@
+import { ISizePrecisionData } from '../pages/exam/EditPrecision';
 import { ISize } from '../pages/size/SizeList';
 import request from '../utils/request';
 

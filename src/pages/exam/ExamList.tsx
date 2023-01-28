@@ -8,6 +8,7 @@ import { getSizeCountByComponentId, getSizeList } from '../../api/size'
 import ShowSizeList from '../component/ShowSizeList'
 import { ISize } from '../size/SizeList'
 import { ExamStatus2Desc } from '../student/Exam'
+import { ISizePrecisionData } from './EditPrecision'
 import PublishExam from './PublishExam'
 // import Criteria, { GelToleranceSymbol, IEntityRequired, SizedElementSymbol } from './Criteria'
 // import Standard from './Standard'
@@ -26,7 +27,8 @@ export interface IExam {
     ExamTeacher: string,
     CriteriaId: number,
     Status: number, //0 初始状态 1 已下发 2 已收卷
-    Data?: { scores: ScoreItem[] }
+    Class?: string, //发放的班级
+    Data?: { scores?: ScoreItem[], precision?: ISizePrecisionData[] },
 }
 
 interface IProps {
@@ -41,7 +43,7 @@ interface IProps {
 
 export default function ExamList() {
 
-    const [exams, setExams] = useState([]);
+    const [exams, setExams] = useState<IExam[]>([]);
     const [total, setTotal] = useState(0);
     const [pageSize, setPageSize] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -104,6 +106,9 @@ export function generateExamTableColomns() {
                     case 3:
                         level = "最粗v"
                         break;
+                    case 4:
+                        level = "自定义"
+                        break;
                     default:
                         level = "未知"
                         break;
@@ -116,6 +121,9 @@ export function generateExamTableColomns() {
 
                 return <Tag>{ExamStatus2Desc.get(exam.Status)}</Tag>
             }
+        },
+        {
+            title:'发放班级', key: 'Class', dataIndex: 'Class'
         }
     ]
     return columns;
@@ -156,13 +164,34 @@ export function getPricisionLevelIndexBySize(size: number) {
     return idx;
 }
 
+/**
+ * 根据线性尺寸公差等级来重计算尺寸的上下偏差
+ * @param exam 考核entity
+ * @param sizes 尺寸列表
+ * @param sizeScopeToDelta 标准尺寸范围&公差等级对照表
+ * @returns 
+ */
 export function getCalculatedSizeForExam(exam: IExam, sizes: ISize[], sizeScopeToDelta: number[][]) {
     const { SizePrecisionLevel } = exam;
+    if(exam.SizePrecisionLevel === 4 && !exam.Data?.precision){
+        message.error(`系统数据异常，自定义的尺寸偏差数据丢失，请重新创建考核。`);
+        return [];
+    }
 
     const newSize = sizes.map(size => {
         //非尺寸数据直接返回
         if (size.FirstType !== 0 || !size.BaseSize) {
             return size
+        }
+        //考核存在自定义偏差数据，处理后直接返回
+        if(exam.SizePrecisionLevel === 4){
+            let temp={...size};
+            const precisionData = exam.Data?.precision?.filter((item:ISizePrecisionData)=>item.Id ===size.Id);
+            if(precisionData && precisionData?.length > 0){
+                temp.UpSize = precisionData[0].UpSize;
+                temp.BottomSize = precisionData[0].BottomSize;
+            }
+            return temp;
         }
         //上下delta有一个不为0 直接返回
         if ((size.UpSize && size.UpSize * 1000 > 0) || (size.BottomSize && size.BottomSize * 1000 > 0)) {

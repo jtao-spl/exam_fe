@@ -191,8 +191,8 @@ function ExamCard(props: IProps) {
       if (!criteria[0].SizeDelta || !criteria[0].SizeDeductScore) return;
 
       if (!exam.Data) return;
-      const scoreItem = exam.Data.scores.filter((item: ScoreItem) => item.SizeId === size.Id);
-      if (scoreItem.length === 0) return;
+      const scoreItem = exam.Data.scores?.filter((item: ScoreItem) => item.SizeId === size.Id);
+      if (! scoreItem || scoreItem.length === 0) return;
       if (!size.BottomSize || !size.UpSize || !size.BaseSize) return;
       const BottomBound = size.BottomSize * 1 + size.BaseSize * 1;
       const UpBound = size.UpSize * 1 + size.BaseSize * 1
@@ -223,8 +223,8 @@ function ExamCard(props: IProps) {
         return;
       }
       if (!exam.Data) return;
-      const scoreItem = exam.Data.scores.filter((item: ScoreItem) => item.SizeId === size.Id);
-      if (scoreItem.length === 0) return;
+      const scoreItem = exam.Data.scores?.filter((item: ScoreItem) => item.SizeId === size.Id);
+      if (! scoreItem || scoreItem.length === 0) return;
 
       if (value <= ScoreVal) {
         //满分
@@ -436,7 +436,7 @@ const generateSizeTable = (sizes: any, exam: IExam) => {
       key: 'score',
       render: (_: any, size: ISize) => {
         const sizeId = size.Id;
-        const scoreItem = exam.Data?.scores.filter(item => item.SizeId === sizeId);
+        const scoreItem = exam.Data?.scores?.filter(item => item.SizeId === sizeId);
         if (scoreItem && scoreItem.length > 0) {
           return scoreItem[0].Score;
         }

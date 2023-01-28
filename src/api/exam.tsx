@@ -1,5 +1,6 @@
 import { IExam } from '../pages/exam/ExamList';
 import request from '../utils/request';
+import { ISizePrecisionData } from '../pages/exam/EditPrecision';
 
 export const saveExam = (exam: IExam) => {
     return request({
@@ -87,5 +88,16 @@ export const getExamTarget = () => {
     return request({
         url: `/exam/target`,
         method: 'get'
+    })
+}
+
+/**
+ * 存储考核自定义的尺寸公差
+ */
+export const batchUpdateSizePrecision = (examId: number, data: ISizePrecisionData) => {
+    return request({
+        url: `/exam/${examId}/size/precision`,
+        method: `patch`,
+        data: { data: data }
     })
 }

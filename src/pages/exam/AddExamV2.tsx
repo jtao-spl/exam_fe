@@ -3,6 +3,8 @@ import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getExamTarget, saveExam } from '../../api/exam';
 import CriteriaV2 from './CriteriaV2';
+import EditPrecision from './EditPrecision';
+import { IExam } from './ExamList';
 import StandardV2 from './StandardV2';
 
 
@@ -33,7 +35,7 @@ import StandardV2 from './StandardV2';
 
 
 const format = "HH:mm";
-export const SizePrecisionLevel = ['精密f', '中等m', '粗糙c', '最粗v']
+export const SizePrecisionLevel = ['精密f', '中等m', '粗糙c', '最粗v', '自定义']
 
 
 export default function AddExamFC() {
@@ -43,6 +45,7 @@ export default function AddExamFC() {
 
     const [current, setCurrent] = useState(0);
     const [examId, setExamId] = useState(0);
+    const [level, setLevel] = useState(-1);
     const [examTargets, setExamTargets] = useState<string[]>([]);
 
     const fetchTarget = async () => {
@@ -65,8 +68,17 @@ export default function AddExamFC() {
             component: <ExamBasicInfo
                 componentId={location.state.id}
                 examTargets={examTargets}
-                callback={(id: number) => { setExamId(id); setCurrent(current + 1) }} />
-
+                callback={(examId: number, level: number) => { 
+                    setExamId(examId); 
+                    setLevel(level);
+                    setCurrent(current + 1) }} />
+        },
+        {
+            title: '线性尺寸公差编辑',
+            component: <EditPrecision
+                examId={examId}
+                level={level}
+                callback={() => setCurrent(current + 1)} />
         },
         {
             title: '评测说明',
@@ -79,7 +91,7 @@ export default function AddExamFC() {
             title: '项目配分',
             component: <StandardV2
                 ExamId={examId}
-                callback={() => navigate('/teacher/exam')}
+                callback={() => navigate('/teacher/exam/list')}
             />
         }
     ]
@@ -94,7 +106,7 @@ export default function AddExamFC() {
 interface IProps {
     componentId: number,
     examTargets: string[]
-    callback: (id: number) => void
+    callback: (examId: number, level: number) => void
 }
 function ExamBasicInfo(props: IProps) {
     const { componentId, examTargets, callback } = props;
@@ -108,7 +120,7 @@ function ExamBasicInfo(props: IProps) {
             return
         }
         message.success(`新建考核成功`);
-        callback(data.Id)
+        callback(data.Id, values.SizePrecisionLevel)
     }
     return (
         <div>
@@ -157,6 +169,10 @@ function ExamBasicInfo(props: IProps) {
                     label="考核项目"
                     name="ExamTarget"
                     initialValue={"钳工"}
+                    rules={[{
+                        required: true,
+                        message: '请选择'
+                    }]}
                 >
                     <Space>
                         <Select style={{ width: 240 }}
@@ -167,7 +183,7 @@ function ExamBasicInfo(props: IProps) {
                                 )
                             }
                         </Select>
-                        <Button type='primary' onClick={()=>navigate('/teacher/exam/target/create')} >新建</Button>
+                        <Button type='primary' onClick={() => navigate('/teacher/exam/target/create')} >新建</Button>
                     </Space>
                 </Form.Item>
                 <Form.Item
@@ -178,6 +194,7 @@ function ExamBasicInfo(props: IProps) {
                 >
                     <Tag>{componentId}</Tag>
                 </Form.Item>
+                注：线性尺寸公差数据支持手动输入，若要手动输入，请选择下拉框中的【自定义】。
                 <Form.Item
                     label="线性尺寸公差等级"
                     required={true}

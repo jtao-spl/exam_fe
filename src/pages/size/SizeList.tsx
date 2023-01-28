@@ -136,7 +136,7 @@ export function generateSizeTableColumns() {
             key: 'UpSize',
             render: (_: any, record: ISize) => {
                 if (record.FirstType === 0) {
-                    if (record.BaseSize && record.UpSize) {
+                    if (record.BaseSize !== undefined && record.UpSize !== undefined) {
                         return <Tag>{Number(record.BaseSize) + Number(record.UpSize)}</Tag>
                     }
                     return <Tag>{"NaN"}</Tag>
@@ -154,7 +154,7 @@ export function generateSizeTableColumns() {
             key: 'bottomSize',
             render: (_: any, record: ISize) => {
                 if (record.FirstType === 0) {
-                    if (record.BaseSize && record.BottomSize) {
+                    if (record.BaseSize !== undefined && record.BottomSize !== undefined) {
                         return <Tag>{Number(record.BaseSize) + Number(record.BottomSize)}</Tag>
                     }
                     return <Tag>{"NaN"}</Tag>
@@ -409,7 +409,7 @@ export default function SizeList() {
                         <Button type='primary'
                             onClick={() => { displayUpdateSizeModal(size) }}
                         >编辑</Button>
-                        <DeleteSize size={size} refresh={onChange} isAggSizeDeletable={true}/>
+                        <DeleteSize size={size} refresh={onChange} isAggSizeDeletable={true} />
                     </Space>
                 )
             }
@@ -438,7 +438,7 @@ export default function SizeList() {
                 cancel={hideUpdateSizeModal}
             />
             {sizeList && generateSizeTable(sizeList)}
-            
+
         </div>
     )
 
