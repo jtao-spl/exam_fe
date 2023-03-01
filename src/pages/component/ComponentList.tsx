@@ -73,6 +73,9 @@ export default function ComponentList() {
           <Button type="primary" disabled={component.Status !== 4}
             onClick={() => { navigate('/teacher/exam/create', {state: {id: component.Id}}) }}
           >新建考核</Button>
+          <Button type="primary" disabled={component.Status !== 4}
+          onClick={() => { navigate('/teacher/exam/demo', {state: {id: component.Id}}) }}
+           >教师展示</Button>
           <DeleteComponentFC ComponentId={component.Id} onDelete={onChange} />
         </Space>
 

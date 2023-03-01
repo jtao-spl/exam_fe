@@ -18,6 +18,7 @@ export default function StudentUpload() {
                     // 利用时间戳+索引，生成唯一的ID，也可以直接使用index
                     const newItem = {
                         Grade: item['年级'],
+                        Major: item['专业'],
                         Class: item['班级'],
                         Name: String(item['姓名']),
                         StudentId: item['学号']
@@ -39,17 +40,12 @@ export default function StudentUpload() {
         }
         console.log(`学生信息：${JSON.stringify(students)}`)
         const res = await  saveStudents(students);
-        const {code, updated, msg} = res.data;
+        const {code, msg} = res.data;
         if(code !== 0){
             message.error(`保存学生信息失败，系统错误：${msg}`);
             return
         }
         message.info(`保存学生信息成功`);
-        if(updated.length > 0){
-            setTimeout(() => {
-                message.info(`检测到学生信息存在变更的记录：${JSON.stringify(updated)}`);
-            }, 200);
-        }
 
     }
 

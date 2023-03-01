@@ -14,12 +14,14 @@ const Exam = lazy(() => import('../pages/student/Exam'));
 const Exams = lazy(() => import('../pages/student/Exams'));
 const ExamList = lazy(() => import('../pages/exam/ExamList'));
 const AddExamV2 = lazy(() => import('../pages/exam/AddExamV2'));
+const TeacherDemo = lazy(()=>import('../pages/teacher/TeacherDemo'));
 const EditComponentV2 = lazy(() => import('../pages/component/EditComponentV2'));
 const ComponentList = lazy(() => import('../pages/component/ComponentList'));
 const ScoreList = lazy(() => import('../pages/exam/score/ScoreList'));
 const TeacherList = lazy(() => import('../pages/admin/TeacherList'));
 const AddExamTarget = lazy(() => import('../pages/exam/AddExamTarget'));
 const StudentUpload = lazy(() => import('../pages/upload/StudentUpload'));
+const StudentList = lazy(()=>import('../pages/admin/StudentList'));
 const PasswordReset = lazy(() => import('../pages/admin/PasswordReset'));
 export default function View() {
   return (
@@ -42,17 +44,20 @@ export default function View() {
               <Route path='exam' key='examlist' >
                 <Route path='list' element={<ExamList />} />
                 <Route path='create' element={<AddExamV2 />} />
+                <Route path='demo' element={<TeacherDemo />} />
                 <Route path=':id/scores' element={<ScoreList />} />
                 <Route path=':id/scores/:studentId/edit' element={<Exam role='teacher' />} />
                 <Route path='target/create' element={<AddExamTarget />} />
               </Route>
-              <Route path='student' key='man_stu'>
+              {/* <Route path='student' key='man_stu'>
                 <Route path='upload' key='ustu' element={<StudentUpload />}> </Route>
-              </Route>
+              </Route> */}
             </Route>
             <Route path='/admin' key='admin'>
               <Route path='teacher/list' key='teachers' element={<TeacherList />} />
               <Route path='password/reset' key='pwd reset' element={<PasswordReset />} />
+              <Route path='student/upload' key='ustu' element={<StudentUpload />}> </Route>
+              <Route path='student/list' key='stuList' element={<StudentList />}> </Route>
             </Route>
             <Route path='/auth/modify' key='mod pass' element={<ChangePassword />} />
 

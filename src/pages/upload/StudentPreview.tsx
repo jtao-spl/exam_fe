@@ -2,6 +2,7 @@ import { Button, Space, Table, TableColumnsType } from 'antd'
 import React from 'react'
 export interface IStudentInfo {
     Grade: number,
+    Major: string,
     Class: number,
     Name: string,
     StudentId: number
@@ -13,6 +14,7 @@ interface DataType extends IStudentInfo{
 const generateStudentTableColumn = ()=>{
     const columns: TableColumnsType<IStudentInfo> = [
         { title: "年级", key: 'Grade', dataIndex: 'Grade' },
+        { title: "专业", key: 'Major', dataIndex: 'Major' },
         { title: "班级", key: 'Class', dataIndex: 'Class' },
         { title: "姓名", key: 'Name', dataIndex: 'Name' },
         { title: "学号", key: 'StudentId', dataIndex: 'StudentId' },

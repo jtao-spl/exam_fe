@@ -10,6 +10,8 @@ const Page404 = lazy(() => import('../pages/Page404'));
 const ExamList = lazy(() => import('../pages/exam/ExamList'));
 const Exams = lazy(() => import('../pages/student/Exams'));
 const TeacherList = lazy(() => import('../pages/admin/TeacherList'));
+const StudentUpload = lazy(()=>import('../pages/upload/StudentUpload'));
+const StudentList = lazy(()=>import('../pages/admin/StudentList'));
 export interface IRouter {
     title: React.ReactNode,
     path: string,
@@ -47,21 +49,6 @@ export const teacherRouters: IRouter[] = [
                 title: <Link to='/teacher/exam/list'>考核列表</Link>,
                 path: '/teacher/exam/list',
                 key: 'exams',
-                icon: <PartitionOutlined />,
-                element: <ExamList />
-            }
-        ]
-    },
-    {
-        title: '学生管理',
-        path: '/teacher/student',
-        key: 'student',
-        icon: <InfoCircleOutlined />,
-        children: [
-            {
-                title: <Link to='/teacher/student/upload'>信息上传</Link>,
-                path: '/teacher/student/upload',
-                key: 'stuUpload',
                 icon: <PartitionOutlined />,
                 element: <ExamList />
             }
@@ -178,6 +165,28 @@ export const adminRoutes: IRouter[] = [
                 icon: <PartitionOutlined />,
                 element: <TeacherList />
             },
+        ]
+    },
+    {
+        title: '学生管理',
+        path: '/admin/student',
+        key: 'student',
+        icon: <InfoCircleOutlined />,
+        children: [
+            {
+                title: <Link to='/admin/student/list'>学生列表</Link>,
+                path: '/admin/student/list',
+                key: 'stuList',
+                icon: <PartitionOutlined />,
+                element: <StudentList />
+            },
+            {
+                title: <Link to='/admin/student/upload'>学生上传</Link>,
+                path: '/admin/student/upload',
+                key: 'stuUpload',
+                icon: <PartitionOutlined />,
+                element: <StudentUpload />
+            }
         ]
     },
     {

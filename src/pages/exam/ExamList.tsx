@@ -123,7 +123,7 @@ export function generateExamTableColomns() {
             }
         },
         {
-            title:'发放班级', key: 'Class', dataIndex: 'Class'
+            title: '发放班级', key: 'Class', dataIndex: 'Class'
         }
     ]
     return columns;
@@ -173,7 +173,7 @@ export function getPricisionLevelIndexBySize(size: number) {
  */
 export function getCalculatedSizeForExam(exam: IExam, sizes: ISize[], sizeScopeToDelta: number[][]) {
     const { SizePrecisionLevel } = exam;
-    if(exam.SizePrecisionLevel === 4 && !exam.Data?.precision){
+    if (exam.SizePrecisionLevel === 4 && !exam.Data?.precision) {
         message.error(`系统数据异常，自定义的尺寸偏差数据丢失，请重新创建考核。`);
         return [];
     }
@@ -184,10 +184,10 @@ export function getCalculatedSizeForExam(exam: IExam, sizes: ISize[], sizeScopeT
             return size
         }
         //考核存在自定义偏差数据，处理后直接返回
-        if(exam.SizePrecisionLevel === 4){
-            let temp={...size};
-            const precisionData = exam.Data?.precision?.filter((item:ISizePrecisionData)=>item.Id ===size.Id);
-            if(precisionData && precisionData?.length > 0){
+        if (exam.SizePrecisionLevel === 4) {
+            let temp = { ...size };
+            const precisionData = exam.Data?.precision?.filter((item: ISizePrecisionData) => item.Id === size.Id);
+            if (precisionData && precisionData?.length > 0) {
                 temp.UpSize = precisionData[0].UpSize;
                 temp.BottomSize = precisionData[0].BottomSize;
             }
@@ -265,6 +265,9 @@ function ExamTable(props: IProps) {
                         <Button type='primary' key={"viewSize"}
                             onClick={() => initSizeList(exam)}
                         >查看尺寸数据</Button>
+                        <Button type="primary" disabled={exam.Status !== 0}
+                            onClick={() => { navigate('/teacher/exam/demo', { state: { id: exam.Id } }) }}
+                        >教师展示</Button>
                         <Button disabled={exam.Status !== 0} type="primary" onClick={() => {
                             setCurrentExam(exam);
                             setShowPublishModal(true);
@@ -311,9 +314,9 @@ function ExamTable(props: IProps) {
                 columns={generateTableColumns()}
                 pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}
                 scroll={{ y: 400 }}
-                onChange={(pagenation:any)=>pageChangeCallback(pagenation.current)}
-                loading={loading} 
-                />}
+                onChange={(pagenation: any) => pageChangeCallback(pagenation.current)}
+                loading={loading}
+            />}
         </div>
     )
 

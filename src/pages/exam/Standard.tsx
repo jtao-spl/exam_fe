@@ -68,10 +68,8 @@ export default function Standard(props: IPropsInput) {
             // }
             return size
         })
-        console.log(`examRes.data.data:${JSON.stringify(examRes.data.data)}, sizeList: ${JSON.stringify(sizeList)}`)
         sizeList.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType });
         const newSizes = getCalculatedSizeForExam(exam, sizeList, sizeScopeToDelta);
-        console.log(`get new Sizes: ${JSON.stringify(newSizes)}`)
         form.resetFields(["table"]);
         form.setFieldsValue({
             table: newSizes

@@ -3,7 +3,7 @@ import request from '../utils/request';
 
 export const saveStudents = (students: IStudentInfo[]) => {
     return request({
-        url: '/student',
+        url: '/admin/students',
         method: 'post',
         data: { students: students }
     })
