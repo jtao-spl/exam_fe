@@ -1,14 +1,18 @@
 import { Button, message, Popconfirm, Space, Table, TableColumnsType, Tag } from 'antd'
 import React, { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 // import { Outlet, useNavigate } from 'react-router-dom'
 // import { getComponentCriteriaTypes } from '../../api/comp'
 import { getExamList, setExamStatusApi } from '../../api/exam'
 import { getSizeCountByComponentId, getSizeList } from '../../api/size'
 import ShowSizeList from '../component/ShowSizeList'
 import { ISize } from '../size/SizeList'
+import { ExamStatus2Desc } from '../student/Exam'
+import { ISizePrecisionData } from './EditPrecision'
+import PublishExam from './PublishExam'
 // import Criteria, { GelToleranceSymbol, IEntityRequired, SizedElementSymbol } from './Criteria'
 // import Standard from './Standard'
-interface ScoreItem {
+export interface ScoreItem {
     Score: number,
     SizeId: number
 }
@@ -23,7 +27,8 @@ export interface IExam {
     ExamTeacher: string,
     CriteriaId: number,
     Status: number, //0 初始状态 1 已下发 2 已收卷
-    Data?: { scores: ScoreItem[] }
+    Class?: string, //发放的班级
+    Data?: { scores?: ScoreItem[], precision?: ISizePrecisionData[] },
 }
 
 interface IProps {
@@ -31,13 +36,14 @@ interface IProps {
     total: number,
     pageSize: number,
     loading: boolean,
-    callback: ()=>void
+    callback: () => void,
+    pageChangeCallback: (page: number) => void
 }
 
 
 export default function ExamList() {
 
-    const [exams, setExams] = useState([]);
+    const [exams, setExams] = useState<IExam[]>([]);
     const [total, setTotal] = useState(0);
     const [pageSize, setPageSize] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -48,7 +54,6 @@ export default function ExamList() {
             message.error(`获取考核列表失败，系统错误：${msg}`);
             return;
         }
-        console.log(`get  exams: ${JSON.stringify(data)}`);
         setExams(data);
         setTotal(total);
         setPageSize(limit);
@@ -62,7 +67,14 @@ export default function ExamList() {
 
     return (
         <div>
-            <ExamTable exams={exams} total={total} pageSize={pageSize} loading={loading} callback={()=>getList()}/>
+            <ExamTable
+                exams={exams}
+                total={total}
+                pageSize={pageSize}
+                loading={loading}
+                callback={() => getList()}
+                pageChangeCallback={(page: number) => getList(page)}
+            />
         </div>
     )
 }
@@ -94,6 +106,9 @@ export function generateExamTableColomns() {
                     case 3:
                         level = "最粗v"
                         break;
+                    case 4:
+                        level = "自定义"
+                        break;
                     default:
                         level = "未知"
                         break;
@@ -101,19 +116,15 @@ export function generateExamTableColomns() {
                 return <Tag>{level}</Tag>
             }
         },
-        {title:'考核状态', key:'ExamStatus', render:(_: any, exam: IExam)=>{
-            let label:string;
-            if (exam.Status === 0){
-                label = `未发放`;
+        {
+            title: '考核状态', key: 'ExamStatus', render: (_: any, exam: IExam) => {
+
+                return <Tag>{ExamStatus2Desc.get(exam.Status)}</Tag>
             }
-            else if (exam.Status === 1){
-                label= `进行中`;
-            }
-            else {
-                label=`已结束`;
-            }
-            return <Tag>{label}</Tag>
-        }}
+        },
+        {
+            title: '发放班级', key: 'Class', dataIndex: 'Class'
+        }
     ]
     return columns;
 }
@@ -153,16 +164,37 @@ export function getPricisionLevelIndexBySize(size: number) {
     return idx;
 }
 
+/**
+ * 根据线性尺寸公差等级来重计算尺寸的上下偏差
+ * @param exam 考核entity
+ * @param sizes 尺寸列表
+ * @param sizeScopeToDelta 标准尺寸范围&公差等级对照表
+ * @returns 
+ */
 export function getCalculatedSizeForExam(exam: IExam, sizes: ISize[], sizeScopeToDelta: number[][]) {
     const { SizePrecisionLevel } = exam;
+    if (exam.SizePrecisionLevel === 4 && !exam.Data?.precision) {
+        message.error(`系统数据异常，自定义的尺寸偏差数据丢失，请重新创建考核。`);
+        return [];
+    }
 
     const newSize = sizes.map(size => {
         //非尺寸数据直接返回
         if (size.FirstType !== 0 || !size.BaseSize) {
             return size
         }
+        //考核存在自定义偏差数据，处理后直接返回
+        if (exam.SizePrecisionLevel === 4) {
+            let temp = { ...size };
+            const precisionData = exam.Data?.precision?.filter((item: ISizePrecisionData) => item.Id === size.Id);
+            if (precisionData && precisionData?.length > 0) {
+                temp.UpSize = precisionData[0].UpSize;
+                temp.BottomSize = precisionData[0].BottomSize;
+            }
+            return temp;
+        }
         //上下delta有一个不为0 直接返回
-        if (size.UpSize && size.UpSize * 1000 > 0 || (size.BottomSize && size.BottomSize * 1000 > 0)) {
+        if ((size.UpSize && size.UpSize * 1000 > 0) || (size.BottomSize && size.BottomSize * 1000 > 0)) {
             return size;
         }
         let temp = { ...size };
@@ -178,14 +210,13 @@ export function getCalculatedSizeForExam(exam: IExam, sizes: ISize[], sizeScopeT
 }
 
 function ExamTable(props: IProps) {
-    const { exams, total, pageSize, loading, callback } = props;
+    const { exams, total, pageSize, loading, callback, pageChangeCallback } = props;
     const [showSizeList, setShowSizeList] = useState(false);
     const [sizeList, setSizeList] = useState<ISize[]>([]);
-    // const [showCreterialModal, setShowCreterialModal] = useState(false);
-    // const [ExamComponent, setExamComponent] = useState(0);
-    // const [currentExamId, setCurrentExam] = useState(0);
-    // const [showStandardModal, setShowStandardModal] = useState(false);
+    const [showPublishModal, setShowPublishModal] = useState(false);
+    const [currentExam, setCurrentExam] = useState<IExam>();
 
+    const navigate = useNavigate()
 
     const initSizeList = async (exam: IExam, showList: boolean = true) => {
         const c = await getSizeCountByComponentId(exam.ExamComponent);
@@ -212,31 +243,6 @@ function ExamTable(props: IProps) {
     const hideShowSizeList = (refresh?: boolean) => {
         setShowSizeList(false);
     }
-    // const displayCreterialModal = (exam: IExam) => {
-    //     setShowCreterialModal(true);
-    //     setExamComponent(exam.ExamComponent);
-    //     setCurrentExam(exam.Id);
-
-    // }
-    // const displaySetStandardModal = async (exam: IExam) => {
-    //     setShowStandardModal(true);
-    //     setCurrentExam(exam.Id);
-    // }
-    // const hiddenStandardModal = () => {
-    //     setShowStandardModal(false);
-    // }
-
-    const publishExam = async (exam: IExam) => {
-        if (exam.CriteriaId === -1) {
-            message.warning(`下发考核前请先设置考核标准`);
-            return
-        }
-        if (!exam.Data) {
-            message.warning(`下发考核前请先设置考核项评分`);
-            return
-        }
-        return await setExamStatus(exam, 1)
-    }
 
     const setExamStatus = async (exam: IExam, status: number) => {
         const res = await setExamStatusApi(exam.Id, status);
@@ -249,8 +255,8 @@ function ExamTable(props: IProps) {
         callback()
     }
 
-    const generateTableColumns = (examList: any) => {
-        const columns: TableColumnsType<DataType> = [
+    const generateTableColumns = () => {
+        const columns: TableColumnsType<any> = [
             ...generateExamTableColomns(),
             {
                 title: "操作", key: "operation", render: (_: any, exam: IExam) => {
@@ -259,22 +265,13 @@ function ExamTable(props: IProps) {
                         <Button type='primary' key={"viewSize"}
                             onClick={() => initSizeList(exam)}
                         >查看尺寸数据</Button>
-
-                        {/* <Button disabled={exam.CriteriaId !== -1} key={"criteria"} type='primary'
-                            onClick={() => displayCreterialModal(exam)}>
-                            设置评测标准
-                        </Button>
-                        <Button key={"standard"} type="primary" disabled={exam.Data !== null}
-                            onClick={() => displaySetStandardModal(exam)}>
-                            设置考核项评分
-                        </Button> */}
-                        <Popconfirm disabled={exam.Status !== 0}
-                            title="下发考核后考核对学生可见，确认发放？"
-                            onConfirm={() => publishExam(exam)}
-                            onCancel={() => { message.info(`取消下发成功`) }}
-                        >
-                            <Button disabled={exam.Status !== 0} type="primary">下发考核</Button>
-                        </Popconfirm>
+                        <Button type="primary" disabled={exam.Status !== 0}
+                            onClick={() => { navigate('/teacher/exam/demo', { state: { id: exam.Id } }) }}
+                        >教师展示</Button>
+                        <Button disabled={exam.Status !== 0} type="primary" onClick={() => {
+                            setCurrentExam(exam);
+                            setShowPublishModal(true);
+                        }}>下发考核</Button>
                         <Popconfirm disabled={exam.Status !== 1}
                             title="收卷后考核学生不可继续提交，确认收卷？"
                             onConfirm={() => setExamStatus(exam, 2)}
@@ -282,16 +279,14 @@ function ExamTable(props: IProps) {
                         >
                             <Button disabled={exam.Status !== 1} type="primary">收卷</Button>
                         </Popconfirm>
+                        <Button type='primary' disabled={exam.Status !== 2} onClick={() => navigate(`/teacher/exam/${exam.Id}/scores`)}>
+                            教师复测
+                        </Button>
                     </Space>)
                 }
             }
         ]
-        return <Table
-            dataSource={examList}
-            columns={columns}
-            pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}
-            scroll={{ y: 400 }} 
-            loading={loading} />
+        return columns
     }
 
 
@@ -302,17 +297,26 @@ function ExamTable(props: IProps) {
                 cancel={hideShowSizeList}
                 sizeList={sizeList}
             />
-            {/* <Criteria
-                visible={showCreterialModal}
-                ExamComponent={ExamComponent}
-                ExamId={currentExamId}
-                cancel={(refresh:boolean) => setShowCreterialModal(refresh)}
-            />
-            <Standard
-                visible={showStandardModal}
-                ExamId={currentExamId}
-                cancel={hiddenStandardModal} /> */}
-            {exams && generateTableColumns(exams)}
+            {currentExam &&
+                <PublishExam
+                    visible={showPublishModal}
+                    cancel={() => setShowPublishModal(false)}
+                    exam={currentExam}
+                    callback={() => {
+                        setShowPublishModal(false);
+                        callback()
+                    }}
+                />
+            }
+            {exams && <Table
+                rowKey={record => record.Id}
+                dataSource={exams}
+                columns={generateTableColumns()}
+                pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}
+                scroll={{ y: 400 }}
+                onChange={(pagenation: any) => pageChangeCallback(pagenation.current)}
+                loading={loading}
+            />}
         </div>
     )
 

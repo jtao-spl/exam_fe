@@ -56,7 +56,7 @@ export default function AddExamFC(props:IProps) {
         }
         message.success(`新建考核成功`);
         cancel();
-        navigate('/exam');
+        navigate('/teacher/exam');
     }
 
   return (

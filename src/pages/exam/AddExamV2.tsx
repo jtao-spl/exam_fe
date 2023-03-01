@@ -1,8 +1,10 @@
 import { Form, Button, Tag, Input, Space, Select, message, TimePicker, DatePicker, Steps, } from 'antd';
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
-import { saveExam } from '../../api/exam';
+import { getExamTarget, saveExam } from '../../api/exam';
 import CriteriaV2 from './CriteriaV2';
+import EditPrecision from './EditPrecision';
+import { IExam } from './ExamList';
 import StandardV2 from './StandardV2';
 
 
@@ -33,7 +35,7 @@ import StandardV2 from './StandardV2';
 
 
 const format = "HH:mm";
-export const SizePrecisionLevel = ['精密f', '中等m', '粗糙c', '最粗v']
+export const SizePrecisionLevel = ['精密f', '中等m', '粗糙c', '最粗v', '自定义']
 
 
 export default function AddExamFC() {
@@ -43,13 +45,40 @@ export default function AddExamFC() {
 
     const [current, setCurrent] = useState(0);
     const [examId, setExamId] = useState(0);
+    const [level, setLevel] = useState(-1);
+    const [examTargets, setExamTargets] = useState<string[]>([]);
+
+    const fetchTarget = async () => {
+        const res = await getExamTarget();
+        const { code, msg, data } = res.data;
+        if (code !== 0) {
+            message.error(`获取考核项目失败，系统错误：${msg}`);
+            return
+        }
+        console.log(`获取考核项目：${JSON.stringify(data)}`);
+        setExamTargets(data.map((item: { Name: string }) => item.Name));
+    }
+
+    useEffect(() => {
+        fetchTarget();
+    }, [])
     const steps = [
         {
             title: '考核信息',
             component: <ExamBasicInfo
                 componentId={location.state.id}
-                callback={(id: number) => { setExamId(id); setCurrent(current + 1) }} />
-
+                examTargets={examTargets}
+                callback={(examId: number, level: number) => { 
+                    setExamId(examId); 
+                    setLevel(level);
+                    setCurrent(current + 1) }} />
+        },
+        {
+            title: '线性尺寸公差编辑',
+            component: <EditPrecision
+                examId={examId}
+                level={level}
+                callback={() => setCurrent(current + 1)} />
         },
         {
             title: '评测说明',
@@ -62,7 +91,7 @@ export default function AddExamFC() {
             title: '项目配分',
             component: <StandardV2
                 ExamId={examId}
-                callback={()=>navigate('/exam')}
+                callback={() => navigate('/teacher/exam/list')}
             />
         }
     ]
@@ -76,10 +105,12 @@ export default function AddExamFC() {
 }
 interface IProps {
     componentId: number,
-    callback: (id: number) => void
+    examTargets: string[]
+    callback: (examId: number, level: number) => void
 }
 function ExamBasicInfo(props: IProps) {
-    const { componentId, callback } = props;
+    const { componentId, examTargets, callback } = props;
+    const navigate = useNavigate();
     const addExam = async (values: any) => {
         console.log(`提交数据： ${JSON.stringify(values)}`);
         const res = await saveExam(values);
@@ -89,7 +120,7 @@ function ExamBasicInfo(props: IProps) {
             return
         }
         message.success(`新建考核成功`);
-        callback(data.Id)
+        callback(data.Id, values.SizePrecisionLevel)
     }
     return (
         <div>
@@ -138,8 +169,22 @@ function ExamBasicInfo(props: IProps) {
                     label="考核项目"
                     name="ExamTarget"
                     initialValue={"钳工"}
+                    rules={[{
+                        required: true,
+                        message: '请选择'
+                    }]}
                 >
-                    <Tag>钳工</Tag>
+                    <Space>
+                        <Select style={{ width: 240 }}
+                        >
+                            {
+                                examTargets.map((Name: string, index: number) =>
+                                    <Select.Option key={index} value={Name}>{Name}</Select.Option>
+                                )
+                            }
+                        </Select>
+                        <Button type='primary' onClick={() => navigate('/teacher/exam/target/create')} >新建</Button>
+                    </Space>
                 </Form.Item>
                 <Form.Item
                     label="考核零件"
@@ -149,6 +194,7 @@ function ExamBasicInfo(props: IProps) {
                 >
                     <Tag>{componentId}</Tag>
                 </Form.Item>
+                注：线性尺寸公差数据支持手动输入，若要手动输入，请选择下拉框中的【自定义】。
                 <Form.Item
                     label="线性尺寸公差等级"
                     required={true}

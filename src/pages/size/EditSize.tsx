@@ -1,5 +1,5 @@
-import { Button, Form, Input, message, Modal, Space, Tag } from 'antd'
-import React, { Component } from 'react'
+import { Button, Form, Input, InputNumber, message, Modal, Space, Tag } from 'antd'
+import React from 'react'
 import { ISize } from './SizeList';
 
 import './font.css';
@@ -19,6 +19,7 @@ export default function EditSize(props:IProps) {
         cancel()
     }
     const updateSizeFunc = async (values: any) => {
+        console.log(`更新尺寸： values ${JSON.stringify(values)}`)
         if (!size) {
             message.error(`更新零件尺寸异常：当前未指定任何尺寸`);
             return
@@ -210,7 +211,13 @@ export default function EditSize(props:IProps) {
                             label="粗糙度值"
                             name="SurfaceRoughnessVal"
                         >
-                            <Input />
+                            <Tag color={size?.Color}>{size?.SurfaceRoughnessVal}</Tag>
+                        </Form.Item>
+                        <Form.Item
+                            label="数量"
+                            name="SurfaceRoughnessCount"
+                        >
+                            <InputNumber defaultValue={size?.SurfaceRoughnessCount}/>
                         </Form.Item>
                         <Form.Item>
                             <Space size={"large"} >
@@ -249,14 +256,14 @@ export default function EditSize(props:IProps) {
                             label="项目类型"
                             name="FirstType"
                         >
-                            <Tag color={size?.Color}>其他</Tag>
+                            <Tag color={size?.Color}>未注倒角</Tag>
                         </Form.Item>
                        
                         <Form.Item
-                            label="其他要求"
-                            name="OtherRequirements"
+                            label="数量"
+                            name="UnDeclaredChamferCount"
                         >
-                            <Input />
+                            <InputNumber />
                         </Form.Item>
                         <Form.Item>
                             <Space size={"large"} >

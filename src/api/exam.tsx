@@ -1,63 +1,103 @@
 import { IExam } from '../pages/exam/ExamList';
 import request from '../utils/request';
+import { ISizePrecisionData } from '../pages/exam/EditPrecision';
 
-export const saveExam = (exam:IExam)=>{
+export const saveExam = (exam: IExam) => {
     return request({
         url: '/exam',
-        method:'post',
+        method: 'post',
         data: exam
     })
 }
 
-export const getExamList = (page: number, limit:number=10, ExamComponent:number=0, Status?: number)=>{
-    let params:{
-        page:number, 
-        limit:number,
+export const getExamList = (page: number, limit: number = 10, ExamComponent: number = 0, Status?: number) => {
+    let params: {
+        page: number,
+        limit: number,
         ExamComponent: number,
         Status?: number
-    } = {page: page, limit:limit, ExamComponent: ExamComponent}
-    if (Status){
-        params = {Status: Status, ... params}
+    } = { page: page, limit: limit, ExamComponent: ExamComponent }
+    if (Status) {
+        params = { Status: Status, ...params }
     }
     return request({
         url: '/exam',
-        method:'get',
+        method: 'get',
         params: params
     })
 }
-export const saveExamCriteria = (criteria:any,ExamId:number)=>{
+export const saveExamCriteria = (criteria: any, ExamId: number) => {
     return request({
-        url:'/exam/criteria',
+        url: '/exam/criteria',
         method: 'post',
         data: criteria,
-        params: {ExamId:ExamId}
+        params: { ExamId: ExamId }
     })
 }
-export const getExamCriteriaApi = (CriteriaId: number)=>{
+export const getExamCriteriaApi = (CriteriaId: number) => {
     return request({
-        url:'/exam/criteria',
+        url: '/exam/criteria',
         method: 'get',
-        params: {CriteriaId:CriteriaId}
+        params: { CriteriaId: CriteriaId }
     })
 }
-export const getExamById = (Id: number)=>{
+export const getExamById = (Id: number) => {
     return request({
-        url:`/exam/${Id}`,
+        url: `/exam/${Id}`,
         method: 'get',
     })
 }
-export const saveExamScores =(scores: any, ExamId: number)=>{
+export const saveExamScores = (scores: any, ExamId: number) => {
     return request({
-        url:'/exam/scores',
+        url: '/exam/scores',
         method: 'post',
-        data: {scores: scores},
-        params: {ExamId: ExamId}
+        data: { scores: scores },
+        params: { ExamId: ExamId }
     })
 }
-export const setExamStatusApi=(examId: number, Status: number)=>{
+
+/**
+ * 下发考核时需要指定年级he班级
+ * @param examId 考核id
+ * @param Status 考核状态  0 未发放 1 已发放  2 已收卷
+ * @param Grade 年级
+ * @param Class 班级
+ * @returns 
+ */
+export const setExamStatusApi = (examId: number, Status: number, Grade?: number, Class?: number) => {
+    let data: { Status: number, Grade?: number, Class?: Number } = { Status: Status }
+    if (Grade && Class) {
+        data = { ...data, Grade: Grade, Class: Class }
+    }
     return request({
         url: `/exam/${examId}`,
-        method:'patch',
-        data: {Status: Status}
+        method: 'patch',
+        data: data
+    })
+}
+
+export const saveExamTarget = (Name: string) => {
+    return request({
+        url: `/exam/target`,
+        method: 'post',
+        data: { Name: Name }
+    })
+}
+
+export const getExamTarget = () => {
+    return request({
+        url: `/exam/target`,
+        method: 'get'
+    })
+}
+
+/**
+ * 存储考核自定义的尺寸公差
+ */
+export const batchUpdateSizePrecision = (examId: number, data: ISizePrecisionData) => {
+    return request({
+        url: `/exam/${examId}/size/precision`,
+        method: `patch`,
+        data: { data: data }
     })
 }

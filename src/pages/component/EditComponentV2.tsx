@@ -1,9 +1,9 @@
 import { Button, Form, Input, message, Space, Steps, Table, TableColumnsType, Upload } from 'antd';
 import React, { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { getComponentById, saveComponentClip, SaveComponentName, updateComponentStatus } from '../../api/comp';
 import { UploadOutlined } from '@ant-design/icons';
-import { generateSizeTableColumns, ISize } from '../size/SizeList';
+import {  generateSizeTableColumns, ISize } from '../size/SizeList';
 import { getSizeList } from '../../api/size';
 import DeleteSize from '../size/DeleteSize';
 import AddSizeV2 from '../size/AddSizeV2';
@@ -37,6 +37,7 @@ export const getComponent = async (id: number) => {
 
 export default function EditComponentV2() {
     const params = useParams();
+    const navigate = useNavigate();
 
     let id = 0;
     if (params.id) {
@@ -51,12 +52,13 @@ export default function EditComponentV2() {
     const getSizes = async (id: number) => {
         const res = await getSizesByComponentId(id)
         setSizeList(res);
+        return res
     }
 
     const setCurrentByComponentStatus = async (id: number) => {
         const res = await getComponent(id);
-        if(res){
-            setCurrent(res.Status)
+        if (res) {
+            setCurrent(res.Status - 1)
         }
     }
 
@@ -72,6 +74,7 @@ export default function EditComponentV2() {
             return
         }
         message.success(`数据修正完成`);
+        setTimeout(() => navigate('/teacher/component/list'), 1000);
     }
     const displayUpdateSizeModal = (size: ISize) => {
         console.log(`show modal, size: ${JSON.stringify(size)}`);
@@ -139,10 +142,11 @@ export default function EditComponentV2() {
         }
     ]
     const items = steps.map((item) => ({ key: item.title, title: item.title }));
+    console.log(`current: ${current}`)
     return (
 
         <>
-            {current > steps.length && <ComponentDetail />}
+            {current >= steps.length && <ComponentDetail />}
             {current < steps.length && <>
                 < Steps current={current} items={items} />
                 <div className="steps-content">{steps[current].component}</div>
@@ -317,13 +321,14 @@ function ShowSizeList(props: IProps2) {
                         <Button type='primary'
                             onClick={() => displayUpdateSizeModal(size)}
                         >编辑</Button>
-                        <DeleteSize size={size} refresh={onDelete} />
+                        <DeleteSize size={size} refresh={onDelete} isAggSizeDeletable={true}/>
                     </Space>
                 )
             }
         ];
         sizes.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType })
         return <Table
+            rowKey={record=>record.Id}
             dataSource={sizes}
             columns={columns}
             pagination={false}
@@ -337,3 +342,41 @@ function ShowSizeList(props: IProps2) {
         </div>
     )
 }
+
+// function ShowSizeAggList(props: IProps3){
+//     const { sizeList, deleteCallback, displayUpdateSizeModal } = props;
+//     const onDelete = () => {
+//         deleteCallback()
+//     }
+//     const generateSizeTable = (sizes: any) => {
+//         const allColumns = generateAggreatedSizeTableColumns();
+//         const OmitComponentIdColumns = allColumns.filter((item: any) => item.key !== 'ComponentId')
+//         const columns: TableColumnsType<DataTypeExt> = [
+//             ...OmitComponentIdColumns,
+//             {
+//                 title: "操作", key: "operation", render: (_: any, size: ISize) => (
+//                     <Space>
+//                         <Button type='primary'
+//                             onClick={() => displayUpdateSizeModal(size)}
+//                         >编辑</Button>
+//                         <DeleteSize size={size} refresh={onDelete} isAggSizeDeletable={false} />
+//                     </Space>
+//                 )
+//             }
+//         ];
+//         sizes.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType })
+//         return <Table
+//             rowKey={record=>record.Id}
+//             dataSource={sizes}
+//             columns={columns}
+//             pagination={false}
+//             scroll={{ y: 400 }}
+//         />
+//     }
+
+//     return (
+//         <div>
+//             {sizeList && generateSizeTable(sizeList)}
+//         </div>
+//     )
+// }

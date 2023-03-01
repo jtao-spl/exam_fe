@@ -1,3 +1,4 @@
+import { ISizePrecisionData } from '../pages/exam/EditPrecision';
 import { ISize } from '../pages/size/SizeList';
 import request from '../utils/request';
 
@@ -25,10 +26,10 @@ export const updateSize = (size: ISize, values: any) => {
         data = { ComponentId: ComponentId, GeoToleranceVal: values.GeoToleranceVal };
     }
     if (FirstType === 2) {
-        data = { ComponentId: ComponentId, SurfaceRoughnessVal: values.SurfaceRoughnessVal }
+        data = { ComponentId: ComponentId, SurfaceRoughnessCount: values.SurfaceRoughnessCount }
     }
     if (FirstType === 3) {
-        data = { ComponentId: ComponentId, OtherRequirements: values.OtherRequirements }
+        data = { ComponentId: ComponentId, UnDeclaredChamferCount: values.UnDeclaredChamferCount }
     }
     return request({
         url: `/size/${Id}`,
