@@ -1,35 +1,15 @@
-import { Button, message, Popconfirm, Space, Table, TableColumnsType, Tag } from 'antd'
+import { Button, message, Popconfirm, Space, Table, TableColumnsType } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-// import { Outlet, useNavigate } from 'react-router-dom'
-// import { getComponentCriteriaTypes } from '../../api/comp'
+
 import { getExamList, setExamStatusApi } from '../../api/exam'
-import { getSizeCountByComponentId, getSizeList } from '../../api/size'
+import { IExam, sizeScopeToDelta } from '../../interfaces/Exam'
+import { ISize } from '../../interfaces/Size'
+import { getSizesByComponentId } from '../../wrapper/Component'
+import { generateExamTableColomns, getCalculatedSizeForExam } from '../../wrapper/Exam'
 import ShowSizeList from '../component/ShowSizeList'
-import { ISize } from '../size/SizeList'
-import { ExamStatus2Desc } from '../student/Exam'
-import { ISizePrecisionData } from './EditPrecision'
 import PublishExam from './PublishExam'
-// import Criteria, { GelToleranceSymbol, IEntityRequired, SizedElementSymbol } from './Criteria'
-// import Standard from './Standard'
-export interface ScoreItem {
-    Score: number,
-    SizeId: number
-}
-export interface IExam {
-    Id: number,
-    ExamDate: Date,
-    StartTime: string,
-    FinishTime: string,
-    ExamTarget: string,
-    ExamComponent: number,
-    SizePrecisionLevel: number,
-    ExamTeacher: string,
-    CriteriaId: number,
-    Status: number, //0 初始状态 1 已下发 2 已收卷
-    Class?: string, //发放的班级
-    Data?: { scores?: ScoreItem[], precision?: ISizePrecisionData[] },
-}
+
 
 interface IProps {
     exams?: IExam[],
@@ -49,19 +29,14 @@ export default function ExamList() {
     const [loading, setLoading] = useState(true);
     const getList = async (pg: number = 1, lim: number = 10, ExamComponent: number = 0) => {
         const res = await getExamList(pg, lim, ExamComponent);
-        const { code, msg, data, total, limit } = res.data;
-        if (code !== 0) {
-            message.error(`获取考核列表失败，系统错误：${msg}`);
-            return;
+        if(res){
+            setExams(res.exams);
+            setTotal(res.total);
+            setPageSize(res.pageSize);
+            setLoading(false);
         }
-        setExams(data);
-        setTotal(total);
-        setPageSize(limit);
-        setLoading(false);
-
     }
     useEffect(() => {
-        console.log(`初始化获取exam list in useEffect`);
         getList();
     }, []);
 
@@ -79,135 +54,6 @@ export default function ExamList() {
     )
 }
 
-interface DataType extends IExam {
-    key: React.Key,
-}
-export function generateExamTableColomns() {
-    const columns: TableColumnsType<DataType> = [
-        { title: "考核日期", key: 'ExamDate', dataIndex: 'ExamDate' },
-        { title: "考核时间", key: 'StartTime', dataIndex: 'StartTime' },
-        { title: "交件时间", key: 'FinishTime', dataIndex: 'FinishTime' },
-        { title: "考核项目", key: 'ExamTarget', dataIndex: 'ExamTarget' },
-        { title: '考核教师', key: 'ExamTeacher', dataIndex: 'ExamTeacher' },
-        { title: '考核零件', key: 'ExamComponent', dataIndex: 'ExamComponent' },
-        {
-            title: '零件精密等级', key: 'SizePrecisionLevel', render: (_: any, exam: IExam) => {
-                let level: string;
-                switch (exam.SizePrecisionLevel) {
-                    case 0:
-                        level = "精密f";
-                        break;
-                    case 1:
-                        level = "中等m";
-                        break;
-                    case 2:
-                        level = "粗糙c";
-                        break;
-                    case 3:
-                        level = "最粗v"
-                        break;
-                    case 4:
-                        level = "自定义"
-                        break;
-                    default:
-                        level = "未知"
-                        break;
-                }
-                return <Tag>{level}</Tag>
-            }
-        },
-        {
-            title: '考核状态', key: 'ExamStatus', render: (_: any, exam: IExam) => {
-
-                return <Tag>{ExamStatus2Desc.get(exam.Status)}</Tag>
-            }
-        },
-        {
-            title: '发放班级', key: 'Class', dataIndex: 'Class'
-        }
-    ]
-    return columns;
-}
-export const sizeScopeToDelta: number[][] = [
-    [0.05, 0.05, 0.1, 0.15, 0.2, 0.3, 0.5, NaN],
-    [0.1, 0.1, 0.2, 0.3, 0.5, 0.8, 1.2, 2],
-    [0.2, 0.3, 0.5, 0.8, 1.2, 2, 3, 4],
-    [NaN, 0.5, 1, 1.5, 2.5, 4, 6, 8]
-];
-
-export function getPricisionLevelIndexBySize(size: number) {
-    let idx = -1;
-    if (size && size >= 0.5 && size < 3) {
-        idx = 0
-    }
-    else if (size && size >= 3 && size < 6) {
-        idx = 1
-    }
-    else if (size && size >= 6 && size < 30) {
-        idx = 2
-    }
-    else if (size && size >= 30 && size < 120) {
-        idx = 3
-    }
-    else if (size && size >= 120 && size < 400) {
-        idx = 4
-    }
-    else if (size && size >= 400 && size < 1000) {
-        idx = 5
-    }
-    else if (size && size >= 1000 && size < 2000) {
-        idx = 6
-    }
-    else if (size && size >= 2000 && size < 4000) {
-        idx = 7
-    }
-    return idx;
-}
-
-/**
- * 根据线性尺寸公差等级来重计算尺寸的上下偏差
- * @param exam 考核entity
- * @param sizes 尺寸列表
- * @param sizeScopeToDelta 标准尺寸范围&公差等级对照表
- * @returns 
- */
-export function getCalculatedSizeForExam(exam: IExam, sizes: ISize[], sizeScopeToDelta: number[][]) {
-    const { SizePrecisionLevel } = exam;
-    if (exam.SizePrecisionLevel === 4 && !exam.Data?.precision) {
-        message.error(`系统数据异常，自定义的尺寸偏差数据丢失，请重新创建考核。`);
-        return [];
-    }
-
-    const newSize = sizes.map(size => {
-        //非尺寸数据直接返回
-        if (size.FirstType !== 0 || !size.BaseSize) {
-            return size
-        }
-        //考核存在自定义偏差数据，处理后直接返回
-        if (exam.SizePrecisionLevel === 4) {
-            let temp = { ...size };
-            const precisionData = exam.Data?.precision?.filter((item: ISizePrecisionData) => item.Id === size.Id);
-            if (precisionData && precisionData?.length > 0) {
-                temp.UpSize = precisionData[0].UpSize;
-                temp.BottomSize = precisionData[0].BottomSize;
-            }
-            return temp;
-        }
-        //上下delta有一个不为0 直接返回
-        if ((size.UpSize && size.UpSize * 1000 > 0) || (size.BottomSize && size.BottomSize * 1000 > 0)) {
-            return size;
-        }
-        let temp = { ...size };
-        const idx = getPricisionLevelIndexBySize(size.BaseSize);
-
-        const delta = sizeScopeToDelta[SizePrecisionLevel][idx];
-        temp.UpSize = delta;
-        temp.BottomSize = -delta;
-        return temp;
-    })
-    return newSize;
-
-}
 
 function ExamTable(props: IProps) {
     const { exams, total, pageSize, loading, callback, pageChangeCallback } = props;
@@ -219,23 +65,8 @@ function ExamTable(props: IProps) {
     const navigate = useNavigate()
 
     const initSizeList = async (exam: IExam, showList: boolean = true) => {
-        const c = await getSizeCountByComponentId(exam.ExamComponent);
-        let { code, msg, data } = c.data;
-        if (code !== 0) {
-            message.error(`请求失败，系统错误:${msg}`);
-            return;
-        }
-        const res = await getSizeList(1, data.count, exam.ExamComponent);
-        if (res.data.code !== 0) {
-            message.error(`请求失败，系统错误:${res.data.msg}`);
-            return;
-        }
-        const sizeList = res.data.data;
-        sizeList.map((size: ISize) => {
-            size.Color = size?.FirstType === 0 ? 'blue' : size?.FirstType === 1 ? 'red' : size?.FirstType === 2 ? 'green' : 'grey';
-            return size
-        })
-        const calculatedSize = getCalculatedSizeForExam(exam, sizeList, sizeScopeToDelta);
+        const sizes = await getSizesByComponentId(exam.ExamComponent);
+        const calculatedSize = getCalculatedSizeForExam(exam, sizes, sizeScopeToDelta);
         setShowSizeList(showList);
         setSizeList(calculatedSize);
 
@@ -246,17 +77,12 @@ function ExamTable(props: IProps) {
 
     const setExamStatus = async (exam: IExam, status: number) => {
         const res = await setExamStatusApi(exam.Id, status);
-        const { code, msg } = res.data;
-        if (code !== 0) {
-            message.error(`操作失败，系统错误:${msg}`);
-            return
-        }
-        message.success(`操作成功`)
+        if(!res) return;
         callback()
     }
 
     const generateTableColumns = () => {
-        const columns: TableColumnsType<any> = [
+        const columns: TableColumnsType<IExam> = [
             ...generateExamTableColomns(),
             {
                 title: "操作", key: "operation", render: (_: any, exam: IExam) => {

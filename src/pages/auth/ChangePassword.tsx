@@ -3,7 +3,6 @@ import React from 'react'
 import { EyeInvisibleOutlined, EyeTwoTone } from '@ant-design/icons';
 import { Button, Input, Space } from 'antd';
 import { changePassword } from '../../api/login';
-import { get } from '../../utils/storage';
 import { useNavigate } from 'react-router-dom';
 import { getHomePage } from '../Login';
 
@@ -12,7 +11,6 @@ export default function ChangePassword() {
   const navigate = useNavigate();
 
   const changePwd = async (values: any) => {
-    console.log(`接收到请求:${JSON.stringify(values)}`);
     if (values.origin !== values.origin2) {
       message.error(`两次输入的原始密码不一致，请重新输入`)
       return;
@@ -26,10 +24,7 @@ export default function ChangePassword() {
       return;
     }
     const res = await changePassword(values.origin, values.newPwd);
-    const { code } = res.data;
-    if (code !== 0) {
-      return
-    }
+    if(!res) return;
     message.info(`修改密码成功`);
     const page = getHomePage();
     setTimeout(() => {

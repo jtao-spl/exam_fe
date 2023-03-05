@@ -1,4 +1,4 @@
-import { Button, Form, Input, message, Select, Space, Tag } from 'antd'
+import { Button, Form, Input, Select, Space, Tag } from 'antd'
 import React from 'react'
 import { resetAccountPassword } from '../../api/admin';
 
@@ -6,13 +6,8 @@ export default function PasswordReset() {
 
     const resetPassword = async(values: any)=>{
         const {type, Name} = values;
-        const res = await resetAccountPassword(type, Name);
-        const {code, msg, data} = res.data;
-        if(code !== 0){
-            message.error(`重置失败，系统错误:${msg}`);
-            return
-        }
-        message.info(`重置成功。`)
+        await resetAccountPassword(type, Name);
+        return
     }
 
     return (

@@ -94,9 +94,9 @@ function ChangePasswordModal(props: IProps) {
 
 export const ShowLoginUser = () => {
     const navigate = useNavigate();
-    if (get('Id')) {
+    if (get('Name')) {
         return (<Space style={{ float: "right" }}>
-            <Tag>你好，{get('Id')}</Tag>
+            <Tag>你好，{get('Name')}</Tag>
             <Button onClick={() => {
                 clear();
                 navigate('/login');

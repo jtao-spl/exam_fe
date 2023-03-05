@@ -3,6 +3,7 @@ import React, {  useState } from 'react';
 
 import './font.css';
 import { saveSize } from '../../api/size';
+import { gdtSymbleArray, IAddSizeProps, sizeSymbolArray } from '../../interfaces/Size';
 
 const { Option } = Select;
 
@@ -11,14 +12,7 @@ const layout = {
     wrapperCol: { span: 16 },
 };
 
-const gdtSymbleArray: Array<string> = ["u", "c", "e", "g", "k", "d", "f", "b", "a", "r", "i", "j", "h", "t"];
-const sizeSymbolArray: Array<string> = ['L', 'D', 'R', '∠']
-interface IProps {
-    visible: boolean
-    componentId: number
-    callback: (refresh?: boolean) => void
-}
-export default function AddSizeV2(props: IProps) {
+export default function AddSizeV2(props: IAddSizeProps) {
     const { visible, componentId, callback } = props;
     const [showAddSizedInput, setShowAddSizedInput] = useState(false);
     const [showAddGeoToleranceInput, setShowAddGeoToleranceInput] = useState(false);
@@ -56,16 +50,9 @@ export default function AddSizeV2(props: IProps) {
     }
     const saveSizeData = async (values: any) => {
         const res = await saveSize(values);
-        const { code, msg } = res.data;
-        if (code === 0) {
-            message.success('新建尺寸成功');
+       if(res){
             callback(true);
-            return
         }
-        if (code !== 0) {
-            message.error(`新建尺寸失败，系统错误: ${msg}`);
-        }
-
     }
     return (
         <div>

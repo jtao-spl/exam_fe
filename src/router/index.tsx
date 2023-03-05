@@ -10,8 +10,8 @@ const Page404 = lazy(() => import('../pages/Page404'));
 const ExamList = lazy(() => import('../pages/exam/ExamList'));
 const Exams = lazy(() => import('../pages/student/Exams'));
 const TeacherList = lazy(() => import('../pages/admin/TeacherList'));
-const StudentUpload = lazy(()=>import('../pages/upload/StudentUpload'));
-const StudentList = lazy(()=>import('../pages/admin/StudentList'));
+const StudentList = lazy(() => import('../pages/admin/StudentList'));
+const ToolList = lazy(() => import('../pages/teacher/ToolList'));
 export interface IRouter {
     title: React.ReactNode,
     path: string,
@@ -36,6 +36,14 @@ export const teacherRouters: IRouter[] = [
                 key: 'management',
                 icon: <PartitionOutlined />,
                 element: <ComponentList />
+            },
+            {
+                title: <Link to='/teacher/component/tools'>工具列表</Link>,
+                // title: 'etst',
+                path: '/teacher/component/tools',
+                key: 'tools',
+                icon: <PartitionOutlined />,
+                element: <ToolList />
             },
         ]
     },
@@ -180,13 +188,13 @@ export const adminRoutes: IRouter[] = [
                 icon: <PartitionOutlined />,
                 element: <StudentList />
             },
-            {
-                title: <Link to='/admin/student/upload'>学生上传</Link>,
-                path: '/admin/student/upload',
-                key: 'stuUpload',
-                icon: <PartitionOutlined />,
-                element: <StudentUpload />
-            }
+            // {
+            //     title: <Link to='/admin/student/upload'>学生上传</Link>,
+            //     path: '/admin/student/upload',
+            //     key: 'stuUpload',
+            //     icon: <PartitionOutlined />,
+            //     element: <StudentUpload />
+            // }
         ]
     },
     {

@@ -4,35 +4,17 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { getExamById } from '../../../api/exam';
 import { getExamScoreList } from '../../../api/score';
 import { batchGetStudentInfo } from '../../../api/student';
-import { ExamScoreData, ExamStatus2Desc } from '../../student/Exam';
-import { IExam } from '../ExamList';
+import { ExamStatus2Desc, IExam, IScore, IScoreTableProps } from '../../../interfaces/Exam';
+import { IStudentInfo } from '../../../interfaces/Student';
 
-interface IScore {
-    Id: number,
-    StudentId: number,
-    ExamId: number,
-    SelfData?: ExamScoreData[],
-    SelfScore?: number,
-    GroupData?: ExamScoreData[],
-    GroupScore?: number,
-    FinalData?: ExamScoreData[],
-    FinalScore?: number,
-}
-
-interface IStudent {
-    Id: number,
-    StudentId: number,
-    Name: string,
-    Class: number,
-}
 
 export default function ScoreList() {
     const params = useParams();
-    const [scoreList, setScoreList] = useState<IScore[]>();
+    const [scoreList, setScoreList] = useState<IScore[]>([]);
     const [pageSize, setPageSize] = useState(10);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [studentInfo, setStudentInfo] = useState<IStudent[]>();
+    const [studentInfo, setStudentInfo] = useState<IStudentInfo[]>([]);
     const [exam, setExam] = useState<IExam>();
 
     const getExamDataScoreList = async (id: string | undefined, page: number = 1, limit: number = 50) => {
@@ -42,29 +24,20 @@ export default function ScoreList() {
         }
         const ExamId = Number.parseInt(id);
         const exam = await getExamById(ExamId);
-        if (exam.data.code !== 0) {
-            message.warn(`获取考核基本信息失败,系统错误：${exam.data.msg}`);
-        } else {
-            setExam(exam.data.data);
-        }
+        if (!exam) return;
+        setExam(exam);
         const res = await getExamScoreList(ExamId, page, limit);
-        const { code, msg, data, total } = res.data;
-        if (code !== 0) {
-            message.error(`获取考核数据失败，系统错误：${msg}`);
-            return
-        }
-        if (!data) {
+        if (!res) return;
+
+        if (res.items.length === 0) {
             message.warn(`当前暂无考核记录`);
             return
         }
-        const infos = await batchGetStudentInfo(data.map((item: IScore) => item.StudentId));
-        if (infos.data.code !== 0) {
-            message.warn(`查询学生信息失败，暂时无法展示姓名`);
-        } else {
-            setStudentInfo(infos.data.data);
-        }
+        const ids = res.items.map((item: IScore) => item.StudentId)
+        const resp = await batchGetStudentInfo({ StudentIds: ids });
+        setStudentInfo(resp);
 
-        setScoreList(data);
+        setScoreList(res.items);
         setLoading(false);
         setPageSize(limit);
         setTotal(total);
@@ -86,9 +59,9 @@ export default function ScoreList() {
                     pageSize={pageSize}
                     loading={loading}
                     students={studentInfo}
-                    callback={() => getExamDataScoreList(params.id)} 
+                    callback={() => getExamDataScoreList(params.id)}
                     pageChangeCallback={(page: number) => getExamDataScoreList(params.id, page)}
-                    />
+                />
             }
 
         </div>
@@ -115,23 +88,13 @@ function ExamBasicInfo(props: IProps2) {
     </div>)
 }
 
-interface IProps {
-    scoreList: IScore[],
-    total: number,
-    pageSize: number,
-    loading: boolean,
-    exam?: IExam,
-    callback: () => void,
-    students?: IStudent[],
-    pageChangeCallback: (page: number) => void
-}
 interface DataType extends IScore {
     key: React.Key,
     Name?: string
 }
 
-function ScoreTable(props: IProps) {
-    const { scoreList, total, pageSize, loading, exam, callback, students,pageChangeCallback } = props;
+function ScoreTable(props: IScoreTableProps) {
+    const { scoreList, total, pageSize, loading, exam, callback, students, pageChangeCallback } = props;
 
     const navigate = useNavigate();
     const generateScoreInfoTableColumns = () => {
@@ -143,7 +106,7 @@ function ScoreTable(props: IProps) {
             {
                 title: '小组成绩', key: 'GroupScore', render: (_: any, record: IScore) => {
                     if (record.GroupData === null && record.GroupScore === 0) {
-                        return <div>-</div>
+                        return (<div>-</div>)
                     }
                     return record.GroupScore
                 }
@@ -170,7 +133,7 @@ function ScoreTable(props: IProps) {
 
     if (students) {
         const newScoreList = scoreList.map((score: IScore) => {
-            const cur = students.filter((student: IStudent) => student.StudentId === score.StudentId)
+            const cur = students.filter((student: IStudentInfo) => student.StudentId === score.StudentId)
             if (cur.length > 0) {
                 return { ...score, Name: cur[0].Name }
             }
@@ -183,7 +146,7 @@ function ScoreTable(props: IProps) {
                 columns={generateScoreInfoTableColumns()}
                 pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}
                 scroll={{ y: 400 }}
-                onChange={(pagenation:any)=>pageChangeCallback(pagenation.current)}
+                onChange={(pagenation: any) => pageChangeCallback(pagenation.current)}
                 loading={loading} />
         </div>)
     }
@@ -194,7 +157,7 @@ function ScoreTable(props: IProps) {
             columns={generateScoreInfoTableColumns()}
             pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}
             scroll={{ y: 400 }}
-            onChange={(pagenation:any)=>pageChangeCallback(pagenation.current)}
+            onChange={(pagenation: any) => pageChangeCallback(pagenation.current)}
             loading={loading} />
     </div>)
 

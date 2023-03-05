@@ -1,40 +1,21 @@
 import { Button, Form, InputNumber, message, Space, Tag } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { batchUpdateSizePrecision, getExamById } from '../../api/exam';
-import { getSizeList } from '../../api/size';
-import { ISize } from '../size/SizeList';
+import { IEditPrecisionProps, ISize, ISizePrecisionData } from '../../interfaces/Size';
+import { getSizesByComponentId } from '../../wrapper/Component';
 
 
-interface IProps {
-    examId: number,
-    level: number,
-    callback: () => void
-}
-
-export interface ISizePrecisionData {
-    Id: number,
-    UpSize: number,
-    BottomSize: number
-}
-
-export default function EditPrecision(props: IProps) {
+export default function EditPrecision(props: IEditPrecisionProps) {
     const { examId, level, callback } = props;
     const [form] = Form.useForm();
     const [sizes, setSizes] = useState<ISize[]>();
     const getSizedSizes = async (examId: number) => {
-        const res = await getExamById(examId);
-        const { code, msg, data } = res.data;
-        if (code !== 0) {
-            message.error(`获取考核信息失败,系统错误：${msg}`);
-            return
-        }
+        const exam = await getExamById(examId);
+        if(!exam) return;
 
-        const sizes = await getSizeList(1, 100, data.ExamComponent);
-        if (sizes.data.code !== 0) {
-            message.error(`查询尺寸数据失败，系统错误:${sizes.data.msg}`);
-            return;
-        }
-        const sizedItem = sizes.data.data.filter((s: ISize) => s.FirstType === 0);
+        const sizes = await getSizesByComponentId(exam.ExamComponent);
+        if (!sizes) return;
+        const sizedItem = sizes.filter((s: ISize) => s.FirstType === 0);
         form.setFieldsValue({
             "table": sizedItem
         })
@@ -46,20 +27,14 @@ export default function EditPrecision(props: IProps) {
     }, [])
 
     const onFinish = async(values: any) => {
-        console.log(`请求: ${JSON.stringify(values)}`);
         const sizes:any = values.table;
-        const req = sizes.map((size:any)=>({
+        const req:ISizePrecisionData = sizes.map((size:any)=>({
             Id: size.Id,
             UpSize: size.UpSize,
             BottomSize: size.BottomSize
         }))
         const res = await batchUpdateSizePrecision(examId, req);
-        const {code, msg, data} = res.data;
-        if(code !== 0){
-            message.error(`保存失败，系统错误：${msg}, 请稍后重试`);
-            return
-        }
-        message.info(`保存成功`);
+        if(!res) return;
         callback()
     }
 

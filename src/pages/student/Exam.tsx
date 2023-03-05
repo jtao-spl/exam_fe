@@ -1,87 +1,29 @@
 import React, { useEffect, useState } from 'react'
-import { getCalculatedSizeForExam, IExam, ScoreItem, sizeScopeToDelta } from '../exam/ExamList';
 import { useNavigate, useParams } from "react-router-dom";
 import { Button, Card, Collapse, Form, InputNumber, message, Space, Table, TableColumnsType, Tag } from 'antd';
 import { getExamById, getExamCriteriaApi } from '../../api/exam';
 import { getComponentById } from '../../api/comp';
-import { getSizeCountByComponentId, getSizeList } from '../../api/size';
-import { IComponent } from '../component/ComponentList';
-import { generateSizeTableColumns, ISize } from '../size/SizeList';
 import { REACT_APP_BASE_API } from '../../config/default';
-import { generateCriteriaColumns, ICriteria } from '../exam/CriteriaV2';
 import { getExamScore, isExamSubmitted, saveExamScore } from '../../api/score';
-export interface ExamScoreData {
-  SizeId: number,
-  SizeValue: number,
-  SizeScore: number
-}
+import { IComponent } from '../../interfaces/Component';
+import { ISize, ISizeWithScore, ISizeWithScoreAll } from '../../interfaces/Size';
+import { getSizesByComponentId } from '../../wrapper/Component';
+import { ExamScoreData, ExamStatus2Desc, IExam, IExamCardProps, IExamProps, sizeScopeToDelta } from '../../interfaces/Exam';
+import { ICriteria } from '../../interfaces/ExamCriteria';
+import { calcuateScore, getCalculatedSizeForExam } from '../../wrapper/Exam';
+import { generateSizeTableColumns } from '../../wrapper/Size';
+import { generateCriteriaColumns } from '../../wrapper/Criteria';
 
-interface IPropsIn {
-  role: string
-}
-
-export const ExamStatus2Desc = new Map<number, string>([[0, '待发放'], [1, '已发放'], [2, '已收卷']])
-
-
-export default function Exam(props: IPropsIn) {
+export default function Exam(props: IExamProps) {
   const { role } = props;
 
   const [exam, setExam] = useState<IExam>();
   const [component, setComponent] = useState<IComponent>();
-  const [sizes, setSizes] = useState<ISize[]>();
-  const [criterias, setCriterias] = useState<ICriteria[]>();
+  const [sizes, setSizes] = useState<ISize[]>([]);
+  const [criterias, setCriterias] = useState<ICriteria[]>([]);
   const [isSub, setIsSub] = useState(false);
 
   const params = useParams();
-  const getExam = async (id: number) => {
-    const res = await getExamById(id);
-    const { code, msg, data } = res.data;
-    if (code !== 0) {
-      message.error(`访问考核详情失败，系统错误：${msg}`);
-      return
-    }
-    return data;
-  }
-  const getComponent = async (id: number) => {
-    const res = await getComponentById(id);
-    const { code, msg, data } = res.data;
-    if (code !== 0) {
-      message.error(`访问零件详情失败，系统错误：${msg}`);
-      return
-    }
-    return data
-  }
-  const getSizeCount = async (id: number) => {
-    const res = await getSizeCountByComponentId(id);
-    const { code, msg, data } = res.data;
-    if (code !== 0) {
-      message.error(`访问零件尺寸数量失败，系统错误：${msg}`);
-      return
-    }
-    return data.count;
-  }
-  const getSizes = async (id: number) => {
-    const count = await getSizeCount(id);
-    if (count) {
-      const res = await getSizeList(1, count, id);
-      const { code, msg, data } = res.data;
-      if (code !== 0) {
-        message.error(`访问零件尺寸列表失败，系统错误：${msg}`);
-        return
-      }
-      return data;
-    }
-  }
-  const getCriteria = async (id: number) => {
-    const res = await getExamCriteriaApi(id);
-    const { code, msg, data } = res.data;
-    if (code !== 0) {
-      message.error(`访问考核标准失败，系统错误：${msg}`);
-      return
-    }
-    return data;
-  }
-
 
   const fetchExam = async (id: string | undefined) => {
     if (!id || isNaN(Number.parseInt(id))) {
@@ -89,37 +31,22 @@ export default function Exam(props: IPropsIn) {
       return
     }
     const examId = Number.parseInt(id);
-    const exam = await getExam(examId);
+    const exam = await getExamById(examId);
     if (role === 'student') {
       const res = await isExamSubmitted(examId);
-      const { code, data } = res.data;
-      if (code !== 0) {
-        setIsSub(false);
-      }
-      else {
-        setIsSub(data.isSubmitted)
-      }
+      setIsSub(res);
     }
     if (exam) {
       setExam(exam);
-      const criterias = await getCriteria(exam.CriteriaId);
-      if (criterias) {
-        setCriterias(criterias);
-      }
-      const component = await getComponent(exam.ExamComponent);
+      const criterias = await getExamCriteriaApi(exam.CriteriaId);
+      setCriterias(criterias);
+      const component = await getComponentById(exam.ExamComponent);
+      setComponent(component);
       if (component) {
-        setComponent(component);
-
-        const sizes = await getSizes(exam?.ExamComponent);
-        const sizeList = sizes.map((size: ISize) => {
-          size.Color = size?.FirstType === 0 ? 'blue' : size?.FirstType === 1 ? 'red' : size?.FirstType === 2 ? 'green' : 'grey';
-          return size
-        })
-        sizeList.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType });
-        const newSizes = getCalculatedSizeForExam(exam, sizeList, sizeScopeToDelta);
-        if (newSizes) {
-          setSizes(newSizes);
-        }
+        const sizes = await getSizesByComponentId(exam?.ExamComponent);
+        if (sizes.length === 0) return;
+        const newSizes = getCalculatedSizeForExam(exam, sizes, sizeScopeToDelta);
+        setSizes(newSizes);
       }
     }
   }
@@ -130,8 +57,8 @@ export default function Exam(props: IPropsIn) {
   if (role === 'student') {
     return (
       <div>
-        {!isSub && exam && component && sizes && criterias && <ExamCard exam={exam} component={component} sizes={sizes} criterias={criterias} role={role} />}
-        {isSub && exam && component && sizes && criterias && <ExamDetail exam={exam} component={component} sizes={sizes} criterias={criterias} role={role} />}
+        {!isSub && exam && component && sizes.length > 0 && criterias.length > 0 && <ExamCard exam={exam} component={component} sizes={sizes} criterias={criterias} role={role} />}
+        {isSub && exam && component && sizes.length > 0 && criterias.length > 0 && <ExamDetail exam={exam} component={component} sizes={sizes} criterias={criterias} role={role} />}
       </div>
     )
   } else if (role === 'teacher') {
@@ -144,20 +71,8 @@ export default function Exam(props: IPropsIn) {
   }
 }
 
-interface IProps {
-  exam: IExam
-  component: IComponent,
-  sizes: ISize[],
-  criterias: ICriteria[]
-  role: string,
-  studentId?: string
-}
 
-interface ISizeWithScore extends ISize {
-  score?: number,
-}
-
-function ExamCard(props: IProps) {
+function ExamCard(props: IExamCardProps) {
   const { exam, component, sizes, criterias, role, studentId } = props;
   const [form] = Form.useForm();
   const navigate = useNavigate()
@@ -176,90 +91,13 @@ function ExamCard(props: IProps) {
     }
   }
 
-  /**
-   * 输入数值/数量的时候，计算该项的评分。
-   * @param value 
-   * @param size 
-   * @returns 
-   */
-  const calcuateScore = (value: number | null, size: ISizeWithScore): number | undefined => {
-    console.log(`size: ${JSON.stringify(size)}, value: ${value}`)
-    if (!value) return;
-    if (size.FirstType === 0) {
-      const criteria = criterias.filter((c: ICriteria) => c.FirstType === 0 && c.SizeType === size.SecondType);
-      if (criteria.length === 0) return;
-      if (!criteria[0].SizeDelta || !criteria[0].SizeDeductScore) return;
 
-      if (!exam.Data) return;
-      const scoreItem = exam.Data.scores?.filter((item: ScoreItem) => item.SizeId === size.Id);
-      if (! scoreItem || scoreItem.length === 0) return;
-      if (!size.BottomSize || !size.UpSize || !size.BaseSize) return;
-      const BottomBound = size.BottomSize * 1 + size.BaseSize * 1;
-      const UpBound = size.UpSize * 1 + size.BaseSize * 1
-      if (value >= BottomBound && value <= UpBound) {
-        return scoreItem[0].Score
-      } else {
-        if (value < BottomBound) {
-          const score = scoreItem[0].Score - (BottomBound - value) * criteria[0].SizeDeductScore / criteria[0].SizeDelta;
-          return score > 0 ? score : 0
-        } else {
-          const score = scoreItem[0].Score - (value - UpBound) * criteria[0].SizeDeductScore / criteria[0].SizeDelta;
-          return score > 0 ? score : 0
-        }
-      }
-    }
-    if (size.FirstType === 1) {
-      const criteria = criterias.filter((c: ICriteria) => c.FirstType === 1 && c.GeoType === size.GeoToleranceType);
-      if (criteria.length === 0) return;
-      //如果第一个字符不是数字、负号或者. ，Number.parseFloat返回NaN
-      let GeoVal = size.GeoToleranceVal;
-      if (!GeoVal) return;
-      while (!GeoVal.startsWith('0') && !GeoVal.startsWith('-') && !GeoVal.startsWith('.')) {
-        GeoVal = GeoVal.substring(1);
-      }
-      const ScoreVal = Number.parseFloat(GeoVal);
-      if (isNaN(ScoreVal)) {
-        console.log(`解析形位公差值失败，${size.GeoToleranceVal}`);
-        return;
-      }
-      if (!exam.Data) return;
-      const scoreItem = exam.Data.scores?.filter((item: ScoreItem) => item.SizeId === size.Id);
-      if (! scoreItem || scoreItem.length === 0) return;
-
-      if (value <= ScoreVal) {
-        //满分
-        return scoreItem[0].Score
-      } else {
-        if (!criteria[0].GeoDelta || !criteria[0].GeoDeductScore) return;
-        const score = scoreItem[0].Score - (value - ScoreVal) * criteria[0].GeoDeductScore / criteria[0].GeoDelta;
-        return score > 0 ? score : 0
-      }
-
-    }
-    if (size.FirstType === 2) {
-      const criteria = criterias.filter((c: ICriteria) => c.FirstType === 2 && c.SurfaceRoughnessVal === size.SurfaceRoughnessVal);
-      if (criteria.length === 0) return;
-      if (criteria[0].SurfaceRoughnessCount && criteria[0].SurfaceRoughnessScore) {
-        const score = value * criteria[0].SurfaceRoughnessScore / criteria[0].SurfaceRoughnessCount;
-        return score > 0 ? score : 0
-      }
-    }
-    if (size.FirstType === 3) {
-      const criteria = criterias.filter((c: ICriteria) => c.FirstType === 3);
-      if (criteria.length === 0) return;
-      if (criteria[0].UnDeclaredChamferCount && criteria[0].UnDeclaredChamferTotalVal) {
-        const score = value * criteria[0].UnDeclaredChamferTotalVal / criteria[0].UnDeclaredChamferCount;
-        return score > 0 ? score : 0
-      }
-    }
-  }
 
   const resetTableContent = (value: number | null, size: ISizeWithScore) => {
-    console.log(`size: ${JSON.stringify(size)}, value: ${value}`)
     if (!value) return;
 
     const other = sizes.filter((s: ISizeWithScore) => s.Id !== size.Id); //非改动的数据
-    const score = calcuateScore(value, size);
+    const score = calcuateScore(value, size, criterias, exam);
     if (score === undefined) {
       return;
     }
@@ -273,7 +111,7 @@ function ExamCard(props: IProps) {
 
   const generateInputColumns = () => {
     const fullColumns = generateSizeTableColumns();
-    const columns: TableColumnsType<any> = [
+    const columns: TableColumnsType<ISize> = [
       ...fullColumns,
       {
         title: '测量值/数量',
@@ -326,7 +164,7 @@ function ExamCard(props: IProps) {
     const sizeList: ISizeWithScore[] = values.table;
     const Sizes: { size: number }[] = values.Sizes;
     const scoreData = sizeList.map((size: ISizeWithScore, index: number) => {
-      const score = calcuateScore(Sizes[index]['size'], size);
+      const score = calcuateScore(Sizes[index]['size'], size, criterias, exam);
       if (score === undefined) {
         return null;
       }
@@ -347,16 +185,11 @@ function ExamCard(props: IProps) {
       saveKey = 'group'
     }
     const res = await saveExamScore(exam.Id, (nonEmptyScores as ExamScoreData[]), totalScore, saveKey, stuId);
-    const { code, msg } = res.data;
-    if (code !== 0) {
-      message.error(`保存失败，系统错误：${msg}`);
-      return
+    if (res) {
+      setTimeout(() => {
+        navigate(-1)
+      }, 500);
     }
-    setTimeout(() => {
-      message.info(`保存成功`);
-      navigate(-1)
-    }, 500);
-
   }
   return (
     <Collapse>
@@ -415,8 +248,8 @@ function ExamCard(props: IProps) {
  * @param criterias  评测标准 
  * @returns 
  */
-function generateCriteriaTable(criterias: any) {
-  const columns: TableColumnsType<any> = [...generateCriteriaColumns()]
+function generateCriteriaTable(criterias: ICriteria[]) {
+  const columns: TableColumnsType<ICriteria> = [...generateCriteriaColumns()]
   return <Table rowKey={record => record.Id} dataSource={criterias} columns={columns} pagination={false}></Table>
 }
 
@@ -429,7 +262,7 @@ function generateCriteriaTable(criterias: any) {
 const generateSizeTable = (sizes: any, exam: IExam) => {
   const columns = generateSizeTableColumns();
   const filterdColumns = columns.filter(column => column.key !== 'ComponentId' && column.key !== 'SizeId')
-  const c: TableColumnsType<any> = [
+  const c: TableColumnsType<ISize> = [
     ...filterdColumns,
     {
       title: '配分',
@@ -444,7 +277,6 @@ const generateSizeTable = (sizes: any, exam: IExam) => {
       }
     }
   ];
-  sizes.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType })
   return <Table
     rowKey={record => record.Id}
     dataSource={sizes}
@@ -455,35 +287,22 @@ const generateSizeTable = (sizes: any, exam: IExam) => {
 
 }
 
-
-interface ISizeWithScoreAll extends ISize {
-  SelfSize?: number,
-  SelfScore?: number,
-  GroupSize?: number,
-  GroupScore?: number,
-  FinalSize?: number,
-  FinalScore?: number
-}
 /**
  * 考核成绩详情展示
  * @param props 
  * @returns 
  */
-function ExamDetail(props: IProps) {
+function ExamDetail(props: IExamCardProps) {
   const { exam, component, sizes, criterias } = props;
   const [selfScore, setSelfScore] = useState(0);
   const [groupScore, setGroupScore] = useState(0);
   const [finalScore, setFinalScore] = useState(0);
-  const [sizeExt, setSizeExt] = useState<ISizeWithScoreAll[]>();
+  const [sizeExt, setSizeExt] = useState<ISizeWithScoreAll[]>([]);
 
   const getDataAndScore = async () => {
     const res = await getExamScore(exam.Id);
-    const { code, msg, data } = res.data;
-    if (code !== 0) {
-      message.error(`获取考核评测数据失败，系统错误:${msg}`);
-      return
-    }
-    const { SelfData, SelfScore, GroupData, GroupScore, FinalData, FinalScore } = data;
+    if(!res) return;
+    const { SelfData, SelfScore, GroupData, GroupScore, FinalData, FinalScore } = res;
     setSelfScore(SelfScore);
     setGroupScore(GroupScore);
     setFinalScore(FinalScore);

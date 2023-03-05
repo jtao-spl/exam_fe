@@ -2,9 +2,10 @@ import { Form, Button, Tag, Input, Space, Select, message, TimePicker, DatePicke
 import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getExamTarget, saveExam } from '../../api/exam';
+import { format, IExamBasicInfoProps, SizePrecisionLevel } from '../../interfaces/Exam';
+import { get } from '../../utils/storage';
 import CriteriaV2 from './CriteriaV2';
 import EditPrecision from './EditPrecision';
-import { IExam } from './ExamList';
 import StandardV2 from './StandardV2';
 
 
@@ -34,8 +35,8 @@ import StandardV2 from './StandardV2';
  */
 
 
-const format = "HH:mm";
-export const SizePrecisionLevel = ['精密f', '中等m', '粗糙c', '最粗v', '自定义']
+// const format = "HH:mm";
+// export const SizePrecisionLevel = ['精密f', '中等m', '粗糙c', '最粗v', '自定义']
 
 
 export default function AddExamFC() {
@@ -50,13 +51,8 @@ export default function AddExamFC() {
 
     const fetchTarget = async () => {
         const res = await getExamTarget();
-        const { code, msg, data } = res.data;
-        if (code !== 0) {
-            message.error(`获取考核项目失败，系统错误：${msg}`);
-            return
-        }
-        console.log(`获取考核项目：${JSON.stringify(data)}`);
-        setExamTargets(data.map((item: { Name: string }) => item.Name));
+        const targetList = res.map(target=>target.Name)
+        setExamTargets(targetList);
     }
 
     useEffect(() => {
@@ -103,24 +99,17 @@ export default function AddExamFC() {
         </div>
     )
 }
-interface IProps {
-    componentId: number,
-    examTargets: string[]
-    callback: (examId: number, level: number) => void
-}
-function ExamBasicInfo(props: IProps) {
+
+function ExamBasicInfo(props: IExamBasicInfoProps) {
     const { componentId, examTargets, callback } = props;
     const navigate = useNavigate();
+    const assiger = get('Name');
+    const teacherId = get(`Id`);
     const addExam = async (values: any) => {
-        console.log(`提交数据： ${JSON.stringify(values)}`);
+
         const res = await saveExam(values);
-        const { code, msg, data } = res.data;
-        if (code !== 0) {
-            message.error(`新建考核失败，系统错误：${msg}`);
-            return
-        }
-        message.success(`新建考核成功`);
-        callback(data.Id, values.SizePrecisionLevel)
+        if(!res) return;
+        callback(res.Id, values.SizePrecisionLevel)
     }
     return (
         <div>
@@ -214,15 +203,11 @@ function ExamBasicInfo(props: IProps) {
                     </Select>
                 </Form.Item>
                 <Form.Item
-                    label="考核教师"
+                    label="发布教师"
                     name="ExamTeacher"
-                    required={true}
-                    rules={[{
-                        required: true,
-                        message: '请输入考核教师'
-                    }]}
+                    initialValue={teacherId}
                 >
-                    <Input />
+                    <Tag>{assiger}</Tag>
                 </Form.Item>
 
                 <Space size={'large'}>

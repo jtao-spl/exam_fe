@@ -1,16 +1,38 @@
-import { IExam } from '../pages/exam/ExamList';
 import request from '../utils/request';
-import { ISizePrecisionData } from '../pages/exam/EditPrecision';
+import { message } from 'antd';
+import { IExam, IExamListResp, IExamTarget, ISizeScore } from '../interfaces/Exam';
+import { ISizePrecisionData } from '../interfaces/Size';
+import { ICriteria } from '../interfaces/ExamCriteria';
 
-export const saveExam = (exam: IExam) => {
-    return request({
+/**
+ * 新建考核
+ * @param exam 
+ * @returns 
+ */
+export const saveExam = async (exam: IExam): Promise<IExam | undefined> => {
+    const res = await request({
         url: '/exam',
         method: 'post',
         data: exam
     })
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`新建考核失败，系统错误：${msg}`);
+        return;
+    }
+    message.success(`新建考核成功`);
+    return data;
 }
 
-export const getExamList = (page: number, limit: number = 10, ExamComponent: number = 0, Status?: number) => {
+/**
+ * 获取考核列表
+ * @param page 页码
+ * @param limit 每页数量
+ * @param ExamComponent 按组件id过滤
+ * @param Status 考核状态
+ * @returns 
+ */
+export const getExamList = async (page: number, limit: number = 10, ExamComponent: number = 0, Status?: number): Promise<IExamListResp | undefined> => {
     let params: {
         page: number,
         limit: number,
@@ -20,40 +42,101 @@ export const getExamList = (page: number, limit: number = 10, ExamComponent: num
     if (Status) {
         params = { Status: Status, ...params }
     }
-    return request({
+    const res = await request({
         url: '/exam',
         method: 'get',
         params: params
     })
+    const { code, msg, data, total } = res.data;
+    if (code !== 0) {
+        message.error(`获取考核列表失败，系统错误：${msg}`);
+        return;
+    }
+    return {
+        exams: data,
+        pageSize: limit,
+        total: total
+    }
 }
-export const saveExamCriteria = (criteria: any, ExamId: number) => {
-    return request({
+
+/**
+ * 保存考核标准
+ * @param criteria 考核项标准
+ * @param ExamId 考试id
+ * @returns 
+ */
+export const saveExamCriteria = async (criteria: any, ExamId: number): Promise<boolean> => {
+    const res = await request({
         url: '/exam/criteria',
         method: 'post',
         data: criteria,
         params: { ExamId: ExamId }
     })
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`保存考核标准失败，系统错误：${msg}`);
+        return false
+    }
+    message.success(`保存考核标准成功`);
+    return true
 }
-export const getExamCriteriaApi = (CriteriaId: number) => {
-    return request({
+/**
+ * 获取考试考核项标准
+ * @param CriteriaId 
+ * @returns 
+ */
+export const getExamCriteriaApi = async (CriteriaId: number): Promise<ICriteria[]> => {
+    const res = await request({
         url: '/exam/criteria',
         method: 'get',
         params: { CriteriaId: CriteriaId }
     })
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`获取考核标准失败，系统错误：${msg}`);
+        return [];
+    }
+    return data;
 }
-export const getExamById = (Id: number) => {
-    return request({
+
+/**
+ * 通过id查找考核
+ * @param Id 考核id
+ * @returns 
+ */
+export const getExamById = async (Id: number): Promise<IExam | undefined> => {
+    const res = await request({
         url: `/exam/${Id}`,
         method: 'get',
     })
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`获取考核信息失败,系统错误：${msg}`);
+        return
+    }
+    return data;
 }
-export const saveExamScores = (scores: any, ExamId: number) => {
-    return request({
+
+/**
+ * 保存考核配分
+ * @param scores 尺寸id,分值
+ * @param ExamId 考核id
+ * @returns 
+ */
+export const saveExamScores = async (scores: ISizeScore[], ExamId: number): Promise<boolean> => {
+    const res = await request({
         url: '/exam/scores',
         method: 'post',
         data: { scores: scores },
         params: { ExamId: ExamId }
     })
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`保存配分失败，系统错误: ${msg}`);
+        return false
+    }
+    message.info(`保存成功`);
+    return true
 }
 
 /**
@@ -64,40 +147,77 @@ export const saveExamScores = (scores: any, ExamId: number) => {
  * @param Class 班级
  * @returns 
  */
-export const setExamStatusApi = (examId: number, Status: number, Grade?: number, Class?: number) => {
-    let data: { Status: number, Grade?: number, Class?: Number } = { Status: Status }
-    if (Grade && Class) {
-        data = { ...data, Grade: Grade, Class: Class }
+export const setExamStatusApi = async (examId: number, Status: number, Grade?: number, Major?: string, Class?: number): Promise<boolean> => {
+    let data: { Status: number, Grade?: number, Major?: string, Class?: Number } = { Status: Status }
+    if (Grade && Major && Class) {
+        data = { ...data, Grade: Grade, Major: Major, Class: Class }
     }
-    return request({
+    const res = await request({
         url: `/exam/${examId}`,
         method: 'patch',
         data: data
     })
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`操作失败，系统错误:${msg}`);
+        return false;
+    }
+    message.success(`操作成功`)
+    return true
 }
 
-export const saveExamTarget = (Name: string) => {
-    return request({
+/**
+ * 新增考核项目
+ * @param Name 考核项目名
+ * @returns 
+ */
+export const saveExamTarget = async (Name: string): Promise<boolean> => {
+    const res = await request({
         url: `/exam/target`,
         method: 'post',
         data: { Name: Name }
     })
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`新增考核项目失败，系统错误：${msg}`);
+        return false;
+    }
+    message.info(`保存成功`);
+    return true;
 }
 
-export const getExamTarget = () => {
-    return request({
+/**
+ * 查询考核项目列表
+ * @returns 
+ */
+export const getExamTarget = async (): Promise<IExamTarget[]> => {
+    const res = await request({
         url: `/exam/target`,
         method: 'get'
     })
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`获取考核项目失败，系统错误：${msg}`);
+        return []
+    }
+    return data;
 }
 
 /**
  * 存储考核自定义的尺寸公差
  */
-export const batchUpdateSizePrecision = (examId: number, data: ISizePrecisionData) => {
-    return request({
+export const batchUpdateSizePrecision = async (examId: number, dt: ISizePrecisionData): Promise<boolean> => {
+    const res = await request({
         url: `/exam/${examId}/size/precision`,
         method: `patch`,
-        data: { data: data }
-    })
+        data: { data: dt }
+    });
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`保存失败，系统错误：${msg}, 请稍后重试`);
+        return false
+    }
+    message.info(`保存成功`);
+    return true
+
 }

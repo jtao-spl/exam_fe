@@ -1,37 +1,33 @@
 import { Space, Table, Tag } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom';
+import { getComponentById } from '../../api/comp';
 import { REACT_APP_BASE_API } from '../../config/default';
-import { generateSizeTableColumns, ISize } from '../size/SizeList';
-import { IComponent } from './ComponentList';
-import { getComponent, getSizesByComponentId } from './EditComponentV2';
+import { IComponent } from '../../interfaces/Component';
+import { ISize } from '../../interfaces/Size';
+import { getSizesByComponentId } from '../../wrapper/Component';
+import { generateSizeTableColumns } from '../../wrapper/Size';
+
 
 export default function ComponentDetail() {
-
     const params = useParams();
-
     let id = 0;
     if (params.id) {
         id = Number.parseInt(params.id);
     }
-
-    const [sizeList, setSizeList] = useState<ISize[]>();
+    const [sizeList, setSizeList] = useState<ISize[]>([]);
     const [component, setComponent] = useState<IComponent>();
 
     const init = async () => {
         const sizes = await getSizesByComponentId(id);
-        if (sizes) {
-            setSizeList(sizes);
-        }
-        const component = await getComponent(id);
-        if (component) {
-            setComponent(component)
-        }
+        setSizeList(sizes);
+        const component = await getComponentById(id);
+        setComponent(component)
     }
+
     const generateSizeTable = (sizes: any) => {
         const allColumns = generateSizeTableColumns();
         const OmitComponentIdColumns = allColumns.filter((item: any) => item.key !== 'ComponentId')
-        sizes.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType })
         return <Table
             dataSource={sizes}
             columns={OmitComponentIdColumns}

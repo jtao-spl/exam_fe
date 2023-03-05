@@ -1,6 +1,6 @@
 import { Form, InputNumber, Space, Tag } from 'antd'
 import React from 'react'
-import { IEntity } from '../CriteriaV2'
+import { IEntity } from '../../../interfaces/ExamCriteria';
 interface IProps {
     SizedEntity:IEntity[]
 }

@@ -1,47 +1,20 @@
-import { Button, Cascader, Form, message, Modal } from 'antd';
+import { Button, Cascader, Form, Modal } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { setExamStatusApi } from '../../api/exam';
-import { getAllGradeClass } from '../../api/student';
-import { IExam } from './ExamList';
-interface IProps {
-    visible: boolean,
-    cancel: () => void,
-    exam: IExam
-    callback: () => void
-}
+import { IPublishExamProps } from '../../interfaces/Exam';
+import { Option } from '../../interfaces/Student';
+import { getOptions } from '../../wrapper/Student';
 
-interface Option {
-    value: string | number;
-    label: string;
-    children?: Option[];
-}
-
-export default function PublishExam(props: IProps) {
+export default function PublishExam(props: IPublishExamProps) {
     const { visible, cancel, exam, callback } = props;
 
-    const [options, setOptions] = useState<Option[]>()
-
-    const getOptions = async () => {
-        const res = await getAllGradeClass();
-        const { code, msg, data } = res.data;
-        if (code !== 0) {
-            message.error(`查询年级&班级信息失败，系统错误：${msg}`);
-            return [];
-        }
-        // data: :[{"Grade":2022,"Class":[1,2]},{"Grade":2021,"Class":[2,3]}]
-        const options: Option[] = data.map((input: { Grade: number, Class: number[] }) => ({
-            label: `${input.Grade}级`,
-            value: input.Grade,
-            children: input.Class.map((cls: number) => ({
-                value: cls,
-                label: `${cls}班`
-            }))
-        }))
+    const [options, setOptions] = useState<Option[]>([])
+    const getOpts = async()=>{
+        const options = await getOptions();
         setOptions(options);
-        return options;
     }
     useEffect(() => {
-        getOptions()
+        getOpts()
     }, [])
 
     // const onChange = (value: (string | number)[][]) => {
@@ -52,13 +25,10 @@ export default function PublishExam(props: IProps) {
         console.log(`提交数据：${JSON.stringify(values)}`);
         const item = values.Class;
         console.log(`提交数据：grade：${item[0]} class: ${item[1]}`);
-        const res = await setExamStatusApi(values.ExamId, 1, item[0], item[1]);
-        const { code, msg, data } = res.data;
-        if (code !== 0) {
-            message.error(`考核下发失败，系统错误：${msg}`);
-            return;
-        }
-        message.info(`考核下发成功`);
+        const Grade = item[0]
+        const [Major, Class] = item[1].split('-');
+        const res = await setExamStatusApi(values.ExamId, 1, Grade, Major, Number.parseInt(Class));
+        if(!res) return;
         callback();
     }
     return (

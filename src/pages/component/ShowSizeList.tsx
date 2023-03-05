@@ -1,23 +1,19 @@
 import { Modal, Table } from 'antd'
 import React from 'react'
-import { generateSizeTableColumns, ISize } from '../size/SizeList'
+import { IShowSizeListProps } from '../../interfaces/Component';
+import {  ISize } from '../../interfaces/Size';
+import { generateSizeTableColumns } from '../../wrapper/Size';
 
 import '../size/font.css';
 
-interface IProps{
-    visible: boolean,
-    cancel:()=>void,
-    sizeList: ISize[]
-}
 
-export default function ShowSizeListFC(props:IProps) {
+export default function ShowSizeListFC(props:IShowSizeListProps) {
     const {visible, cancel, sizeList} = props;
     const onCancel = ()=>{
         cancel()
     }
     const generateTable = (sizeList:any) =>{
         const columns = generateSizeTableColumns();
-        sizeList.sort((a:ISize, b:ISize)=>{return a.FirstType - b.FirstType})
         return <Table rowKey={record=>record.Id} columns={columns} dataSource={sizeList} pagination={false} scroll={{ y: 400 }} />;
       }
 

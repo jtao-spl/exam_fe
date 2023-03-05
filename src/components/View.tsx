@@ -17,6 +17,7 @@ const AddExamV2 = lazy(() => import('../pages/exam/AddExamV2'));
 const TeacherDemo = lazy(()=>import('../pages/teacher/TeacherDemo'));
 const EditComponentV2 = lazy(() => import('../pages/component/EditComponentV2'));
 const ComponentList = lazy(() => import('../pages/component/ComponentList'));
+const ToolList = lazy(()=>import('../pages/teacher/ToolList'));
 const ScoreList = lazy(() => import('../pages/exam/score/ScoreList'));
 const TeacherList = lazy(() => import('../pages/admin/TeacherList'));
 const AddExamTarget = lazy(() => import('../pages/exam/AddExamTarget'));
@@ -40,6 +41,7 @@ export default function View() {
               <Route path='component' key='component'>
                 <Route path='list' element={<ComponentList />} />
                 <Route path=':id' element={<EditComponentV2 />} />
+                <Route path='tools' element={<ToolList />} />
               </Route>
               <Route path='exam' key='examlist' >
                 <Route path='list' element={<ExamList />} />

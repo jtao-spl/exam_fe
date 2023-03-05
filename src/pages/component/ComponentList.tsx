@@ -2,14 +2,8 @@ import { Button, Space, Table, Tag } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { getComponentList } from '../../api/comp'
+import { IComponent } from '../../interfaces/Component'
 import DeleteComponentFC from './DeleteComponent'
-export interface IComponent {
-  Id: number,
-  ComponentName: string,
-  Status: number,
-  Deleted: boolean,
-  ClipPath: string
-}
 
 export default function ComponentList() {
   const [componentList, setComponentList] = useState<IComponent[]>();
@@ -25,11 +19,12 @@ export default function ComponentList() {
    */
   const getComponents = async (pg: number = 1, lim: number = 10) => {
     const res = await getComponentList(pg, lim);
-    const { data, total } = res.data;
-    setComponentList(data);
-    setPageSize(lim);
-    setTotal(total);
-    setLoading(false);
+    if(res){
+      setComponentList(res.components);
+      setPageSize(res.pageSize);
+      setTotal(res.total);
+      setLoading(false);
+    }
   }
   /**
    * 零件列表换页处理
@@ -73,9 +68,6 @@ export default function ComponentList() {
           <Button type="primary" disabled={component.Status !== 4}
             onClick={() => { navigate('/teacher/exam/create', {state: {id: component.Id}}) }}
           >新建考核</Button>
-          <Button type="primary" disabled={component.Status !== 4}
-          onClick={() => { navigate('/teacher/exam/demo', {state: {id: component.Id}}) }}
-           >教师展示</Button>
           <DeleteComponentFC ComponentId={component.Id} onDelete={onChange} />
         </Space>
 
