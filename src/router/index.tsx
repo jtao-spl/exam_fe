@@ -12,6 +12,7 @@ const Exams = lazy(() => import('../pages/student/Exams'));
 const TeacherList = lazy(() => import('../pages/admin/TeacherList'));
 const StudentList = lazy(() => import('../pages/admin/StudentList'));
 const ToolList = lazy(() => import('../pages/teacher/ToolList'));
+const TeacherStuList = lazy(()=>import('../pages/teacher/StudentList'));
 export interface IRouter {
     title: React.ReactNode,
     path: string,
@@ -48,13 +49,29 @@ export const teacherRouters: IRouter[] = [
         ]
     },
     {
-        title: '考核管理',
+        title: '学生管理',
+        path: '/teacher/student',
+        key: 'student',
+        icon: <InfoCircleOutlined />,
+        children: [
+            {
+                title: <Link to='/teacher/student/list'>分组管理</Link>,
+                path: '/teacher/student/list',
+                key: 'students',
+                icon: <PartitionOutlined />,
+                element: <TeacherStuList />
+            }
+        ]
+    },
+
+    {
+        title: '考试管理',
         path: '/teacher/exam',
         key: 'exam',
         icon: <InfoCircleOutlined />,
         children: [
             {
-                title: <Link to='/teacher/exam/list'>考核列表</Link>,
+                title: <Link to='/teacher/exam/list'>考卷列表</Link>,
                 path: '/teacher/exam/list',
                 key: 'exams',
                 icon: <PartitionOutlined />,
@@ -195,6 +212,22 @@ export const adminRoutes: IRouter[] = [
             //     icon: <PartitionOutlined />,
             //     element: <StudentUpload />
             // }
+        ]
+    },
+    {
+        title: '工具管理',
+        path: '/admin/tool',
+        key: 'tool',
+        icon: <PartitionOutlined />,
+        children: [
+            {
+                title: <Link to='/admin/tool/list'>工具列表</Link>,
+                // title: 'etst',
+                path: '/admin/tool/list',
+                key: 'tools',
+                icon: <PartitionOutlined />,
+                element: <ToolList />
+            },
         ]
     },
     {

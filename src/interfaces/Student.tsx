@@ -26,6 +26,10 @@ export interface IStudentInfo {
     StudentId: number,
     Deleted?: boolean
 }
+export interface IStudentInfoWithGroup extends IStudentInfo{
+    Group?: string
+}
+
 //上传后，class为落库后记录的id
 export interface IStudent {
     Id: number,
@@ -82,4 +86,14 @@ export interface IGradeTableProps {
     defaultGradeKey: React.Key,
     delCallback: ()=>void,
     selectRowCallback:(id:number)=>void
+}
+
+
+export interface IGroupInfo {
+    Id: number,
+    GradeId: number,
+    Class:number,
+    TeacherPhone: string,
+    GroupName: string,
+    StudentIds: number[]
 }

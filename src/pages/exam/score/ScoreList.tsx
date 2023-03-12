@@ -76,11 +76,11 @@ function ExamBasicInfo(props: IProps2) {
     return (<div>
         {exam &&
             <Space direction="vertical">
-                {`考核日期：${exam.ExamDate}`}
+                {/* {`考核日期：${exam.ExamDate}`}
                 {`考核时间：${exam.StartTime}`}
-                {`交件时间: ${exam.FinishTime}`}
+                {`交件时间: ${exam.FinishTime}`} */}
                 {`考核项目: ${exam.ExamTarget}`}
-                {`考核教师: ${exam.ExamTeacher}`}
+                {/* {`考核教师: ${exam.ExamTeacher}`} */}
                 {`考核零件: ${exam.ExamComponent}`}
                 {`考核状态: ${ExamStatus2Desc.get(exam.Status)}`}
             </Space>

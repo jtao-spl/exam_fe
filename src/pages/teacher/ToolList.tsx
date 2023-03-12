@@ -11,9 +11,9 @@ export default function ToolList() {
     const [tool, setTool] = useState<ITool>();
     const [showAddToolModal, setShowAddToolModal] = useState(false);
     const [showEditToolModal, setShowEditToolModal] = useState(false);
-    const init = async () => {
+    const init = async (page: number = 0, limit: number = 10) => {
         setLoading(true);
-        const res = await getToolList(0, 10);
+        const res = await getToolList(page, limit);
         setLoading(false);
         if (!res) return;
         setTools(res.items);
@@ -38,6 +38,7 @@ export default function ToolList() {
                     setTool(item);
                     setShowEditToolModal(true);
                 }}
+                pageChangeCallback={(pagenation: any) => init(pagenation.current)}
             />
             <EditTool
                 open={showEditToolModal}
@@ -60,7 +61,7 @@ export default function ToolList() {
 
 
 function ToolTable(props: IToolTableProps) {
-    const { tools, pageSize, total, loading, callback, showEditToolModal } = props;
+    const { tools, pageSize, total, loading, callback, showEditToolModal, pageChangeCallback } = props;
 
     const delTool = async (id: number) => {
         const res = await deleteTool(id);
@@ -91,6 +92,7 @@ function ToolTable(props: IToolTableProps) {
             loading={loading}
             pagination={{ position: ["bottomCenter"], total: total, pageSize: pageSize, showSizeChanger: false }}
             scroll={{ y: 400 }}
+            onChange={(pagenation: any) => pageChangeCallback(pagenation.current)}
         />
     </div>)
 }
@@ -110,6 +112,7 @@ function EditTool(props: IEditToolProps) {
             title='更改工具名称'
             footer={null}
             open={open}
+            onCancel={callback}
         >
             <Form
                 onFinish={update}
@@ -149,6 +152,7 @@ function AddTool(props: IAddToolProps) {
             title='新增工具'
             footer={null}
             open={open}
+            onCancel={callback}
         >
             <Form
                 onFinish={create}

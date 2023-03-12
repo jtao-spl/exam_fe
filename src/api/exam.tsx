@@ -6,14 +6,16 @@ import { ICriteria } from '../interfaces/ExamCriteria';
 
 /**
  * 新建考核
- * @param exam 
+ * @param ExamTarget 考核项目
+ * @param ExamComponent 考核组件号
+ * @param SizePrecisionLevel 线性尺寸公差等级
  * @returns 
  */
-export const saveExam = async (exam: IExam): Promise<IExam | undefined> => {
+export const saveExam = async (ExamTarget: string, ExamComponent: number, SizePrecisionLevel: number): Promise<IExam | undefined> => {
     const res = await request({
         url: '/exam',
         method: 'post',
-        data: exam
+        data: { ExamTarget: ExamTarget, ExamComponent: ExamComponent, SizePrecisionLevel: SizePrecisionLevel }
     })
     const { code, msg, data } = res.data;
     if (code !== 0) {
@@ -25,20 +27,41 @@ export const saveExam = async (exam: IExam): Promise<IExam | undefined> => {
 }
 
 /**
+ * 查询当前已创建未完成的考核，继续
+ * @param ComponentId 
+ * @returns 
+ */
+export const getPendingExam = async (ComponentId: number): Promise<IExam | null> => {
+    const res = await request({
+        url: '/exam/pending',
+        method: 'get',
+        params: { ExamComponent: ComponentId }
+    });
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.warning(`查询失败，系统错误：${msg}`);
+        return null;
+    }
+    return data;
+}
+
+/**
  * 获取考核列表
  * @param page 页码
  * @param limit 每页数量
  * @param ExamComponent 按组件id过滤
  * @param Status 考核状态
+ * @param IncludeShared 是否返回共享的考卷
  * @returns 
  */
-export const getExamList = async (page: number, limit: number = 10, ExamComponent: number = 0, Status?: number): Promise<IExamListResp | undefined> => {
+export const getExamList = async (page: number, limit: number = 10, ExamComponent: number = 0, IncludeShared: boolean = true, Status?: number): Promise<IExamListResp | undefined> => {
     let params: {
         page: number,
         limit: number,
         ExamComponent: number,
+        IncludeShared: boolean,
         Status?: number
-    } = { page: page, limit: limit, ExamComponent: ExamComponent }
+    } = { page: page, limit: limit, ExamComponent: ExamComponent, Status: 3, IncludeShared: IncludeShared }
     if (Status) {
         params = { Status: Status, ...params }
     }
@@ -96,7 +119,13 @@ export const getExamCriteriaApi = async (CriteriaId: number): Promise<ICriteria[
         message.error(`获取考核标准失败，系统错误：${msg}`);
         return [];
     }
-    return data;
+    const d2nCriterias = data.map((item: any) => ({
+        ...item,
+        SizeDelta: Number.parseFloat(item.SizeDelta),
+        GeoDelta: Number.parseFloat(item.GeoDelta),
+        SurfaceRoughnessScore: Number.parseFloat(item.SurfaceRoughnessScore),
+    }))
+    return d2nCriterias;
 }
 
 /**
@@ -206,7 +235,7 @@ export const getExamTarget = async (): Promise<IExamTarget[]> => {
 /**
  * 存储考核自定义的尺寸公差
  */
-export const batchUpdateSizePrecision = async (examId: number, dt: ISizePrecisionData): Promise<boolean> => {
+export const batchUpdateSizePrecision = async (examId: number, dt: ISizePrecisionData[]): Promise<boolean> => {
     const res = await request({
         url: `/exam/${examId}/size/precision`,
         method: `patch`,

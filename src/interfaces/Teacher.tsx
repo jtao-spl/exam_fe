@@ -1,7 +1,12 @@
+import { IComponent } from "./Component"
+import { IExam } from "./Exam"
+import { ICriteria } from "./ExamCriteria"
+import { ISize } from "./Size"
+
 export interface ITeacher {
     Id: number,
     Name: string,
-    Phone: number,
+    Phone: string,
     Deleted: boolean
 }
 export interface ITeacherWithKey extends ITeacher {
@@ -25,6 +30,15 @@ export interface ITeacherTableProps {
 }
 
 export interface IAddTeacherProps {
+    open: boolean,
+    callback: () => void
+}
+
+export interface IExamDetailProps {
+    exam?: IExam,
+    component?: IComponent,
+    sizes: ISize[],
+    criterias: ICriteria[],
     open: boolean,
     callback: () => void
 }

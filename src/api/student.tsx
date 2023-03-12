@@ -1,5 +1,5 @@
 import { message } from 'antd';
-import { IGrade, IGradeClass, IStudent, IStudentInfo, IStudentQueryReq, IStudentUpload } from '../interfaces/Student';
+import { IGrade, IGradeClass, IGroupInfo, IStudent, IStudentInfo, IStudentInfoWithGroup, IStudentQueryReq, IStudentUpload } from '../interfaces/Student';
 import request from '../utils/request';
 
 /**
@@ -37,15 +37,16 @@ export const getAllGradeClass = async (): Promise<IGradeClass[]> => {
         message.error(`查询年级&班级信息失败，系统错误：${msg}`);
         return [];
     }
-    return [];
+    return [];//TODO:
 }
 
 /**
  * 批量查询学生信息
- * @param req 学号列表  or 班级 
+ * @param req 学号列表  or 班级
+ * @param GroupInfoRequired 是否返回分组信息
  * @returns 
  */
-export const batchGetStudentInfo = async (req: IStudentQueryReq): Promise<IStudentInfo[]> => {
+export const batchGetStudentInfo = async (req: IStudentQueryReq, GroupInfoRequired: boolean = false): Promise<IStudentInfoWithGroup[]> => {
     const res = await request({
         url: '/student',
         method: 'get',
@@ -53,18 +54,35 @@ export const batchGetStudentInfo = async (req: IStudentQueryReq): Promise<IStude
     })
     const { code, msg, data } = res.data;
     if (code !== 0) {
-        message.warn(`查询学生信息失败，暂时无法展示姓名,系统错误：${msg}`);
+        message.warn(`查询学生信息失败,系统错误：${msg}`);
         return [];
     }
-    const gradeIds:number[] = data.map((item: IStudent) => item.GradeId);
+    const gradeIds: number[] = data.map((item: IStudent) => item.GradeId);
     const uniqIds = Array.from(new Set(gradeIds));
     const grades = await batchGetStudentGradeInfo(uniqIds);
+    let groupInfo: IGroupInfo | null = null
+    //仅支持教师侧查询分组，因为每个教师的设置都不一样，管理员侧没法看。然后教师侧每次仅支持单班级的配置。
+    if (GroupInfoRequired && data.length > 0) {
+        groupInfo = await getGroupInfo(gradeIds[0], data[0].Class, 'A');
+    }
     const result = data.map((item: IStudent) => {
         const grade = grades.filter((g: IGrade) => g.Id === item.GradeId);
+        let ret;
         if (grade.length === 0) {
-            return { StudentId: item.StudentId, Name: item.Name, Grade: 0, Major: '未知', Class: item.Class, Deleted: item.Deleted }
+            ret = { StudentId: item.StudentId, Name: item.Name, Grade: 0, Major: '未知', Class: item.Class, Deleted: item.Deleted, Group: '待定' }
+        } else {
+            ret = { StudentId: item.StudentId, Name: item.Name, Grade: grade[0].Grade, Major: grade[0].Major, Class: item.Class, Deleted: item.Deleted, Group: '待定' }
         }
-        return { StudentId: item.StudentId, Name: item.Name, Grade: grade[0].Grade, Major: grade[0].Major, Class: item.Class, Deleted: item.Deleted }
+        if (GroupInfoRequired) {
+            if (groupInfo !== null) {
+                if (groupInfo.StudentIds.includes(item.StudentId)) {
+                    ret.Group = 'A'
+                } else {
+                    ret.Group = 'B'
+                }
+            }
+        }
+        return ret
     })
     return result;
 }
@@ -74,7 +92,7 @@ export const batchGetStudentInfo = async (req: IStudentQueryReq): Promise<IStude
  * @param ids 
  * @returns 
  */
-const batchGetStudentGradeInfo = async (ids: number[]): Promise<IGrade[]> => {
+export const batchGetStudentGradeInfo = async (ids?: number[]): Promise<IGrade[]> => {
     const res = await request({
         url: '/student/grade',
         method: 'get',
@@ -106,4 +124,47 @@ export const updateStudentInfo = async (student: IStudentInfo): Promise<boolean>
         return false;
     }
     return true
+}
+
+/**
+ * 新建或更新学生分组
+ * @param Grade 年级
+ * @param Major 专业
+ * @param Class 班级
+ * @param ids 学生id列表
+ * @returns 
+ */
+export const createOrUpdateGroup = async (Grade: number, Major: string, Class: number, ids: number[]): Promise<boolean> => {
+    const res = await request({
+        url: '/student/group',
+        method: 'post',
+        data: { Grade, Major, Class, ids }
+    });
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`保存失败，系统错误：${msg}`);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * 查询当前用户对指定年级专业班级的分组信息
+ * @param GradeId 
+ * @param Class 
+ * @param GroupName
+ * @returns 
+ */
+export const getGroupInfo = async (GradeId: number, Class: number, GroupName: string): Promise<IGroupInfo | null> => {
+    const res = await request({
+        url: '/student/group',
+        method: 'get',
+        params: { GradeId, Class, GroupName }
+    });
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`查询失败，系统错误：${msg}`);
+        return null;
+    }
+    return data;
 }

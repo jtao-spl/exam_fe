@@ -1,8 +1,10 @@
-import { Form, Button, Tag, Input, Space, Select, message, TimePicker, DatePicker, Steps, } from 'antd';
+import { Form, Button, Tag, Space, Select, Steps, message } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
-import { getExamTarget, saveExam } from '../../api/exam';
-import { format, IExamBasicInfoProps, SizePrecisionLevel } from '../../interfaces/Exam';
+import { getComponentById } from '../../api/comp';
+import { getExamTarget, getPendingExam, saveExam } from '../../api/exam';
+import { IComponent } from '../../interfaces/Component';
+import { IExamBasicInfoProps, SizePrecisionLevel } from '../../interfaces/Exam';
 import { get } from '../../utils/storage';
 import CriteriaV2 from './CriteriaV2';
 import EditPrecision from './EditPrecision';
@@ -51,12 +53,22 @@ export default function AddExamFC() {
 
     const fetchTarget = async () => {
         const res = await getExamTarget();
-        const targetList = res.map(target=>target.Name)
+        const targetList = res.map(target => target.Name)
         setExamTargets(targetList);
+    }
+    const checkPendingExam = async()=>{
+        const res = await getPendingExam(location.state.id);
+        if(res){
+            message.info(`存在未创建完成的考核，继续编辑`);
+            setExamId(res.Id);
+            setLevel(res.SizePrecisionLevel);
+            setCurrent(res.Status + 1);
+        }
     }
 
     useEffect(() => {
         fetchTarget();
+        checkPendingExam();
     }, [])
     const steps = [
         {
@@ -64,10 +76,11 @@ export default function AddExamFC() {
             component: <ExamBasicInfo
                 componentId={location.state.id}
                 examTargets={examTargets}
-                callback={(examId: number, level: number) => { 
-                    setExamId(examId); 
+                callback={(examId: number, level: number) => {
+                    setExamId(examId);
                     setLevel(level);
-                    setCurrent(current + 1) }} />
+                    setCurrent(current + 1)
+                }} />
         },
         {
             title: '线性尺寸公差编辑',
@@ -94,29 +107,43 @@ export default function AddExamFC() {
     const items = steps.map((item) => ({ key: item.title, title: item.title }));
     return (
         <div>
-            < Steps current={current} items={items} />
-            <div className="steps-content">{steps[current].component}</div>
+            <Space direction='vertical'>
+                < Steps current={current} items={items} />
+                <div></div>
+                <div className="steps-content">{steps[current].component}</div>
+            </Space>
         </div>
     )
 }
 
 function ExamBasicInfo(props: IExamBasicInfoProps) {
     const { componentId, examTargets, callback } = props;
+    const [component, setComponent] = useState<IComponent>();
     const navigate = useNavigate();
     const assiger = get('Name');
     const teacherId = get(`Id`);
     const addExam = async (values: any) => {
-
-        const res = await saveExam(values);
-        if(!res) return;
+        const { ExamTarget, ExamComponent, SizePrecisionLevel } = values;
+        const res = await saveExam(ExamTarget, ExamComponent, SizePrecisionLevel);
+        if (!res) return;
         callback(res.Id, values.SizePrecisionLevel)
     }
+
+    const getComponent = async () => {
+        const res = await getComponentById(componentId);
+        if (!res) return;
+        setComponent(res)
+    }
+    useEffect(() => {
+        getComponent()
+    }, [])
+
     return (
         <div>
             <Form
                 onFinish={addExam}
             >
-                <Form.Item
+                {/* <Form.Item
                     label="考核日期"
                     name="ExamDate"
                     rules={[{
@@ -153,7 +180,7 @@ function ExamBasicInfo(props: IExamBasicInfoProps) {
                         minuteStep={10}
                         format={format}
                     />
-                </Form.Item>
+                </Form.Item> */}
                 <Form.Item
                     label="考核项目"
                     name="ExamTarget"
@@ -181,7 +208,7 @@ function ExamBasicInfo(props: IExamBasicInfoProps) {
                     name="ExamComponent"
                     initialValue={componentId}
                 >
-                    <Tag>{componentId}</Tag>
+                    <Tag>{component ? component.ComponentName : componentId}</Tag>
                 </Form.Item>
                 注：线性尺寸公差数据支持手动输入，若要手动输入，请选择下拉框中的【自定义】。
                 <Form.Item
@@ -204,23 +231,15 @@ function ExamBasicInfo(props: IExamBasicInfoProps) {
                 </Form.Item>
                 <Form.Item
                     label="发布教师"
-                    name="ExamTeacher"
+                    name="Creator"
                     initialValue={teacherId}
                 >
                     <Tag>{assiger}</Tag>
                 </Form.Item>
 
                 <Space size={'large'}>
-                    <Button
-                        type='primary'
-                        htmlType='reset'
-
-                    >重置</Button>
-                    <Button
-                        type='primary'
-                        htmlType='submit'
-
-                    >保存</Button>
+                    <Button type='primary' htmlType='reset' >重置</Button>
+                    <Button type='primary' htmlType='submit' >保存</Button>
                 </Space>
             </Form>
 

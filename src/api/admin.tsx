@@ -54,7 +54,7 @@ export const createTeacher = async (Name: string, Phone: string): Promise<boolea
  * @param Role
  * @returns 
  */
-export const toggleStatus = async (Id: number, Role: number): Promise<boolean> => {
+export const toggleStatus = async (Id: string, Role: number): Promise<boolean> => {
     const res = await request({
         url: `/admin/status/toggle/${Role}/${Id}`,
         method: 'patch'

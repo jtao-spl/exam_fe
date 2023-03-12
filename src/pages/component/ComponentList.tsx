@@ -19,7 +19,7 @@ export default function ComponentList() {
    */
   const getComponents = async (pg: number = 1, lim: number = 10) => {
     const res = await getComponentList(pg, lim);
-    if(res){
+    if (res) {
       setComponentList(res.components);
       setPageSize(res.pageSize);
       setTotal(res.total);
@@ -50,26 +50,27 @@ export default function ComponentList() {
         <Table.Column title={'零件ID'} dataIndex={'Id'} />
         <Table.Column title={'零件名称'} dataIndex={'ComponentName'} />
         <Table.Column title={'状态'} render={(_: any, component: IComponent) => {
-          if (component.Status !== 4) {
+          if (component.Status !== 5) {
             return <Tag color='yellow'>待校正</Tag>
           } else {
             return <Tag color='green'>可用</Tag>
           }
         }} />
-        <Table.Column title={'操作'} render={(component: IComponent) => (<Space>
-          <Button type="primary"
-            disabled={component.Status ===4}
-            onClick={() => navigate(`/teacher/component/${component.Id}`)}
-          >编辑</Button>
-          <Button type="primary"
-            disabled={component.Status !==4}
-            onClick={() => navigate(`/teacher/component/${component.Id}`)}
-          >查看详情</Button>
-          <Button type="primary" disabled={component.Status !== 4}
-            onClick={() => { navigate('/teacher/exam/create', {state: {id: component.Id}}) }}
-          >新建考核</Button>
-          <DeleteComponentFC ComponentId={component.Id} onDelete={onChange} />
-        </Space>
+        <Table.Column title={'操作'} render={(component: IComponent) => (
+          <Space direction='vertical'>
+            <Button type="primary"
+              disabled={component.Status === 5}
+              onClick={() => navigate(`/teacher/component/${component.Id}`)}
+            >编辑</Button>
+            <Button type="primary"
+              disabled={component.Status !== 5}
+              onClick={() => navigate(`/teacher/component/${component.Id}`)}
+            >查看详情</Button>
+            <Button type="primary" disabled={component.Status !== 5}
+              onClick={() => { navigate('/teacher/exam/create', { state: { id: component.Id } }) }}
+            >新建考核</Button>
+            <DeleteComponentFC ComponentId={component.Id} onDelete={onChange} />
+          </Space>
 
         )} />
       </Table>

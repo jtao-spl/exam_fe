@@ -1,16 +1,17 @@
 import { message, TableColumnsType, Tag } from "antd";
-import { ExamStatus2Desc, IExam, ScoreItem } from "../interfaces/Exam";
+import { IExam, ScoreItem, sizeScopeToDelta } from "../interfaces/Exam";
 import { ICriteria } from "../interfaces/ExamCriteria";
 import { ISize, ISizePrecisionData, ISizeWithScore } from "../interfaces/Size";
+import { IDemoTableItem } from "../pages/teacher/TeacherDemo";
 
 export function generateExamTableColomns() {
     const columns: TableColumnsType<IExam> = [
-        { title: "考核日期", key: 'ExamDate', dataIndex: 'ExamDate' },
-        { title: "考核时间", key: 'StartTime', dataIndex: 'StartTime' },
-        { title: "交件时间", key: 'FinishTime', dataIndex: 'FinishTime' },
+        // { title: "考核日期", key: 'ExamDate', dataIndex: 'ExamDate' },
+        // { title: "考核时间", key: 'StartTime', dataIndex: 'StartTime' },
+        // { title: "交件时间", key: 'FinishTime', dataIndex: 'FinishTime' },
+        { title: '考核零件', key: 'ExamComponent', dataIndex: 'ExamComponentName' },
         { title: "考核项目", key: 'ExamTarget', dataIndex: 'ExamTarget' },
-        { title: '考核教师', key: 'ExamTeacher', dataIndex: 'ExamTeacher' },
-        { title: '考核零件', key: 'ExamComponent', dataIndex: 'ExamComponent' },
+        { title: '创建人', key: 'Creator', dataIndex: 'CreatorName' },
         {
             title: '零件精密等级', key: 'SizePrecisionLevel', render: (_: any, exam: IExam) => {
                 let level: string;
@@ -37,15 +38,15 @@ export function generateExamTableColomns() {
                 return <Tag>{level}</Tag>
             }
         },
-        {
-            title: '考核状态', key: 'ExamStatus', render: (_: any, exam: IExam) => {
+        // {
+        //     title: '考核状态', key: 'ExamStatus', render: (_: any, exam: IExam) => {
 
-                return <Tag>{ExamStatus2Desc.get(exam.Status)}</Tag>
-            }
-        },
-        {
-            title: '发放班级', key: 'Class', dataIndex: 'Class'
-        }
+        //         return <Tag>{ExamStatus2Desc.get(exam.Status)}</Tag>
+        //     }
+        // },
+        // {
+        //     title: '发放班级', key: 'Class', dataIndex: 'Class'
+        // }
     ]
     return columns;
 }
@@ -84,17 +85,16 @@ export function getPricisionLevelIndexBySize(size: number) {
  * 根据线性尺寸公差等级来重计算尺寸的上下偏差
  * @param exam 考核entity
  * @param sizes 尺寸列表
- * @param sizeScopeToDelta 标准尺寸范围&公差等级对照表
  * @returns 
  */
-export function getCalculatedSizeForExam(exam: IExam, sizes: ISize[], sizeScopeToDelta: number[][]) {
+export function getCalculatedSizeForExam(exam: IExam, sizes: ISize[]) {
     const { SizePrecisionLevel } = exam;
     if (exam.SizePrecisionLevel === 4 && !exam.Data?.precision) {
         message.error(`系统数据异常，自定义的尺寸偏差数据丢失，请重新创建考核。`);
         return [];
     }
 
-    const newSize = sizes.map(size => {
+    const newSize: ISize[] = sizes.map(size => {
         //非尺寸数据直接返回
         if (size.FirstType !== 0 || !size.BaseSize) {
             return size
@@ -202,4 +202,70 @@ export const calcuateScore = (value: number | null, size: ISizeWithScore, criter
             return score > 0 ? score : 0
         }
     }
+}
+
+
+export const getMeasureResult = (item: IDemoTableItem, value: number) => {
+    const size = item.size;
+    if (size.FirstType === 0) {
+        if (size.BaseSize === undefined || size.UpSize === undefined || size.BottomSize === undefined) return '解析失败';
+        const upBound = size.BaseSize + size.UpSize;
+        const bottomBound = size.BaseSize + size.BottomSize;
+        if (size.SecondType === 0) {
+            if (value > upBound) return '返工';
+            if (value < bottomBound) return '报废';
+            return '入库';
+        }
+        if (size.SecondType === 1 || size.SecondType === 2) {
+            if (size.DiameterType === 1) {
+                if (value > upBound) return '返工';
+                if (value < bottomBound) return '报废';
+                return '入库';
+            }
+            if (size.DiameterType === 2) {
+                if (value > upBound) return '报废';
+                if (value < bottomBound) return '返工';
+                return '入库';
+            }
+            return '解析失败';
+        }
+        if (size.SecondType === 3) {
+            if (value > upBound) return '返工';
+            if (value < bottomBound) return '报废';
+            return '入库';
+        }
+    }
+    if (size.FirstType === 1) {
+        let GeoVal = size.GeoToleranceVal;
+        if (!GeoVal) return '解析失败';
+        while (!GeoVal.startsWith('0') && !GeoVal.startsWith('-') && !GeoVal.startsWith('.')) {
+            GeoVal = GeoVal.substring(1);
+        }
+        const ScoreVal = Number.parseFloat(GeoVal);
+        if (isNaN(ScoreVal)) {
+            console.log(`解析形位公差值失败，${size.GeoToleranceVal}`);
+            return '解析失败';
+        }
+        if (value <= ScoreVal) return '入库';
+        return '返工';
+    }
+    if (size.FirstType === 2) {
+        if (!size.SurfaceRoughnessVal) return '解析失败';
+        if (value <= size.SurfaceRoughnessVal) return '入库';
+        return '返工'
+    }
+    return '解析失败';
+}
+
+export const getSummary = (items:IDemoTableItem[])=>{
+    const fail = items.some((item:IDemoTableItem)=>item.result === '报废');
+    if(fail) return '报废';
+    const pass = items.every((item:IDemoTableItem)=>item.result === '入库');
+    if(pass) return '入库';
+    const done = items.every((item:IDemoTableItem)=>item.result !== '待定');
+    if(done){
+        const back = items.some((item:IDemoTableItem)=>item.result === '返工');
+        if(back) return '返工';
+    }
+    return '待定';
 }

@@ -105,7 +105,7 @@ export interface ICriteria {
     GeoDeductScore?: number,
     SurfaceRoughnessVal?:string,
     SurfaceRoughnessCount?:number,
-    SurfaceRoughnessScore?: number,
+    SurfaceRoughnessScore?: number, //decimal转成了string
     UnDeclaredChamferCount?: number,
     UnDeclaredChamferTotalVal?:number
 }

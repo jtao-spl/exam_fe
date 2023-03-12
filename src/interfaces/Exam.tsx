@@ -28,16 +28,19 @@ export interface ScoreItem {
 }
 export interface IExam {
     Id: number,
-    ExamDate: Date,
-    StartTime: string,
-    FinishTime: string,
+    // ExamDate: Date,
+    // StartTime: string,
+    // FinishTime: string,
     ExamTarget: string,
     ExamComponent: number,
+    ExamComponentName?: string,
     SizePrecisionLevel: number,
-    ExamTeacher: string,
+    Creator: string,
+    CreatorName?: string,
     CriteriaId: number,
-    Status: number, //0 初始状态 1 已下发 2 已收卷
-    Class?: string, //发放的班级
+    Status: number, //创建进度。3为完成。
+    Shared: boolean, //是否已共享
+    // Class?: string, //发放的班级
     Data?: { scores?: ScoreItem[], precision?: ISizePrecisionData[] },
 }
 

@@ -42,7 +42,8 @@ export interface IToolTableProps {
     total: number,
     loading: boolean,
     callback: () => void,
-    showEditToolModal: (item: ITool) => void
+    showEditToolModal: (item: ITool) => void,
+    pageChangeCallback: (pagenation: any) => void
 }
 
 export interface IEditToolProps {
@@ -54,4 +55,11 @@ export interface IEditToolProps {
 export interface IAddToolProps {
     open: boolean,
     callback: () => void
+}
+
+export interface IDiameterConfigProps {
+    id: number,
+    sizes: ISize[],
+    callback: () => void,
+    refreshSizeCallback: () => void
 }

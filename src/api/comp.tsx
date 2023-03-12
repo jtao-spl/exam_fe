@@ -166,3 +166,22 @@ export const updateComponentStatus = async (id: number, status: number): Promise
     message.success(`更新组件状态成功`);
     return true;
 }
+
+/**
+ * 根据指定id批量查询，限制每次最多返回50条
+ * @param ids 
+ * @returns 
+ */
+export const getComponentByIds = async(ids: number[]): Promise<IComponent[]> =>{
+    const res = await request({
+        url: '/component/search',
+        method: 'get',
+        params: {Ids: ids}
+    });
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`批量查询组件出错，系统错误${msg}`);
+        return [];
+    }
+    return data;
+}

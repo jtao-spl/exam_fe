@@ -28,12 +28,23 @@ export default function EditPrecision(props: IEditPrecisionProps) {
 
     const onFinish = async(values: any) => {
         const sizes:any = values.table;
-        const req:ISizePrecisionData = sizes.map((size:any)=>({
+        const req:ISizePrecisionData[] = sizes.map((size:any)=>({
             Id: size.Id,
             UpSize: size.UpSize,
             BottomSize: size.BottomSize
         }))
+        const invalidInput = req.filter((item:ISizePrecisionData)=>item.UpSize < item.BottomSize);
+        if(invalidInput.length >0){
+            message.error(`校验失败：输入中存在上偏差小于下偏差，请修正后重新提交`);
+            return;
+        }
         const res = await batchUpdateSizePrecision(examId, req);
+        if(!res) return;
+        callback()
+    }
+
+    const onFinishMini = async()=>{
+        const res = await batchUpdateSizePrecision(examId, []);
         if(!res) return;
         callback()
     }
@@ -41,7 +52,7 @@ export default function EditPrecision(props: IEditPrecisionProps) {
     if (level !== 4) {
         return (<div>
             创建考核时已选择具体的线性尺寸公差等级，此处无需编辑。
-            <Button type='primary' onClick={callback}>下一步</Button>
+            <Button type='primary' onClick={onFinishMini}>下一步</Button>
         </div>)
     }
     return (
@@ -69,7 +80,7 @@ function PrecisionInput(props: IProps2) {
     const { sizes } = props;
     return (
         <div>
-            <Tag color="red">下偏差需要输入有效负数或0，默认值为系统解析的原始偏差数据。</Tag>
+            <Tag color="blue">默认值为系统解析的原始偏差数据。</Tag>
             <Form.List name="table" >
                 {(fields) => (
                     <React.Fragment>
@@ -84,7 +95,7 @@ function PrecisionInput(props: IProps2) {
                                 name={[name, 'UpSize']}
                                 rules={[{ required: true, message: '请输入' }]}
                             >
-                                <InputNumber min={0} max={99.99}/>
+                                <InputNumber min={0} />
                             </Form.Item>
                             下偏差
                             <Form.Item
@@ -92,7 +103,7 @@ function PrecisionInput(props: IProps2) {
                                 name={[name, 'BottomSize']}
                                 rules={[{ required: true, message: '请输入' }]}
                             >
-                                <InputNumber max={0} min={-99.99} />
+                                <InputNumber />
                             </Form.Item>
                         </Space>)
 

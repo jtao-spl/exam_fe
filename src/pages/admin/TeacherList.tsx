@@ -14,6 +14,7 @@ export default function TeacherList() {
     const [switchChecked, setSwitchChecked] = useState(true);
     const [showAddTeacherModal, setShowAddTeacherModal] = useState(false);
     const queryTeachers = async (pg: number = 1, lmt: number = 10, containDeleted: boolean = true) => {
+        setSwitchLoading(true);
         const resp = await getTeacherList(pg, lmt, containDeleted);
         if (resp) {
             setTeachers(resp.teachers);
@@ -62,7 +63,7 @@ export default function TeacherList() {
 function TeacherTable(props: ITeacherTableProps) {
     const { teachers, callback, pageSize, total, loading, refreshCallback } = props;
 
-    const toggleAccountStatus = async (Id: number) => {
+    const toggleAccountStatus = async (Id: string) => {
         const result = await toggleStatus(Id, 2);
         if(result){
             callback();

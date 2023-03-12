@@ -9,13 +9,15 @@ export interface ISize {
     BaseSize?: number,
     UpSize?: number,
     BottomSize?: number,
+    DiameterType?: number,
     GeoToleranceType?: string,
     GeoToleranceVal?: string,
     SurfaceRoughnessType?: string,
-    SurfaceRoughnessVal?: string,
+    SurfaceRoughnessVal?: number,
     SurfaceRoughnessCount?: number,
     UnDeclaredChamferCount?: number,
-    UnDeclaredChamferTotalVal?: number
+    UnDeclaredChamferTotalVal?: number,
+    SafetyRequirement?:string,
     Deleted: boolean
     Color: string
 }
@@ -29,9 +31,11 @@ export interface ISizeWithKey extends ISize {
 }
 
 export interface IShowSizeListProps {
+    id: number,
     sizeList?: ISize[],
     deleteCallback: () => void,
-    displayUpdateSizeModal: (size: ISize) => void
+    displayUpdateSizeModal: (size: ISize) => void,
+    callback: ()=>void
 }
 
 export interface ISizePrecisionData {
@@ -80,4 +84,9 @@ export interface ISizeWithScoreAll extends ISize {
     GroupScore?: number,
     FinalSize?: number,
     FinalScore?: number
+  }
+  
+  export interface IDiameterType{
+    id: number,
+    type: number
   }

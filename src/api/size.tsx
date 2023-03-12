@@ -1,5 +1,5 @@
 import { message } from 'antd';
-import { ISize, ISizeListResp } from '../interfaces/Size';
+import { IDiameterType, ISize, ISizeListResp } from '../interfaces/Size';
 import request from '../utils/request';
 
 /**
@@ -7,9 +7,10 @@ import request from '../utils/request';
  * @param page 页码
  * @param limit 每页数量
  * @param ComponentId 所属组件id
+ * @param OmitSafety  是否过滤安全文明生产的项(默认为true，仅和考核相关的才主动设为false)
  * @returns 
  */
-export const getSizeList = async (page: number = 1, limit: number = 10, ComponentId: number = 0): Promise<ISizeListResp | null> => {
+export const getSizeList = async (page: number = 1, limit: number = 10, ComponentId: number = 0, OmitSafety: boolean=true): Promise<ISizeListResp | null> => {
     const res = await request({
         url: '/size',
         method: 'get',
@@ -21,14 +22,28 @@ export const getSizeList = async (page: number = 1, limit: number = 10, Componen
         return null;
     }
     //设置尺寸类型颜色
-    const sizesWithColor: ISize[] = data.map((size: ISize) => {
-        size.Color = size?.FirstType === 0 ? 'blue' : size?.FirstType === 1 ? 'red' : size?.FirstType === 2 ? 'green' : 'grey';
+    const sizesWithColor: ISize[] = data.map((size: any) => {
+        size.Color = size?.FirstType === 0 ? 'blue' : size?.FirstType === 1 ? 'red' : size?.FirstType === 2 ? 'green' : size?.FirstType === 3 ? 'orange' : 'pink';
         return size
     })
+    //decimal转float
+    const d2nSizes = sizesWithColor.map((size:any)=>({
+        ...size,
+        BaseSize: Number.parseFloat(size.BaseSize),
+        UpSize: Number.parseFloat(size.UpSize),
+        BottomSize: Number.parseFloat(size.BottomSize),
+        SurfaceRoughnessVal: Number.parseFloat(size.SurfaceRoughnessVal),
+    }))
+
+    //是否过滤安全文明生产项
+    let result:ISize[] = d2nSizes;
+    if(OmitSafety){
+        result = d2nSizes.filter((size:ISize)=>size.FirstType !== 4);
+    }
     //排序
-    sizesWithColor.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType });
+    result.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType });
     return {
-        sizes: sizesWithColor,
+        sizes: result,
         pageSize: limit,
         total: total
     }
@@ -119,10 +134,28 @@ export const saveSize = async (size: ISize): Promise<boolean> => {
     const { code, msg } = res.data;
     if (code !== 0) {
         message.error(`新建尺寸失败，系统错误: ${msg}`);
-
         return false
     }
     message.success('新建尺寸成功');
     return true
 
+}
+
+/**
+ * 更新直径是内径还是半径
+ * @param req 
+ * @returns 
+ */
+export const updateDiameterType = async(req:IDiameterType[]):Promise<boolean>=>{
+    const res = await request({
+        url: '/size/diameter',
+        method: 'patch',
+        data: {IdType: req}
+    });
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`更新直径类型失败，系统错误: ${msg}`);
+        return false
+    }
+    return true
 }

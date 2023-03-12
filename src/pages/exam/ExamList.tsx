@@ -1,18 +1,24 @@
-import { Button, message, Popconfirm, Space, Table, TableColumnsType } from 'antd'
+import { Button, message, Popconfirm, Space, Switch, Table, TableColumnsType } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { getComponentById, getComponentByIds } from '../../api/comp'
 
-import { getExamList, setExamStatusApi } from '../../api/exam'
+import { getExamCriteriaApi, getExamList, setExamStatusApi } from '../../api/exam'
+import { getTeacherByIds } from '../../api/teacher'
+import { IComponent } from '../../interfaces/Component'
 import { IExam, sizeScopeToDelta } from '../../interfaces/Exam'
+import { ICriteria } from '../../interfaces/ExamCriteria'
 import { ISize } from '../../interfaces/Size'
+import { ITeacher } from '../../interfaces/Teacher'
 import { getSizesByComponentId } from '../../wrapper/Component'
 import { generateExamTableColomns, getCalculatedSizeForExam } from '../../wrapper/Exam'
 import ShowSizeList from '../component/ShowSizeList'
+import ExamDetail from './ExamDetail'
 import PublishExam from './PublishExam'
 
 
 interface IProps {
-    exams?: IExam[],
+    exams: IExam[],
     total: number,
     pageSize: number,
     loading: boolean,
@@ -27,14 +33,35 @@ export default function ExamList() {
     const [total, setTotal] = useState(0);
     const [pageSize, setPageSize] = useState(0);
     const [loading, setLoading] = useState(true);
-    const getList = async (pg: number = 1, lim: number = 10, ExamComponent: number = 0) => {
-        const res = await getExamList(pg, lim, ExamComponent);
-        if(res){
-            setExams(res.exams);
+    const [switchLoading, setSwitchLoading] = useState(false);
+    const [switchChecked, setSwitchChecked] = useState(true);
+
+    const getList = async (pg: number = 1, lim: number = 10, ExamComponent: number = 0, IncludeShared: boolean = true, Status: number = 3) => {
+        setSwitchLoading(true);
+        setLoading(true);
+        const res = await getExamList(pg, lim, ExamComponent, IncludeShared, Status);
+        if (res && res.exams.length > 0) {
+            const componentIds = res.exams.map((e: IExam) => e.ExamComponent);
+            const creatorIds = res.exams.map((e: IExam) => e.Creator);
+            const uniqIds = Array.from(new Set(componentIds));
+            const uniqCreatorIds = Array.from(new Set(creatorIds));
+            const components = await getComponentByIds(uniqIds);
+            const creators = await getTeacherByIds(uniqCreatorIds);
+            const exams = res.exams.map((e: IExam) => {
+                let name = '';
+                let creatorName = '';
+                const component = components.filter((c: IComponent) => c.Id === e.ExamComponent);
+                if (component.length > 0) name = component[0].ComponentName;
+                const creator = creators.filter((c: ITeacher) => c.Phone === e.Creator);
+                if (creator.length > 0) creatorName = creator[0].Name
+                return { ...e, CreatorName: creatorName, ExamComponentName: name }
+            })
+            setExams(exams);
             setTotal(res.total);
             setPageSize(res.pageSize);
-            setLoading(false);
         }
+        setLoading(false);
+        setSwitchLoading(false);
     }
     useEffect(() => {
         getList();
@@ -42,13 +69,22 @@ export default function ExamList() {
 
     return (
         <div>
+            <Switch
+                defaultChecked={switchChecked}
+                loading={switchLoading}
+                checkedChildren="全部考卷"
+                unCheckedChildren="仅自建"
+                onChange={(checked: boolean) => {
+                    setSwitchChecked(checked);
+                    getList(1, 10, 0, checked);
+                }} />
             <ExamTable
                 exams={exams}
                 total={total}
                 pageSize={pageSize}
                 loading={loading}
                 callback={() => getList()}
-                pageChangeCallback={(page: number) => getList(page)}
+                pageChangeCallback={(page: number) => getList(page, 10, 0, switchChecked)}
             />
         </div>
     )
@@ -58,27 +94,47 @@ export default function ExamList() {
 function ExamTable(props: IProps) {
     const { exams, total, pageSize, loading, callback, pageChangeCallback } = props;
     const [showSizeList, setShowSizeList] = useState(false);
-    const [sizeList, setSizeList] = useState<ISize[]>([]);
+    const [sizes, setSizes] = useState<ISize[]>([]);
     const [showPublishModal, setShowPublishModal] = useState(false);
     const [currentExam, setCurrentExam] = useState<IExam>();
+    const [showExam, setShowExam] = useState(false);
+    const [component, setComponent] = useState<IComponent>();
+    const [criterias, setCriterias] = useState<ICriteria[]>([]);
+    const [modalLoading, setModalLoading] = useState(false);
 
-    const navigate = useNavigate()
+    const navigate = useNavigate();
 
-    const initSizeList = async (exam: IExam, showList: boolean = true) => {
-        const sizes = await getSizesByComponentId(exam.ExamComponent);
-        const calculatedSize = getCalculatedSizeForExam(exam, sizes, sizeScopeToDelta);
-        setShowSizeList(showList);
-        setSizeList(calculatedSize);
+    // const initSizeList = async (exam: IExam, showList: boolean = true) => {
+    //     const sizes = await getSizesByComponentId(exam.ExamComponent);
+    //     const calculatedSize = getCalculatedSizeForExam(exam, sizes, sizeScopeToDelta);
+    //     setShowSizeList(showList);
+    //     setSizes(calculatedSize);
 
-    }
+    // }
     const hideShowSizeList = (refresh?: boolean) => {
         setShowSizeList(false);
     }
 
     const setExamStatus = async (exam: IExam, status: number) => {
         const res = await setExamStatusApi(exam.Id, status);
-        if(!res) return;
+        if (!res) return;
         callback()
+    }
+    const setShowExamDetail = async (exam: IExam) => {
+        setModalLoading(true);
+        setCurrentExam(exam);
+        const criterias = await getExamCriteriaApi(exam.CriteriaId);
+        setCriterias(criterias);
+        const component = await getComponentById(exam.ExamComponent);
+        setComponent(component);
+        if (component) {
+            const sizes = await getSizesByComponentId(exam?.ExamComponent, false);
+            if (sizes.length === 0) return;
+            const newSizes = getCalculatedSizeForExam(exam, sizes);
+            setSizes(newSizes);
+        }
+        setShowExam(true);
+        setModalLoading(false);
     }
 
     const generateTableColumns = () => {
@@ -87,12 +143,12 @@ function ExamTable(props: IProps) {
             {
                 title: "操作", key: "operation", render: (_: any, exam: IExam) => {
                     return (<Space direction='vertical'>
-
-                        <Button type='primary' key={"viewSize"}
+                        <Button type='primary' loading={modalLoading} onClick={() => setShowExamDetail(exam)}>考卷详情</Button>
+                        {/* <Button type='primary' key={"viewSize"}
                             onClick={() => initSizeList(exam)}
-                        >查看尺寸数据</Button>
-                        <Button type="primary" disabled={exam.Status !== 0}
-                            onClick={() => { navigate('/teacher/exam/demo', { state: { id: exam.Id } }) }}
+                        >查看尺寸数据</Button> */}
+                        <Button type="primary" disabled={exam.Status !== 3}
+                            onClick={() => { navigate(`/teacher/exam/${exam.Id}/demo`) }}
                         >教师展示</Button>
                         <Button disabled={exam.Status !== 0} type="primary" onClick={() => {
                             setCurrentExam(exam);
@@ -118,10 +174,18 @@ function ExamTable(props: IProps) {
 
     return (
         <div>
+            <ExamDetail
+                exam={currentExam}
+                component={component}
+                sizes={sizes}
+                criterias={criterias}
+                open={showExam}
+                callback={() => setShowExam(false)}
+            />
             <ShowSizeList
                 visible={showSizeList}
                 cancel={hideShowSizeList}
-                sizeList={sizeList}
+                sizeList={sizes}
             />
             {currentExam &&
                 <PublishExam

@@ -5,6 +5,7 @@ import { toggleStatus, createGrade, getGrades, deleteGrade, batchToggleStatus, g
 import { batchGetStudentInfo } from '../../api/student';
 import { IAddGradeProps, IGrade, IGradeTableProps, IStudentInfo, IStudentQueryReq, IStudentTableProps } from '../../interfaces/Student'
 import { range } from '../../utils/common';
+import { generateStudentTableColumn } from '../../wrapper/Student';
 import EditStudent from './EditStudent';
 
 export default function StudentList() {
@@ -85,26 +86,14 @@ export function StudentTable(props: IStudentTableProps) {
   const [selectedClass, setSelectedClass] = useState(0);
   const [loading, setLoading] = useState(false);
   const action = async (record: IStudentInfo) => {
-    const res = await toggleStatus(record.StudentId, 3);
+    const res = await toggleStatus(String(record.StudentId), 3);
     if (res) callback({ Grade: record.Grade, Major: record.Major });
   }
 
-  const generateStudentTableColumn = () => {
+  const generateStudentTableColumns = () => {
+    const common = generateStudentTableColumn()
     const coloums: TableColumnsType<IStudentInfo> = [
-      { title: '学号', key: 'StudentId', dataIndex: 'StudentId' },
-      { title: '姓名', key: 'Name', dataIndex: 'Name' },
-      { title: '年级', key: 'Grade', dataIndex: 'Grade' },
-      { title: '专业', key: 'Major', dataIndex: 'Major' },
-      {
-        title: '班级', key: 'Class', render: (_: any, record: IStudentInfo) => {
-          return (<div>{record.Class === 0 ? '待定' : record.Class + '班'} </div>)
-        }
-      },
-      {
-        title: '状态', key: 'status', render: (_: any, record: IStudentInfo) => {
-          return (<Tag color={record.Deleted ? 'red' : 'green'}>{record.Deleted ? '已禁用' : '有效'}</Tag>)
-        }
-      },
+      ...common,
       {
         title: '操作', key: 'operation', render: (_: any, record: IStudentInfo) => {
           return (<Space direction='vertical'>
@@ -189,7 +178,7 @@ export function StudentTable(props: IStudentTableProps) {
         rowSelection={rowSelection}
         bordered={true}
         rowKey={record => record.StudentId} //此处设置每个行的key为学号，勾选时key就是学号
-        columns={generateStudentTableColumn()}
+        columns={generateStudentTableColumns()}
         dataSource={students}
         pagination={false}
         scroll={{ y: 400 }}

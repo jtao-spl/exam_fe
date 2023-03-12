@@ -13,7 +13,7 @@ export const getToolList = async (pg: number, lmt: number,): Promise<IResp<ITool
     const res = await request({
         url: '/tool',
         method: 'get',
-        params: { Page: pg, limit: lmt }
+        params: { page: pg, limit: lmt }
     });
     const { code, msg, data, total } = res.data;
     if (code !== 0) {
@@ -72,7 +72,7 @@ export const updateTool = async (id: number, Name: string): Promise<boolean> => 
  */
 export const createTool = async(Name:string):Promise<boolean>=>{
     const res = await request({
-        url: `/tool/`,
+        url: `/tool`,
         method: 'post',
         data: { Name:Name }
     })

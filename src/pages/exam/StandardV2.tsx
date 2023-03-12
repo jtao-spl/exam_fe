@@ -16,7 +16,7 @@ export default function StandardV2(props: IStandardProps) {
     const onFinish = async (values: any) => {
         const Sizes: { Score: number }[] = values.Sizes;
         const table: ISize[] = values.table;
-        const total = Sizes.reduce((a, b) => ({ Score: a.Score + b.Score }));
+        const total = Sizes.reduce((a, b) =>({ Score: a.Score + b.Score }));
         if (total.Score !== 100) {
             message.error(`分数总和不为100. 当前总和为:${total.Score}.请修改.`);
             return
@@ -73,9 +73,10 @@ export default function StandardV2(props: IStandardProps) {
         const exam = await getExamById(ExamId);
 
         if(!exam) return;
-        const sizes = await getSizesByComponentId(exam.ExamComponent);
-        const newSizes = getCalculatedSizeForExam(exam, sizes, sizeScopeToDelta);
+        const sizes = await getSizesByComponentId(exam.ExamComponent, false);
+        const newSizes = getCalculatedSizeForExam(exam, sizes);
         const SizeExt = await getSizeWithDefaultScore(exam, newSizes);
+        SizeExt.sort((a:ISizeExtended, b:ISizeExtended)=> a.FirstType - b.FirstType)
         form.resetFields(["table"]);
         form.setFieldsValue({
             table: SizeExt

@@ -45,7 +45,7 @@ export default function Exam(props: IExamProps) {
       if (component) {
         const sizes = await getSizesByComponentId(exam?.ExamComponent);
         if (sizes.length === 0) return;
-        const newSizes = getCalculatedSizeForExam(exam, sizes, sizeScopeToDelta);
+        const newSizes = getCalculatedSizeForExam(exam, sizes);
         setSizes(newSizes);
       }
     }
@@ -197,11 +197,11 @@ function ExamCard(props: IExamCardProps) {
         <Card title='基本信息'
         >
           <Space direction="vertical">
-            {`考核日期：${exam.ExamDate}`}
+            {/* {`考核日期：${exam.ExamDate}`}
             {`考核时间：${exam.StartTime}`}
-            {`交件时间: ${exam.FinishTime}`}
+            {`交件时间: ${exam.FinishTime}`} */}
             {`考核项目: ${exam.ExamTarget}`}
-            {`考核教师: ${exam.ExamTeacher}`}
+            {/* {`考核教师: ${exam.Creator}`} */}
             {`考核零件: ${exam.ExamComponent}`}
             {`考核状态: ${ExamStatus2Desc.get(exam.Status)}`}
           </Space>
@@ -376,11 +376,11 @@ function ExamDetail(props: IExamCardProps) {
         <Card title='基本信息'
         >
           <Space direction="vertical">
-            {`考核日期：${exam.ExamDate}`}
+            {/* {`考核日期：${exam.ExamDate}`}
             {`考核时间：${exam.StartTime}`}
-            {`交件时间: ${exam.FinishTime}`}
+            {`交件时间: ${exam.FinishTime}`} */}
             {`考核项目: ${exam.ExamTarget}`}
-            {`考核教师: ${exam.ExamTeacher}`}
+            {/* {`考核教师: ${exam.ExamTeacher}`} */}
             {`考核零件: ${exam.ExamComponent}`}
             {`考核状态: ${ExamStatus2Desc.get(exam.Status)}`}
           </Space>

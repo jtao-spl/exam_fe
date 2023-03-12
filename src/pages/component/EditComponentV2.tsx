@@ -1,4 +1,4 @@
-import { Button, Form, Input, message, Space, Steps, Table, TableColumnsType, Upload } from 'antd';
+import { Button, Form, Input, message, Radio, Space, Steps, Table, Divider, TableColumnsType, Tag, Upload } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getComponentById, saveComponentClip, SaveComponentName, updateComponentStatus } from '../../api/comp';
@@ -8,22 +8,24 @@ import DeleteSize from '../size/DeleteSize';
 import AddSizeV2 from '../size/AddSizeV2';
 import EditSize from '../size/EditSize';
 import ComponentDetail from './ComponentDetail';
-import { IShowSizeListProps, ISize } from '../../interfaces/Size';
+import { IDiameterType, IShowSizeListProps, ISize } from '../../interfaces/Size';
 import { getSizesByComponentId } from '../../wrapper/Component';
-import { IEditComponentProps } from '../../interfaces/Component';
+import { IComponent, IDiameterConfigProps, IEditComponentProps } from '../../interfaces/Component';
 import { generateSizeTableColumns } from '../../wrapper/Size';
+import { updateDiameterType } from '../../api/size';
 
 
 export default function EditComponentV2() {
     const params = useParams();
-    const navigate = useNavigate();
+    // const navigate = useNavigate();
 
     let id = 0;
     if (params.id) {
         id = Number.parseInt(params.id);
     }
     const [current, setCurrent] = useState(0);
-    const [sizeList, setSizeList] = useState<ISize[]>();
+    const [sizeList, setSizeList] = useState<ISize[]>([]);
+    // const [component, setComponent] = useState<IComponent>();
     const [showUpdateSizeModal, setShowUpdateSizeModal] = useState(false);
     const [showAddSieModal, setShowAddSieModal] = useState(false);
     const [size, setSize] = useState<ISize>();
@@ -39,6 +41,11 @@ export default function EditComponentV2() {
         return res
     }
 
+    // const refreshComponent = async () => {
+    //     const component = await getComponentById(id);
+    //     setComponent(component);
+
+    // }
     /**
      * 通过组件的状态确定当前在编辑组件的哪一步
      * @param id 
@@ -54,11 +61,11 @@ export default function EditComponentV2() {
         const sizes = await getSizesByComponentId(id);
         setSizeList(sizes);
     }
-    const onFinish = async () => {
-        const res = await updateComponentStatus(id, 4);
-        if(!res) return;
-        setTimeout(() => navigate('/teacher/component/list'), 1000);
-    }
+    // const onFinish = async () => {
+    //     const res = await updateComponentStatus(id, 4);
+    //     if (!res) return;
+    //     setTimeout(() => navigate('/teacher/component/list'), 1000);
+    // }
 
     const displayUpdateSizeModal = (size: ISize) => {
         setShowUpdateSizeModal(true);
@@ -89,10 +96,12 @@ export default function EditComponentV2() {
         setCurrent(current - 1);
     };
     useEffect(() => {
-        setCurrentByComponentStatus(id)
         getSizes(id);
-
-    }, [])
+        setCurrentByComponentStatus(id)
+    }, []);
+    // useEffect(() => {
+    //     refreshComponent();
+    // }, [current])
     const steps = [
         {
             title: '零件重命名',
@@ -118,11 +127,22 @@ export default function EditComponentV2() {
                     cancel={hideUpdateSizeModal}
                 />
                 <ShowSizeList
+                    id={id}
                     sizeList={sizeList}
                     deleteCallback={onDelete}
                     displayUpdateSizeModal={displayUpdateSizeModal}
+                    callback={next}
                 />
             </div>)
+        },
+        {
+            title: '直径配置',
+            component: <DiameterConfig
+                id={id}
+                refreshSizeCallback={() => getSizes(id)}
+                sizes={sizeList}
+                callback={() => { }}
+            />
         }
     ]
     const items = steps.map((item) => ({ key: item.title, title: item.title }));
@@ -133,23 +153,25 @@ export default function EditComponentV2() {
             {current >= steps.length && <ComponentDetail />}
             {current < steps.length && <>
                 < Steps current={current} items={items} />
+                <Divider />
                 <div className="steps-content">{steps[current].component}</div>
+                <Divider />
                 <div className="steps-action">
                     {current > 0 && (
                         <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
                             上一步
                         </Button>
                     )}
-                    {current < steps.length - 1 && (
-                        <Button type="primary" onClick={() => next()}>
+                    {/* {current < steps.length - 1 && (
+                        <Button type="primary" disabled={component ? current < component.Status : false} onClick={() => next()}>
                             下一步
                         </Button>
-                    )}
-                    {current === steps.length - 1 && (
+                    )} */}
+                    {/* {current === steps.length - 1 && (
                         <Button type="primary" onClick={onFinish}>
                             完成
                         </Button>
-                    )}
+                    )} */}
 
                 </div>
             </>
@@ -175,7 +197,7 @@ function RenameComponent(props: IEditComponentProps) {
             return;
         }
         const res = await SaveComponentName(values.ComponentName, componentId);
-        if(!res) return;
+        if (!res) return;
         callback()
     }
     return (<Form
@@ -238,7 +260,7 @@ function UploadClip(props: IEditComponentProps) {
             return;
         }
         const res = await saveComponentClip(option.file, componentId)
-        if(!res) return;
+        if (!res) return;
         option.onSuccess();
         callback()
     }
@@ -270,10 +292,16 @@ function UploadClip(props: IEditComponentProps) {
  * @param props 
  */
 function ShowSizeList(props: IShowSizeListProps) {
-    const { sizeList, deleteCallback, displayUpdateSizeModal } = props;
+    const { id, sizeList, deleteCallback, displayUpdateSizeModal, callback } = props;
     const onDelete = () => {
         deleteCallback()
     }
+
+    const onConfirm = async () => {
+        const res = await updateComponentStatus(id, 4);
+        if (res) callback()
+    }
+
     const generateSizeTable = (sizes: any) => {
         const allColumns = generateSizeTableColumns();
         const OmitComponentIdColumns = allColumns.filter((item: any) => item.key !== 'ComponentId')
@@ -285,23 +313,98 @@ function ShowSizeList(props: IShowSizeListProps) {
                         <Button type='primary'
                             onClick={() => displayUpdateSizeModal(size)}
                         >编辑</Button>
-                        <DeleteSize size={size} refresh={onDelete} isAggSizeDeletable={true}/>
+                        <DeleteSize size={size} refresh={onDelete} isAggSizeDeletable={true} />
                     </Space>
                 )
             }
         ];
-        return <Table
-            rowKey={record=>record.Id}
+        return (<Table
+            rowKey={record => record.Id}
             dataSource={sizes}
             columns={columns}
             pagination={false}
             scroll={{ y: 400 }}
-        />
+        />)
     }
 
     return (
         <div>
             {sizeList && generateSizeTable(sizeList)}
+            <Button type="primary" onClick={onConfirm}>确认校验完成</Button>
         </div>
     )
+}
+
+/**
+ * 指定内外半径
+ * @param props 
+ * @returns 
+ */
+function DiameterConfig(props: IDiameterConfigProps) {
+    const navigate = useNavigate();
+    const { id, sizes, callback } = props;
+    const [form] = Form.useForm();
+    const [diameters, setDiameters] = useState<ISize[]>([]);
+
+    const init = () => {
+        const diameters = sizes.filter((size: ISize) => size.FirstType === 0 && size.SecondType && size.SecondType === 1);
+        setDiameters(diameters);
+        form.setFieldsValue({
+            "diameters": diameters
+        });
+    }
+
+    useEffect(() => {
+        init()
+    }, [])
+    const setDiamterConfig = async (values: any) => {
+        console.log(`存储内外经：${JSON.stringify(values)}`);
+        const sizes = values.diameters;
+        const request: IDiameterType[] = sizes.map((size: any) => ({ id: size.Id, type: size.type }));
+        const res = await updateDiameterType(request);
+        if (!res) return;
+        const res2 = await updateComponentStatus(id, 5);
+        if (!res2) return;
+        setTimeout(() => navigate('/teacher/component/list'), 1000);
+    }
+    if (diameters.length === 0) {
+        return (<Space direction='vertical'>
+            <div>未检测到直径尺寸，请返回上一步再次确认。</div>
+            <Button type='primary' onClick={callback}>完成</Button>
+        </Space>)
+    }
+    return (<div>
+        <Form form={form} name="dynamic_form_nest_item" onFinish={setDiamterConfig} autoComplete="off"
+        >
+            <Form.List name="diameters" >
+                {(fields) => (
+                    <React.Fragment>
+                        {fields.map(({ key, name, ...restField }) =>
+                        (<Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                            尺寸id: <Tag>{diameters.at(key)?.Id}</Tag>
+                            基准值: <Tag>{diameters.at(key)?.BaseSize}</Tag>
+                            上偏差: <Tag>{diameters.at(key)?.UpSize}</Tag>
+                            下偏差: <Tag>{diameters.at(key)?.BottomSize}</Tag>
+                            类型:
+                            <Form.Item
+                                {...restField}
+                                name={[name, 'type']}
+                                rules={[{ required: true, message: '请选择' }]}
+                            >
+                                <Radio.Group value={1}>
+                                    <Radio value={1}>内径</Radio>
+                                    <Radio value={2}>外径</Radio>
+                                </Radio.Group>
+                            </Form.Item>
+                        </Space>)
+                        )}
+                    </React.Fragment>
+                )
+                }
+            </Form.List>
+            <Form.Item>
+                <Button type="primary" htmlType="submit">保存并完成</Button>
+            </Form.Item>
+        </Form>
+    </div>)
 }

@@ -29,6 +29,8 @@ export default function ComponentDetail() {
         const allColumns = generateSizeTableColumns();
         const OmitComponentIdColumns = allColumns.filter((item: any) => item.key !== 'ComponentId')
         return <Table
+            rowKey={record=>record.Id}
+            bordered
             dataSource={sizes}
             columns={OmitComponentIdColumns}
             pagination={false}

@@ -5,12 +5,13 @@ import { ISize } from "../interfaces/Size";
 /**
  * 返回组件id关联的尺寸列表
  * @param id 组件id
+ * @param OmitSafety 是否过滤安全文明生产项
  * @returns 
  */
-export const getSizesByComponentId = async (id: number):Promise<ISize[]> => {
+export const getSizesByComponentId = async (id: number, OmitSafety: boolean=true):Promise<ISize[]> => {
     const count = await getSizeCountByComponentId(id);
     if (count) {
-      const res = await getSizeList(1, count, id);
+      const res = await getSizeList(1, count, id, OmitSafety);
       if(!res) return []
       return res.sizes
     }
