@@ -250,3 +250,36 @@ export const batchUpdateSizePrecision = async (examId: number, dt: ISizePrecisio
     return true
 
 }
+
+/**
+ * 申请公开考卷给所有教师可见
+ * @param examId 
+ * @returns 
+ */
+export const sendExamPublishAudit = async(examId: number):Promise<boolean>=>{
+    const res = await request({
+        url: `/exam/${examId}/audit`,
+        method:'post',
+        data: {}
+    });
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`发送审核失败，系统错误：${msg}`);
+        return false
+    }
+    return true;
+}
+
+export const getExamsByIds = async(ids: number[]):Promise<IExam[]> =>{
+    const res = await request({
+        url: `/exam/batch`,
+        method:'get',
+        params: {ids: ids}
+    });
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`获取考核列表失败，系统错误：${msg}`);
+        return []
+    }
+    return data;
+}

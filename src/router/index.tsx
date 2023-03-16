@@ -12,7 +12,8 @@ const Exams = lazy(() => import('../pages/student/Exams'));
 const TeacherList = lazy(() => import('../pages/admin/TeacherList'));
 const StudentList = lazy(() => import('../pages/admin/StudentList'));
 const ToolList = lazy(() => import('../pages/teacher/ToolList'));
-const TeacherStuList = lazy(()=>import('../pages/teacher/StudentList'));
+const TeacherStuList = lazy(() => import('../pages/teacher/StudentList'));
+const ExamAudit = lazy(() => import('../pages/admin/ExamAudit'));
 export interface IRouter {
     title: React.ReactNode,
     path: string,
@@ -227,6 +228,22 @@ export const adminRoutes: IRouter[] = [
                 key: 'tools',
                 icon: <PartitionOutlined />,
                 element: <ToolList />
+            },
+        ]
+    },
+    {
+        title: '考卷审核',
+        path: '/admin/exam',
+        key: 'exams',
+        icon: <PartitionOutlined />,
+        children: [
+            {
+                title: <Link to='/admin/exam/list'>待审列表</Link>,
+                // title: 'etst',
+                path: '/admin/exam/list',
+                key: 'exam',
+                icon: <PartitionOutlined />,
+                element: <ExamAudit />
             },
         ]
     },

@@ -10,7 +10,7 @@ export default function TeacherList() {
     const [pageSize, setPageSize] = useState(10);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [switchLoading, setSwitchLoading] = useState(true);
+    const [switchLoading, setSwitchLoading] = useState(false);
     const [switchChecked, setSwitchChecked] = useState(true);
     const [showAddTeacherModal, setShowAddTeacherModal] = useState(false);
     const queryTeachers = async (pg: number = 1, lmt: number = 10, containDeleted: boolean = true) => {

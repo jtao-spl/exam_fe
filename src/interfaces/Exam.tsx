@@ -39,7 +39,7 @@ export interface IExam {
     CreatorName?: string,
     CriteriaId: number,
     Status: number, //创建进度。3为完成。
-    Shared: boolean, //是否已共享
+    Shared: number, //是否已共享
     // Class?: string, //发放的班级
     Data?: { scores?: ScoreItem[], precision?: ISizePrecisionData[] },
 }
@@ -123,7 +123,7 @@ export interface IResp<T> {
     total: number
 }
 
-export interface  IScoreTableProps {
+export interface IScoreTableProps {
     scoreList: IScore[],
     total: number,
     pageSize: number,
@@ -132,4 +132,24 @@ export interface  IScoreTableProps {
     callback: () => void,
     students?: IStudentInfo[],
     pageChangeCallback: (page: number) => void
+}
+
+export interface IExamShare {
+    Id: number,
+    ExamId: number,
+    TeacherPhone: string,
+    Status: number,
+}
+export interface IExamAuditTableProps {
+    exams: IExam[],
+    pageSize: number,
+    total: number,
+    loading: boolean,
+    callback: () => void,
+    pageChangeCallback: (page: number) => void
+}
+export interface IExamAudit extends IExamShare {
+    ComponentName: string,
+    createdAt: Date,
+    updatedAt: Date,
 }

@@ -23,8 +23,9 @@ const TeacherList = lazy(() => import('../pages/admin/TeacherList'));
 const AddExamTarget = lazy(() => import('../pages/exam/AddExamTarget'));
 const StudentUpload = lazy(() => import('../pages/upload/StudentUpload'));
 const StudentList = lazy(() => import('../pages/admin/StudentList'));
-const TeacherStuList = lazy(()=>import('../pages/teacher/StudentList'));
+const TeacherStuList = lazy(() => import('../pages/teacher/StudentList'));
 const PasswordReset = lazy(() => import('../pages/admin/PasswordReset'));
+const ExamAudit = lazy(() => import('../pages/admin/ExamAudit'));
 export default function View() {
   return (
     <BrowserRouter>
@@ -65,6 +66,7 @@ export default function View() {
               <Route path='student/upload' key='ustu' element={<StudentUpload />}> </Route>
               <Route path='student/list' key='stuList' element={<StudentList />}> </Route>
               <Route path='tool/list' key='tool' element={<ToolList />}></Route>
+              <Route path='exam/list' key='exam' element={<ExamAudit />}></Route>
             </Route>
             <Route path='/auth/modify' key='mod pass' element={<ChangePassword />} />
 

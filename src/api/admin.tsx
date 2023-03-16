@@ -1,4 +1,5 @@
 import { message } from 'antd';
+import { IExamShare, IResp } from '../interfaces/Exam';
 import { IGrade } from '../interfaces/Student';
 import { ITeacherListResp } from '../interfaces/Teacher';
 import request from '../utils/request';
@@ -171,7 +172,7 @@ export const deleteGrade = async (Id: number): Promise<boolean> => {
  * @returns 
  */
 export const getGradeById = async (Id: number): Promise<IGrade | undefined> => {
-    if (Id == 0) return;
+    if (Id === 0) return;
     const res = await request({
         url: `/admin/grade/${Id}`,
         method: 'get'
@@ -198,6 +199,51 @@ export const batchUpdateClass = async (ids: number[], Class: number): Promise<bo
     const { code, msg } = res.data;
     if (code !== 0) {
         message.error(`分班失败，系统错误：${msg}`);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * 查询申请共享的考卷列表
+ * @param page 
+ * @param limit 
+ * @param status 
+ * @returns 
+ */
+export const getExamShares = async(page:number, limit: number, status: number):Promise<IResp<IExamShare>|undefined>=>{
+    const res = await request({
+        url: '/admin/exam/share',
+        method: 'get',
+        params: {page, limit, status}
+    });
+    const { code, msg, data, total } = res.data;
+    if (code !== 0) {
+        message.error(`获取考核列表失败，系统错误：${msg}`);
+        return;
+    }
+    return {
+        items: data,
+        pageSize: limit,
+        total: total
+    }
+}
+
+/**
+ * 审核考卷的共享
+ * @param examId 
+ * @param status 
+ * @returns 
+ */
+export const updateExamAuditStatus = async(examId:number, status: number):Promise<boolean>=>{
+    const res = await request({
+        url: `/admin/exam/audit`,
+        method: 'patch',
+        data: {examId, status}
+    });
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`审核失败，系统错误：${msg}`);
         return false;
     }
     return true;

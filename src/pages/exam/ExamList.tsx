@@ -3,10 +3,10 @@ import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getComponentById, getComponentByIds } from '../../api/comp'
 
-import { getExamCriteriaApi, getExamList, setExamStatusApi } from '../../api/exam'
+import { getExamCriteriaApi, getExamList, sendExamPublishAudit, setExamStatusApi } from '../../api/exam'
 import { getTeacherByIds } from '../../api/teacher'
 import { IComponent } from '../../interfaces/Component'
-import { IExam, sizeScopeToDelta } from '../../interfaces/Exam'
+import { IExam } from '../../interfaces/Exam'
 import { ICriteria } from '../../interfaces/ExamCriteria'
 import { ISize } from '../../interfaces/Size'
 import { ITeacher } from '../../interfaces/Teacher'
@@ -150,7 +150,14 @@ function ExamTable(props: IProps) {
                         <Button type="primary" disabled={exam.Status !== 3}
                             onClick={() => { navigate(`/teacher/exam/${exam.Id}/demo`) }}
                         >教师展示</Button>
-                        <Button disabled={exam.Status !== 0} type="primary" onClick={() => {
+                        <Popconfirm disabled={exam.Status !== 3 || exam.Shared === 1}
+                            title="共享考卷需要管理员审批，共享后全部教师可使用，确定共享？"
+                            onConfirm={async () => await sendExamPublishAudit(exam.Id)}
+                            onCancel={() => { message.info(`取消操作`) }}
+                        >
+                            <Button disabled={exam.Status !== 3 || exam.Shared === 1} type="primary">共享考卷</Button>
+                        </Popconfirm>
+                        <Button disabled={exam.Status !== 3} type="primary" onClick={() => {
                             setCurrentExam(exam);
                             setShowPublishModal(true);
                         }}>下发考核</Button>
