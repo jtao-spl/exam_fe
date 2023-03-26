@@ -10,6 +10,7 @@ import { IExam } from '../../interfaces/Exam'
 import { ICriteria } from '../../interfaces/ExamCriteria'
 import { ISize } from '../../interfaces/Size'
 import { ITeacher } from '../../interfaces/Teacher'
+import { get } from '../../utils/storage'
 import { getSizesByComponentId } from '../../wrapper/Component'
 import { generateExamTableColomns, getCalculatedSizeForExam } from '../../wrapper/Exam'
 import ShowSizeList from '../component/ShowSizeList'
@@ -141,36 +142,37 @@ function ExamTable(props: IProps) {
         const columns: TableColumnsType<IExam> = [
             ...generateExamTableColomns(),
             {
+                title: `考卷来源`, key: 'source', render: (_: any, exam: IExam) => {
+                    const Id = get('Id');
+                    if (Id === exam.Creator) return '自建';
+                    return '共享'
+                }
+            },
+            {
+                title: `共享状态`, key: 'shared', render: (_: any, exam: IExam) => {
+                    return exam.Shared === 1 ? '已共享' :
+                        exam.Shared === 2 ? '审核中' :
+                            exam.Shared === 3 ? '审核未通过' : '仅自见'
+                }
+            },
+            {
                 title: "操作", key: "operation", render: (_: any, exam: IExam) => {
                     return (<Space direction='vertical'>
                         <Button type='primary' loading={modalLoading} onClick={() => setShowExamDetail(exam)}>考卷详情</Button>
-                        {/* <Button type='primary' key={"viewSize"}
-                            onClick={() => initSizeList(exam)}
-                        >查看尺寸数据</Button> */}
                         <Button type="primary" disabled={exam.Status !== 3}
                             onClick={() => { navigate(`/teacher/exam/${exam.Id}/demo`) }}
                         >教师展示</Button>
-                        <Popconfirm disabled={exam.Status !== 3 || exam.Shared === 1}
+                        <Popconfirm disabled={exam.Status !== 3 || exam.Shared !== 0}
                             title="共享考卷需要管理员审批，共享后全部教师可使用，确定共享？"
                             onConfirm={async () => await sendExamPublishAudit(exam.Id)}
                             onCancel={() => { message.info(`取消操作`) }}
                         >
-                            <Button disabled={exam.Status !== 3 || exam.Shared === 1} type="primary">共享考卷</Button>
+                            <Button disabled={exam.Status !== 3 || exam.Shared !== 0} type="primary">共享考卷</Button>
                         </Popconfirm>
                         <Button disabled={exam.Status !== 3} type="primary" onClick={() => {
                             setCurrentExam(exam);
                             setShowPublishModal(true);
-                        }}>下发考核</Button>
-                        <Popconfirm disabled={exam.Status !== 1}
-                            title="收卷后考核学生不可继续提交，确认收卷？"
-                            onConfirm={() => setExamStatus(exam, 2)}
-                            onCancel={() => { message.info(`取消收卷成功`) }}
-                        >
-                            <Button disabled={exam.Status !== 1} type="primary">收卷</Button>
-                        </Popconfirm>
-                        <Button type='primary' disabled={exam.Status !== 2} onClick={() => navigate(`/teacher/exam/${exam.Id}/scores`)}>
-                            教师复测
-                        </Button>
+                        }}>新建考核</Button>
                     </Space>)
                 }
             }

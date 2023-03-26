@@ -1,5 +1,5 @@
 import { message } from 'antd';
-import { ExamScoreData, IResp, IScore } from '../interfaces/Exam';
+import { ExamScoreData, IExamInput, IResp, IScore } from '../interfaces/Exam';
 import request from '../utils/request';
 
 /**
@@ -101,4 +101,32 @@ export const getExamScoreList = async(ExamId: number, page: number = 0, limit: n
             pageSize: limit,
             total: total
         }
+}
+
+/**
+ * 提交考核数据，附加提交人登录id以区分自测还是小组评测
+ * @param data 数据详情
+ * @param totalScore 总分
+ * @param detailId  具体写入的数据库项id
+ */
+export const submitExamResult = async (data: IExamInput[], totalScore: string, detailId: number) => {
+    if (detailId === 0) {
+        message.error(`系统异常，请返回主页重新进入`);
+        return false;
+    }
+    if(isNaN(Number.parseFloat(totalScore))){
+        message.error(`系统异常：总分非数值，请返回主页重新进入`);
+        return false;
+    }
+    const res = await request({
+        url: `/score/deliver/detail/${detailId}`,
+        method: `patch`,
+        data: { data, totalScore }
+    });
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`提交失败，系统错误：${msg}`);
+        return false;
+    }
+    return true;
 }

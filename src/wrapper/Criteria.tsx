@@ -40,21 +40,28 @@ export function generateCriteriaColumns() {
         },
         {
             title: '评测标准', key: 'criteriainfo', render: (_: any, criteria) => {
-                if (criteria.FirstType === 0 && criteria.SizeDelta && criteria.SizeDeductScore) {
-                    return <Tag>偏差范围以得分，偏差范围外每超差{criteria.SizeDelta}扣{criteria.GeoDeductScore}分，配分扣完为止</Tag>
-                }
-                if (criteria.FirstType === 1 && criteria.GeoBase && criteria.GeoDelta && criteria.GeoDeductScore) {
-                    return <Tag>低于{criteria.GeoBase}得分，高于{criteria.GeoBase}每超差{criteria.GeoDelta}扣{criteria.GeoDeductScore}分，配分扣完为止</Tag>
-                }
-                if (criteria.FirstType === 2) {
-                    return <Tag>样块对比目测，符合要求得分</Tag>
-                }
-                if (criteria.FirstType === 3 && criteria.UnDeclaredChamferCount && criteria.UnDeclaredChamferCount > 0) {
-                    return <Tag>共计{criteria.UnDeclaredChamferCount}处，总共{criteria.UnDeclaredChamferTotalVal}分</Tag>
-                }
+                return <Tag>{getCriteriaDescByCriteria(criteria)}</Tag>
             }
         }
     ]
 
     return columns;
+}
+
+
+export function getCriteriaDescByCriteria(criteria?: ICriteria) {
+    if (!criteria) return ''
+    if (criteria.FirstType === 0 && criteria.SizeDelta && criteria.SizeDeductScore) {
+        return `偏差范围以得分，偏差范围外每超差${criteria.SizeDelta}扣${criteria.SizeDeductScore}分，配分扣完为止`
+    }
+    if (criteria.FirstType === 1 && criteria.GeoBase && criteria.GeoDelta && criteria.GeoDeductScore) {
+        return `低于${criteria.GeoBase}得分，高于${criteria.GeoBase}每超差${criteria.GeoDelta}扣${criteria.GeoDeductScore}分，配分扣完为止`
+    }
+    if (criteria.FirstType === 2) {
+        return `样块对比目测，符合要求得分`
+    }
+    if (criteria.FirstType === 3 && criteria.UnDeclaredChamferCount && criteria.UnDeclaredChamferCount > 0) {
+        return `共计${criteria.UnDeclaredChamferCount}处，总共${criteria.UnDeclaredChamferTotalVal}分`
+    }
+    return ``
 }

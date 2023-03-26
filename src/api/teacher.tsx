@@ -1,4 +1,5 @@
 import { message } from 'antd';
+import { IGrade } from '../interfaces/Student';
 import { ITeacher } from '../interfaces/Teacher';
 import request from '../utils/request';
 

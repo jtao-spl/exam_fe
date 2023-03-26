@@ -68,7 +68,7 @@ export default function ComponentList() {
             >查看详情</Button>
             <Button type="primary" disabled={component.Status !== 5}
               onClick={() => { navigate('/teacher/exam/create', { state: { id: component.Id } }) }}
-            >新建考核</Button>
+            >新建考卷</Button>
             <DeleteComponentFC ComponentId={component.Id} onDelete={onChange} />
           </Space>
 

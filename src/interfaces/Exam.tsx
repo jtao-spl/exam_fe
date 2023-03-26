@@ -1,7 +1,7 @@
 import { IComponent } from "./Component";
 import { ICriteria } from "./ExamCriteria";
 import { ISize, ISizePrecisionData } from "./Size";
-import { IStudentInfo } from "./Student";
+import { IGrade, IStudentInfo } from "./Student";
 
 export const format = "HH:mm";
 export const SizePrecisionLevel = ['精密f', '中等m', '粗糙c', '最粗v', '自定义']
@@ -152,4 +152,91 @@ export interface IExamAudit extends IExamShare {
     ComponentName: string,
     createdAt: Date,
     updatedAt: Date,
+}
+
+export interface IExamDeliver {
+    Id: number,
+    ExamId: number,
+    ExamName: string,
+    ExamType: number,
+    TeacherPhone: string,
+    ExamDate: Date,
+    StartTime: string,
+    FinishTime: string,
+    GradeId: number,
+    Class: number,
+    GroupName: string,
+    Status: number,
+    Deleted: boolean
+}
+
+export interface IExamDeliverEntity extends IExamDeliver {
+    Exam?: IExam,
+    Grade?: IGrade,
+    DeliverDetailId?: number,
+    DeliverDetailStatus?: number,
+    Progress?: IDeliverProgress
+}
+
+export interface IDeleverTableProps {
+    isTeacher: boolean,
+    delivers: IExamDeliverEntity[],
+    callback: () => void,
+    pageSize: number,
+    total: number,
+    loading: boolean,
+    pageChangeCallback: (page: number) => void
+}
+
+export interface IDeliverDetail {
+    Id: number,
+    DeliverId: number,
+    ExamId: number,
+    StudentId: number,
+    Status: number,
+    StudentName?: string,
+    SelfData?: IExamInput[],
+    SelfScore?: number, //decimal待转为number
+    GroupData?: IExamInput[],
+    GroupScore?: number,
+    GroupId?: number,
+    FinalData?: IExamInput[],
+    FinalScore?: number
+}
+
+export interface IExamInput {
+    sizeId: number,
+    score: number,
+    value: number,
+    toolId?: number
+}
+
+export interface IGroupTableProps {
+    details: IDeliverDetail[],
+    loading: boolean,
+
+}
+
+export interface IDeliverProgress {
+    id: number,
+    progress: number
+}
+
+export interface ITeacherTableItem {
+    id: number,
+    // clip: any,
+    size: ISize,
+    project: string | any,
+    baseSize: number | string,
+    upSize: number | string,
+    bottomSize: number | string,
+    score: number, //配分
+    criteria?: ICriteria,
+    toolId: number,
+    result: string | number //单项得分
+    selfTool?: string,
+    selfSize?: number,
+    selfScore?: number,
+    groupSize?: number,
+    groupScore?: number,
 }

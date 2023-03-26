@@ -17,7 +17,7 @@ import { updateDiameterType } from '../../api/size';
 
 export default function EditComponentV2() {
     const params = useParams();
-    // const navigate = useNavigate();
+    const navigate = useNavigate();
 
     let id = 0;
     if (params.id) {
@@ -141,7 +141,11 @@ export default function EditComponentV2() {
                 id={id}
                 refreshSizeCallback={() => getSizes(id)}
                 sizes={sizeList}
-                callback={() => { }}
+                callback={async () => {
+                    const res = await updateComponentStatus(id, 5);
+                    if (!res) return;
+                    setTimeout(() => navigate('/teacher/component/list'), 1000);
+                }}
             />
         }
     ]
@@ -370,7 +374,7 @@ function DiameterConfig(props: IDiameterConfigProps) {
     if (diameters.length === 0) {
         return (<Space direction='vertical'>
             <div>未检测到直径尺寸，请返回上一步再次确认。</div>
-            <Button type='primary' onClick={callback}>完成</Button>
+            <Button type='primary' onClick={callback}>确认并结束</Button>
         </Space>)
     }
     return (<div>

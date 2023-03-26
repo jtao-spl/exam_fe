@@ -29,9 +29,9 @@ export default function LayoutComponent() {
           <Content
             className="site-layout-background"
             style={{
-              padding: 24,
+              // padding: 24,
               margin: 0,
-              minHeight: 280,
+              minHeight: 80,
             }}
           >
             <Outlet />

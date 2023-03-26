@@ -76,7 +76,18 @@ export default function SiderLayout() {
   }
 
   return (
-    <Sider width={200} className="site-layout-background">
+    <Sider
+      // style={{
+      //   overflow: 'auto',
+      //   height: '100vh',
+      //   position: 'fixed',
+      //   left: 0,
+      //   top: 0,
+      //   bottom: 0,
+      // }}
+      width={200}
+      className="site-layout-background"
+    >
       {
         defaultSelectedKeys && defaultSelectedKeys.length > 0 ?
           <Menu

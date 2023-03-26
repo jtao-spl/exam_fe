@@ -14,6 +14,9 @@ const StudentList = lazy(() => import('../pages/admin/StudentList'));
 const ToolList = lazy(() => import('../pages/teacher/ToolList'));
 const TeacherStuList = lazy(() => import('../pages/teacher/StudentList'));
 const ExamAudit = lazy(() => import('../pages/admin/ExamAudit'));
+const DeliverList = lazy(() => import('../pages/exam/deliver/DeliverList'));
+const Delivers = lazy(() => import('../pages/student/Delivers'));
+const GroupInput = lazy(() => import('../pages/student/GroupInput'));
 export interface IRouter {
     title: React.ReactNode,
     path: string,
@@ -77,6 +80,13 @@ export const teacherRouters: IRouter[] = [
                 key: 'exams',
                 icon: <PartitionOutlined />,
                 element: <ExamList />
+            },
+            {
+                title: <Link to='/teacher/exam/deliver'>考核列表</Link>,
+                path: '/teacher/exam/deliver',
+                key: 'deliver',
+                icon: <PartitionOutlined />,
+                element: <DeliverList />
             }
         ]
     },
@@ -161,10 +171,17 @@ export const studentRoutes: IRouter[] = [
         children: [
             {
                 title: <Link to='/student/exams'>考核列表</Link>,
-                path: 'exams',
+                path: '/student/exams',
                 key: 'student_exams',
                 icon: <PartitionOutlined />,
-                element: <Exams />
+                element: <Delivers />
+            },
+            {
+                title: <Link to='/student/partner'>小组互测</Link>,
+                path: '/student/partner',
+                key: 'student_exams_partner',
+                icon: <PartitionOutlined />,
+                element: <GroupInput />
             },
         ]
     },

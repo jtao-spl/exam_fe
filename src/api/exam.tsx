@@ -1,9 +1,12 @@
 import request from '../utils/request';
 import { message } from 'antd';
-import { IExam, IExamListResp, IExamTarget, ISizeScore } from '../interfaces/Exam';
+import { IDeliverDetail, IDeliverProgress, IExam, IExamDeliver, IExamListResp, IExamTarget, IResp, ISizeScore } from '../interfaces/Exam';
 import { ISizePrecisionData } from '../interfaces/Size';
 import { ICriteria } from '../interfaces/ExamCriteria';
+import { get } from '../utils/storage';
 
+//exam: 概念上指考卷，与之相关联的是考核零件，考核标准和尺寸配分。exam与deliver是1对多的关系，即一张考卷可以用于多场考试中。
+//deliver: 概念上是指考试，与之相关的是考试时间，考试教师，考试所用的考卷。
 /**
  * 新建考核
  * @param ExamTarget 考核项目
@@ -124,6 +127,7 @@ export const getExamCriteriaApi = async (CriteriaId: number): Promise<ICriteria[
         SizeDelta: Number.parseFloat(item.SizeDelta),
         GeoDelta: Number.parseFloat(item.GeoDelta),
         SurfaceRoughnessScore: Number.parseFloat(item.SurfaceRoughnessScore),
+        SurfaceRoughnessVal: Number.parseFloat(item.SurfaceRoughnessVal),
     }))
     return d2nCriterias;
 }
@@ -256,10 +260,10 @@ export const batchUpdateSizePrecision = async (examId: number, dt: ISizePrecisio
  * @param examId 
  * @returns 
  */
-export const sendExamPublishAudit = async(examId: number):Promise<boolean>=>{
+export const sendExamPublishAudit = async (examId: number): Promise<boolean> => {
     const res = await request({
         url: `/exam/${examId}/audit`,
-        method:'post',
+        method: 'post',
         data: {}
     });
     const { code, msg } = res.data;
@@ -270,16 +274,142 @@ export const sendExamPublishAudit = async(examId: number):Promise<boolean>=>{
     return true;
 }
 
-export const getExamsByIds = async(ids: number[]):Promise<IExam[]> =>{
+export const getExamsByIds = async (ids: number[]): Promise<IExam[]> => {
     const res = await request({
         url: `/exam/batch`,
-        method:'get',
-        params: {ids: ids}
+        method: 'get',
+        params: { ids: ids }
     });
     const { code, msg, data } = res.data;
     if (code !== 0) {
         message.error(`获取考核列表失败，系统错误：${msg}`);
         return []
+    }
+    return data;
+}
+
+/**
+ * 新增考核
+ * 
+ * @param ExamId 考卷id
+ * @param ExamName 考核名称
+ * @param ExamType 考试类型 普通或者正式考试
+ * @param ExamDate 考核时间
+ * @param StartTime 开始时间
+ * @param FinishTime 收卷时间
+ * @param Grade 年级
+ * @param Major 专业
+ * @param Class 班级
+ * @param Group 分组
+ */
+export const createNewExamDeliver = async (ExamId: number, ExamName: string, ExamType: number, ExamDate: Date,
+    StartTime: string, FinishTime: string, Grade: number, Major: string, Class: number,
+    Group: string): Promise<boolean> => {
+    const res = await request({
+        url: `/exam/${ExamId}/deliver`,
+        method: 'post',
+        data: { ExamName, ExamType, ExamDate, StartTime, FinishTime, Grade, Major, Class, Group }
+    })
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`新建失败，系统错误：${msg}`);
+        return false
+    }
+    return true;
+}
+
+/**
+ * 获取考核列表
+ * @param page 
+ * @param limit 
+ * @returns 
+ */
+export const getExamDeliverList = async (page: number, limit: number,): Promise<IResp<IExamDeliver> | undefined> => {
+    const res = await request({
+        url: `/exam/deliver`,
+        method: 'get',
+        params: { page, limit }
+    })
+    const { code, msg, data, total } = res.data;
+    if (code !== 0) {
+        message.error(`获取考核列表失败，系统错误：${msg}`);
+        return;
+    }
+    return {
+        items: data,
+        pageSize: limit,
+        total: total
+    }
+}
+
+/**
+ * 更新考核状态
+ * @param id 
+ * @param status 
+ * @returns 
+ */
+export const updateDeliverStatus = async (id: number, status: number): Promise<boolean> => {
+    const res = await request({
+        url: `/exam/deliver/${id}`,
+        method: 'patch',
+        data: { status }
+    });
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`新建失败，系统错误：${msg}`);
+        return false
+    }
+    return true;
+}
+/**
+ * 指定考核id查询详情
+ * @param id 
+ * @returns 
+ */
+export const getExamDeliverById = async (id: number): Promise<IExamDeliver | undefined> => {
+    const res = await request({
+        url: `/exam/deliver/${id}`,
+        method: `get`
+    })
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`查询失败，系统错误：${msg}`);
+        return;
+    }
+    return data;
+}
+
+
+export const getProgessByDeliverIds = async (ids: number[]): Promise<IDeliverProgress[]> => {
+    if (ids.length === 0) return []
+    const res = await request({
+        url: `/exam/deliver/progress`,
+        method: `get`,
+        params: { ids }
+    })
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`查询失败，系统错误：${msg}`);
+        return [];
+    }
+    return data;
+}
+
+/**
+ * 查询指定id的detail详情
+ * @param id 
+ * @returns 
+ */
+export const getDeliverDetailById = async (id: number): Promise<IDeliverDetail | undefined> => {
+    if(id === 0) return;
+    const res = await request({
+        url: `/exam/detail/${id}`,
+        method: `get`,
+    });
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`查询失败，系统错误：${msg}`);
+        return;
     }
     return data;
 }

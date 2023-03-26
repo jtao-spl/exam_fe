@@ -10,6 +10,7 @@ export interface IGradeClass {
 export interface Option {
     value: string | number;
     label: string;
+    disabled?: boolean,
     children?: Option[];
 }
 //上传时，拆分详细的年级，班级，专业

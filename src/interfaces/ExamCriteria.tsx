@@ -103,7 +103,7 @@ export interface ICriteria {
     GeoBase?: string,
     GeoDelta?: number,
     GeoDeductScore?: number,
-    SurfaceRoughnessVal?:string,
+    SurfaceRoughnessVal?: number,
     SurfaceRoughnessCount?:number,
     SurfaceRoughnessScore?: number, //decimal转成了string
     UnDeclaredChamferCount?: number,

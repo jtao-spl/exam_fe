@@ -26,6 +26,11 @@ const StudentList = lazy(() => import('../pages/admin/StudentList'));
 const TeacherStuList = lazy(() => import('../pages/teacher/StudentList'));
 const PasswordReset = lazy(() => import('../pages/admin/PasswordReset'));
 const ExamAudit = lazy(() => import('../pages/admin/ExamAudit'));
+const DeliverList = lazy(() => import('../pages/exam/deliver/DeliverList'));
+const Delivers = lazy(() => import('../pages/student/Delivers'));
+const ExamInput = lazy(() => import('../pages/student/ExamInput'));
+const GroupInput = lazy(() => import('../pages/student/GroupInput'));
+const FinalInput = lazy(() => import('../pages/teacher/FinalInput'));
 export default function View() {
   return (
     <BrowserRouter>
@@ -33,9 +38,10 @@ export default function View() {
         <Routes>
           <Route element={<LayoutComponent />}>
             <Route path='/student' key='stu'>
-              <Route path='exams' key='stu_exams' element={<Exams />}></Route>
-              <Route path='exam/:id' key='detail exam' element={<Exam role='student' />}></Route>
-              <Route path='exam/:id/detail' key='exam score detail' element={<Exam role="student" />}></Route>
+              <Route path='exams' key='stu_exams' element={<Delivers />}></Route>
+              <Route path='exam/:id/:detailId' key='detail exam' element={<ExamInput />}></Route>
+              <Route path='partner' key='partner' element={<GroupInput />} />
+              {/* <Route path='exam/:id/detail' key='exam score detail' element={<Exam role="student" />}></Route> */}
               {/* <Route path='scores' key='score list' element={<Scores />}></Route>
               <Route path='score/:id' key='score detail' element={<Score />}></Route> */}
             </Route>
@@ -52,6 +58,8 @@ export default function View() {
                 <Route path=':id/scores' element={<ScoreList />} />
                 <Route path=':id/scores/:studentId/edit' element={<Exam role='teacher' />} />
                 <Route path='target/create' element={<AddExamTarget />} />
+                <Route path='deliver' element={<DeliverList />} />
+                <Route path="final/:id" element={<FinalInput />} />
               </Route>
               <Route path='student' key='student'>
                 <Route path='list' element={<TeacherStuList />} />

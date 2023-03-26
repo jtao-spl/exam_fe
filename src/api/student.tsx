@@ -1,4 +1,5 @@
 import { message } from 'antd';
+import { IDeliverDetail, IExamDeliverEntity, IResp } from '../interfaces/Exam';
 import { IGrade, IGradeClass, IGroupInfo, IStudent, IStudentInfo, IStudentInfoWithGroup, IStudentQueryReq, IStudentUpload } from '../interfaces/Student';
 import request from '../utils/request';
 
@@ -118,7 +119,7 @@ export const updateStudentInfo = async (student: IStudentInfo): Promise<boolean>
         method: 'patch',
         data: student
     });
-    const { code, msg, data } = res.data;
+    const { code, msg } = res.data;
     if (code !== 0) {
         message.error(`更新学生信息失败，系统错误：${msg}`);
         return false;
@@ -165,6 +166,91 @@ export const getGroupInfo = async (GradeId: number, Class: number, GroupName: st
     if (code !== 0) {
         message.error(`查询失败，系统错误：${msg}`);
         return null;
+    }
+    return data;
+}
+
+/**
+ * 查询当前用户设置的所有分组信息
+ * @returns 
+ */
+export const getGroupInfos = async (): Promise<IGroupInfo[]> => {
+    const res = await request({
+        url: '/student/group/all',
+        method: 'get',
+    })
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`查询失败，系统错误：${msg}`);
+        return [];
+    }
+    return data;
+}
+
+/**
+ * 分页查询考试列表
+ * @param page 
+ * @param limit 
+ * @param status 
+ * @returns 
+ */
+export const studentGetDeliverList = async (page: number, limit: number, status: number): Promise<IResp<IExamDeliverEntity> | null> => {
+    const res = await request({
+        url: `/student/deliver/list`,
+        method: 'get',
+        params: { page, limit, status }
+    })
+    const { code, msg, data, total } = res.data;
+    if (code !== 0) {
+        message.error(`查询失败，系统错误：${msg}`);
+        return null;
+    }
+    return {
+        items: data,
+        pageSize: page,
+        total: total
+    }
+}
+
+/**
+ * 获取本班级待复测的考核列表
+ * @param page 
+ * @param limit 
+ * @returns 
+ */
+export const getClassPendingList = async (page: number, limit: number): Promise<IResp<IExamDeliverEntity> | null> => {
+    const res = await request({
+        url: `/student/class/deliver/list`,
+        method: 'get',
+        params: { page, limit }
+    })
+    const { code, msg, data, total } = res.data;
+    if (code !== 0) {
+        message.error(`查询失败，系统错误：${msg}`);
+        return null;
+    }
+    return {
+        items: data,
+        pageSize: page,
+        total: total
+    }
+}
+/**
+ * 获取指定考核中待提交复测数据的考卷列表
+ * @param id 
+ * @returns 
+ */
+export const getDeliverDetailsByDeliverId = async (id: number): Promise<IDeliverDetail[]> => {
+    if(id === 0) return []
+    const res = await request({
+        url: `/student/details`,
+        method: 'get',
+        params: { id, Status:1 }
+    })
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`查询失败，系统错误：${msg}`);
+        return [];
     }
     return data;
 }

@@ -29,7 +29,7 @@ export default function ExamAudit() {
         const examIds = res.items.map((item: IExamShare) => item.ExamId);
         if (examIds.length === 0) {
             setLoading(false);
-            setExams([])
+            setExams([]);
             return
         }
         const exams = await getExamsByIds(examIds);

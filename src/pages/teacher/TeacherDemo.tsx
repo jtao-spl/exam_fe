@@ -15,7 +15,7 @@ import { getCalculatedSizeForExam, getMeasureResult, getSummary } from '../../wr
 
 export interface IDemoTableItem {
     id: number,
-    clip: any,
+    // clip: any,
     size: ISize,
     project: string | any,
     baseSize: number | string,
@@ -124,7 +124,7 @@ export default function TeacherDemo() {
                 const items: IDemoTableItem[] = filterdSizes.map((size: ISize) => {
                     return {
                         id: size.Id,
-                        clip: 'aaa',
+                        // clip: 'aaa',
                         size: size,
                         project: size.FirstType === 0 && size.SecondType !== undefined && size.SecondType === 0 ? '线性（L）' :
                             size.FirstType === 0 && size.SecondType !== undefined && size.SecondType === 1 && size.DiameterType !== undefined && size.DiameterType === 2 ? '内径（d）' :
