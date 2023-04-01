@@ -1,6 +1,6 @@
 import request from '../utils/request';
 import { message } from 'antd';
-import { IDeliverDetail, IDeliverProgress, IExam, IExamDeliver, IExamListResp, IExamTarget, IResp, ISizeScore } from '../interfaces/Exam';
+import { IDeliverDetail, IDeliverDistribution, IDeliverProgress, IDeliverSizeStat, IDeliverStat, IExam, IExamDeliver, IExamListResp, IExamTarget, IResp, ISizeScore } from '../interfaces/Exam';
 import { ISizePrecisionData } from '../interfaces/Size';
 import { ICriteria } from '../interfaces/ExamCriteria';
 import { get } from '../utils/storage';
@@ -324,11 +324,11 @@ export const createNewExamDeliver = async (ExamId: number, ExamName: string, Exa
  * @param limit 
  * @returns 
  */
-export const getExamDeliverList = async (page: number, limit: number,): Promise<IResp<IExamDeliver> | undefined> => {
+export const getExamDeliverList = async (page: number, limit: number, Status?: number): Promise<IResp<IExamDeliver> | undefined> => {
     const res = await request({
         url: `/exam/deliver`,
         method: 'get',
-        params: { page, limit }
+        params: { page, limit, Status }
     })
     const { code, msg, data, total } = res.data;
     if (code !== 0) {
@@ -401,7 +401,7 @@ export const getProgessByDeliverIds = async (ids: number[]): Promise<IDeliverPro
  * @returns 
  */
 export const getDeliverDetailById = async (id: number): Promise<IDeliverDetail | undefined> => {
-    if(id === 0) return;
+    if (id === 0) return;
     const res = await request({
         url: `/exam/detail/${id}`,
         method: `get`,
@@ -410,6 +410,77 @@ export const getDeliverDetailById = async (id: number): Promise<IDeliverDetail |
     if (code !== 0) {
         message.error(`查询失败，系统错误：${msg}`);
         return;
+    }
+    return data;
+}
+
+/**
+ * 查询考核的统计数据
+ * @param id deliver id
+ * @returns 
+ */
+export const getExamStatsByDeliverId = async (id: number): Promise<IDeliverStat | null> => {
+    const res = await request({
+        url: `/exam/deliver/${id}/stat`,
+        method: 'get'
+    });
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`查询失败，系统错误：${msg}`);
+        return null;
+    }
+    return data;
+}
+
+/**
+ * 查询考核的成绩分布
+ * @param id deliver id
+ * @returns 
+ */
+export const getExamDistributionByDeliverId = async (id: number): Promise<IDeliverDistribution | null> => {
+    const res = await request({
+        url: `/exam/deliver/${id}/dist`,
+        method: 'get'
+    });
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`查询失败，系统错误：${msg}`);
+        return null;
+    }
+    return data;
+}
+
+/**
+ * 完成复测、
+ * @param id 
+ */
+export const finishFinalReview = async (id: number): Promise<boolean> => {
+    const res = await request({
+        url: `/exam/deliver/${id}/finish`,
+        method: 'post'
+    });
+    const { code, msg } = res.data;
+    if (code !== 0) {
+        message.error(`处理失败，系统错误：${msg}`);
+        return false;
+    }
+    return true;
+}
+
+/**
+ * 获取评分项得分情况详情
+ * @param id 
+ * @returns 
+ */
+export const getDetailedScoresByDeliverId = async(id: number):Promise<IDeliverSizeStat[]> =>{
+    const res = await request({
+        url: `/exam/deliver/${id}/scores`,
+        method: 'get'
+    })
+    const { code, msg, data } = res.data;
+    if (code !== 0) {
+        message.error(`查询失败，系统错误：${msg}`);
+        return [];
     }
     return data;
 }

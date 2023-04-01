@@ -17,6 +17,7 @@ const ExamAudit = lazy(() => import('../pages/admin/ExamAudit'));
 const DeliverList = lazy(() => import('../pages/exam/deliver/DeliverList'));
 const Delivers = lazy(() => import('../pages/student/Delivers'));
 const GroupInput = lazy(() => import('../pages/student/GroupInput'));
+const ChartStats  = lazy(()=>import('../pages/teacher/ChartStats')) ;
 export interface IRouter {
     title: React.ReactNode,
     path: string,
@@ -87,7 +88,14 @@ export const teacherRouters: IRouter[] = [
                 key: 'deliver',
                 icon: <PartitionOutlined />,
                 element: <DeliverList />
-            }
+            },
+            {
+                title: <Link to='/teacher/exam/stats'>成绩分析</Link>,
+                path: '/teacher/exam/stats',
+                key: 'stats',
+                icon: <PartitionOutlined />,
+                element: <ChartStats />
+            },
         ]
     },
     {

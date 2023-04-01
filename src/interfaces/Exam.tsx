@@ -214,6 +214,7 @@ export interface IExamInput {
 export interface IGroupTableProps {
     details: IDeliverDetail[],
     loading: boolean,
+    deliver?: IExamDeliver
 
 }
 
@@ -239,4 +240,39 @@ export interface ITeacherTableItem {
     selfScore?: number,
     groupSize?: number,
     groupScore?: number,
+}
+
+
+export interface IDeliverStat{
+    Id: number,
+    DeliverId: number,
+    PartCnt: number,
+    AvgScore: number,
+    PassRate: number,
+    ExclRate: number,
+    LowRate: number,
+    StandardDiff:number,
+}
+
+export interface IDeliverDistribution {
+    Id: number,
+    DeliverId: number,
+    ScoreLe30: number,
+    Score3040: number,
+    Score4050: number,
+    Score5060: number,
+    Score6070: number,
+    Score7080: number,
+    Score8090: number,
+    Score90100: number,
+    Deleted: boolean,
+}
+
+export interface IDeliverSizeStat {
+    Id: number,
+    DeliverId: number,
+    SizeId:number,
+    Total: number,
+    ScoreAvg: number,//百分比
+    ScoreRate: number,//百分比
 }

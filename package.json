@@ -16,6 +16,8 @@
     "antd": "4.24.4",
     "axios": "^0.27.2",
     "craco-antd": "^2.0.0",
+    "echarts": "^5.4.2",
+    "echarts-for-react": "^3.0.2",
     "nprogress": "^0.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

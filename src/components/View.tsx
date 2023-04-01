@@ -31,6 +31,7 @@ const Delivers = lazy(() => import('../pages/student/Delivers'));
 const ExamInput = lazy(() => import('../pages/student/ExamInput'));
 const GroupInput = lazy(() => import('../pages/student/GroupInput'));
 const FinalInput = lazy(() => import('../pages/teacher/FinalInput'));
+const ChartStats  = lazy(()=>import('../pages/teacher/ChartStats')) ;
 export default function View() {
   return (
     <BrowserRouter>
@@ -60,6 +61,7 @@ export default function View() {
                 <Route path='target/create' element={<AddExamTarget />} />
                 <Route path='deliver' element={<DeliverList />} />
                 <Route path="final/:id" element={<FinalInput />} />
+                <Route path='stats' element={<ChartStats />} />
               </Route>
               <Route path='student' key='student'>
                 <Route path='list' element={<TeacherStuList />} />
