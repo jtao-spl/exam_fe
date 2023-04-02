@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom';
 import { getClassPendingList, getDeliverDetailsByDeliverId } from '../../api/student';
 import { IDeliverDetail, IExamDeliverEntity, IGroupTableProps } from '../../interfaces/Exam';
 import { generateDeliverTableColumns } from '../../wrapper/Exam';
-import { DeliverTable } from '../exam/deliver/DeliverList';
 
 //小组复测
 export default function GroupInput() {

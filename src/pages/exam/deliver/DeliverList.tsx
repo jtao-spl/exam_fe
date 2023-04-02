@@ -1,6 +1,6 @@
-import { Button, message, Popconfirm, Space, Table, TableColumnsType } from 'antd';
+import { Button, message, Popconfirm, Space, Switch, Table, TableColumnsType } from 'antd';
 import React, { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { getGrades } from '../../../api/admin';
 import { getExamDeliverList, getExamsByIds, getProgessByDeliverIds, updateDeliverStatus } from '../../../api/exam';
 import { batchGetStudentGradeInfo } from '../../../api/student';
@@ -17,12 +17,13 @@ export default function DeliverList() {
 
   const init = async (pg: number = 1, lmt: number = 10) => {
     setLoading(true);
-    const res = await getExamDeliverList(pg, lmt);
+    const res = await getExamDeliverList(pg, lmt, false);
     if (!res) {
       setLoading(false);
+      setDelivers([]);
       return
     }
-    const DeliverIds = res.items.map((item:IExamDeliver)=>item.Id);
+    const DeliverIds = res.items.map((item: IExamDeliver) => item.Id);
     const ExamIds = res.items.map((deliver: IExamDeliver) => deliver.ExamId);
     const GradeIds = res.items.map((deliver: IExamDeliver) => deliver.GradeId);
     const uniqExamIds = Array.from(new Set(ExamIds));
@@ -38,7 +39,7 @@ export default function DeliverList() {
       ...item,
       Exam: exams.find((exam: IExam) => exam.Id === item.ExamId),
       Grade: grades.find((grade: IGrade) => grade.Id === item.GradeId),
-      Progress: submitProgress.find((prog:IDeliverProgress)=>prog.id === item.Id)
+      Progress: submitProgress.find((prog: IDeliverProgress) => prog.id === item.Id)
     }))
     setDelivers(items);
     setPageSize(res.pageSize);
@@ -52,18 +53,18 @@ export default function DeliverList() {
 
   return (
     <div>
-      <DeliverTable
-        isTeacher={true}
-        delivers={delivers}
-        callback={init}
-        pageSize={pageSize}
-        total={total}
-        loading={loading}
-        pageChangeCallback={(page: number) => init(page)}
-      />
-      {/* <div>
-        一考核列表
-      </div> */}
+      <Space direction='vertical'>
+        <DeliverTable
+          isTeacher={true}
+          isArchived={false}
+          delivers={delivers}
+          callback={init}
+          pageSize={pageSize}
+          total={total}
+          loading={loading}
+          pageChangeCallback={(page: number) => init(page)}
+        />
+      </Space>
     </div>
   )
 }
@@ -71,35 +72,44 @@ export default function DeliverList() {
 
 export function DeliverTable(props: IDeleverTableProps) {
   const navigate = useNavigate();
-  const { isTeacher, delivers, loading, callback, pageSize, total, pageChangeCallback } = props;
+  const { isTeacher, isArchived, delivers, loading, callback, pageSize, total, pageChangeCallback } = props;
 
   const getTeacherColums = () => {
+    const notArchivedOpColumn = {
+      title: `操作`, key: 'op', render: (_: any, record: IExamDeliverEntity) => {
+        return (<Space direction='vertical'>
+          <Button type='primary'
+            onClick={() => setDeliverStatus(record.Id, 1)}
+            disabled={record.Status !== 0}
+          >下发</Button>
+          <Popconfirm
+            title={"收卷后学生不可再提交，确认收卷？"}
+            disabled={record.Status !== 1}
+            onConfirm={() => setDeliverStatus(record.Id, 2)}
+            onCancel={() => message.info(`取消收卷`)}
+          >
+            <Button type='primary'
+              disabled={record.Status !== 1}
+            >收卷</Button>
+          </Popconfirm>
+          <Button
+            type="primary"
+            disabled={record.Status !== 2}
+            onClick={() => navigate(`/teacher/exam/final/${record.Id}`)}>去复测</Button>
+        </Space>)
+      }
+    };
+    const archivedOpColumn = {
+      title: `操作`, key: 'op', render: (_: any, record: IExamDeliverEntity) => {
+        return (
+          <Button type='primary'
+            onClick={() => navigate(`/teacher/exam/stats`, { state: record.Id })}>查看成绩分析</Button>
+        )
+      }
+    }
     const columns: TableColumnsType<IExamDeliverEntity> = [
       ...generateTeacherDeliverTableColumns(),
-      {
-        title: `操作`, key: 'op', render: (_: any, record: IExamDeliverEntity) => {
-          return (<Space direction='vertical'>
-            <Button type='primary'
-              onClick={() => setDeliverStatus(record.Id, 1)}
-              disabled={record.Status !== 0}
-            >下发</Button>
-            <Popconfirm
-              title={"收卷后学生不可再提交，确认收卷？"}
-              disabled={record.Status !== 1}
-              onConfirm={() => setDeliverStatus(record.Id, 2)}
-              onCancel={() => message.info(`取消收卷`)}
-            >
-              <Button type='primary'
-                disabled={record.Status !== 1}
-              >收卷</Button>
-            </Popconfirm>
-            <Button
-              type="primary"
-              disabled={record.Status !== 2}
-              onClick={() => navigate(`/teacher/exam/final/${record.Id}`)}>去复测</Button>
-          </Space>)
-        }
-      }
+      isArchived ? archivedOpColumn : notArchivedOpColumn
     ]
     return columns;
   }
@@ -114,16 +124,6 @@ export function DeliverTable(props: IDeleverTableProps) {
               onClick={() => navigate(`/student/exam/${record.Id}/${record.DeliverDetailId}`)}
             // disabled={record.Status !== 0}
             >去考试</Button>
-            {/* <Popconfirm
-              title={"收卷后学生不可再提交，确认收卷？"}
-              disabled={record.Status !== 1}
-              onConfirm={() => setDeliverStatus(record.Id, 2)}
-              onCancel={() => message.info(`取消收卷`)}
-            >
-              <Button type='primary'
-                disabled={record.Status !== 1}
-              >收卷</Button>
-            </Popconfirm> */}
 
           </Space>)
         }

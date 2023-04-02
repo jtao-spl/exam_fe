@@ -68,7 +68,8 @@ export interface IStudentTableProps {
     students: IStudentInfo[],
     grade?:IGrade,
     callback: (req: IStudentQueryReq) => void,
-    showEditModal: (student: IStudentInfo) => void
+    showEditModal: (student: IStudentInfo) => void,
+    switchCallback: (checked:boolean)=>void,
 }
 
 export interface IEditStudentProps {

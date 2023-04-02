@@ -180,6 +180,7 @@ export interface IExamDeliverEntity extends IExamDeliver {
 
 export interface IDeleverTableProps {
     isTeacher: boolean,
+    isArchived: boolean,
     delivers: IExamDeliverEntity[],
     callback: () => void,
     pageSize: number,
@@ -272,6 +273,7 @@ export interface IDeliverSizeStat {
     Id: number,
     DeliverId: number,
     SizeId:number,
+    IsSecurity: boolean,
     Total: number,
     ScoreAvg: number,//百分比
     ScoreRate: number,//百分比

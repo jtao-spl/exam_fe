@@ -1,4 +1,4 @@
-import { Button, Divider, Form, Input, InputNumber, message, Modal, Select, Space, Table, TableColumnsType, Tag } from 'antd';
+import { Button, Divider, Form, Input, InputNumber, message, Modal, Select, Space, Switch, Table, TableColumnsType, Tag } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { toggleStatus, createGrade, getGrades, deleteGrade, batchToggleStatus, getGradeById, batchUpdateClass } from '../../api/admin';
@@ -16,12 +16,19 @@ export default function StudentList() {
   const [grades, setGrades] = useState<IGrade[]>([]);
   const [grade, setGrade] = useState<IGrade>();
   const [gradeId, setGradeId] = useState(0);
+  const [checked, setChecked] = useState(true);
   const queryStudents = async (req: IStudentQueryReq) => {
     const resp = await batchGetStudentInfo(req);
-    if (resp) {
+    if (!checked) {
+      const unClassedStudents = resp.filter((student: IStudentInfo) => student.Class !== 0);
+      console.log(`length of ungrouped studnets: ${unClassedStudents.length}`);
+      setStudents(unClassedStudents);
+    } else {
       setStudents(resp);
     }
+
   }
+
   const queryGrades = async () => {
     const res = await getGrades();
     setGrades(res);
@@ -69,6 +76,16 @@ export default function StudentList() {
           setStudent(student);
           setShowEditStudentModal(true);
         }}
+        switchCallback={(checked: boolean) => {
+          setChecked(checked)
+          if (!checked) {
+            const unClassedStudents = students.filter((student: IStudentInfo) => student.Class === 0);
+            console.log(`length of ungrouped studnets: ${unClassedStudents.length}`);
+            setStudents(unClassedStudents);
+          } else {
+            queryStudents({ GradeId: gradeId });
+          }
+        }}
       />
       <EditStudent
         student={student}
@@ -81,7 +98,7 @@ export default function StudentList() {
 
 
 export function StudentTable(props: IStudentTableProps) {
-  const { students, grade, callback, showEditModal } = props;
+  const { students, grade, callback, showEditModal, switchCallback } = props;
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
   const [selectedClass, setSelectedClass] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -140,6 +157,9 @@ export function StudentTable(props: IStudentTableProps) {
       }, 500);
     }
   }
+  const onChange = (checked: boolean) => {
+    switchCallback(checked)
+  }
 
   const hasSelected = selectedRowKeys.length > 0;
   const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
@@ -163,7 +183,7 @@ export function StudentTable(props: IStudentTableProps) {
         <Space direction='horizontal'>
           <div>分配至</div>
           {grade ? <Select style={{ width: "100px" }}
-            onChange={(values: any) => {  setSelectedClass(values); }}
+            onChange={(values: any) => { setSelectedClass(values); }}
             options={range(grade.ClassCount).map((item: number) => ({ value: item + 1, label: `${item + 1}班` }))} /> : ''
           }
           <Button type='primary' onClick={() => setClass()} disabled={!hasSelected} loading={loading} >确定</Button>
@@ -173,6 +193,11 @@ export function StudentTable(props: IStudentTableProps) {
             {hasSelected ? `已选定 ${selectedRowKeys.length} 名学生` : ''}
           </span>
         </div>
+        <Switch
+          defaultChecked={true}
+          checkedChildren="全部"
+          unCheckedChildren="未分班"
+          onChange={onChange} />
       </Space>
       <Table
         rowSelection={rowSelection}

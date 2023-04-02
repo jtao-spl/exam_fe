@@ -17,7 +17,8 @@ const ExamAudit = lazy(() => import('../pages/admin/ExamAudit'));
 const DeliverList = lazy(() => import('../pages/exam/deliver/DeliverList'));
 const Delivers = lazy(() => import('../pages/student/Delivers'));
 const GroupInput = lazy(() => import('../pages/student/GroupInput'));
-const ChartStats  = lazy(()=>import('../pages/teacher/ChartStats')) ;
+const ChartStats = lazy(() => import('../pages/teacher/ChartStats'));
+const ArchivedList = lazy(() => import('../pages/exam/deliver/ArchivedList'));
 export interface IRouter {
     title: React.ReactNode,
     path: string,
@@ -90,6 +91,13 @@ export const teacherRouters: IRouter[] = [
                 element: <DeliverList />
             },
             {
+                title: <Link to='/teacher/exam/deliver/archived'>归档列表</Link>,
+                path: '/teacher/exam/deliver/archived',
+                key: 'archived',
+                icon: <PartitionOutlined />,
+                element: <ArchivedList />
+            },
+            {
                 title: <Link to='/teacher/exam/stats'>成绩分析</Link>,
                 path: '/teacher/exam/stats',
                 key: 'stats',
@@ -155,6 +163,13 @@ const routers: IRouter[] = [
     }
 ]
 export const unAuthRoutes: IRouter[] = [
+    {
+        title: '首页',
+        path: '/',
+        key: 'home',
+        icon: <LoginOutlined />,
+        element: <Login />
+    },
     {
         title: '登录',
         path: '/login',

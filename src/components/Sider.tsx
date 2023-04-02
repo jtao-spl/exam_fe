@@ -46,10 +46,10 @@ export default function SiderLayout() {
       let match = matchPath(r.path, path)
       if (match || path.includes(r.path)) {
         if (r.children) {
-          setDefaultSelectedKeys([r.key]);
+          setDefaultOpenKeys([r.key])
         }
         else {
-          setDefaultOpenKeys([r.key])
+          setDefaultSelectedKeys([r.key]);
         }
       }
       if (r.children) {
@@ -77,14 +77,6 @@ export default function SiderLayout() {
 
   return (
     <Sider
-      // style={{
-      //   overflow: 'auto',
-      //   height: '100vh',
-      //   position: 'fixed',
-      //   left: 0,
-      //   top: 0,
-      //   bottom: 0,
-      // }}
       width={200}
       className="site-layout-background"
     >

@@ -324,11 +324,11 @@ export const createNewExamDeliver = async (ExamId: number, ExamName: string, Exa
  * @param limit 
  * @returns 
  */
-export const getExamDeliverList = async (page: number, limit: number, Status?: number): Promise<IResp<IExamDeliver> | undefined> => {
+export const getExamDeliverList = async (page: number, limit: number, archived: boolean): Promise<IResp<IExamDeliver> | undefined> => {
     const res = await request({
         url: `/exam/deliver`,
         method: 'get',
-        params: { page, limit, Status }
+        params: { page, limit, archived }
     })
     const { code, msg, data, total } = res.data;
     if (code !== 0) {
@@ -482,5 +482,6 @@ export const getDetailedScoresByDeliverId = async(id: number):Promise<IDeliverSi
         message.error(`查询失败，系统错误：${msg}`);
         return [];
     }
+    data.sort((a:IDeliverSizeStat, b:IDeliverSizeStat)=>a.SizeId - b.SizeId)
     return data;
 }

@@ -30,6 +30,7 @@ export default function Delivers() {
         <div>
             <DeliverTable
                 isTeacher={false}
+                isArchived={false}
                 delivers={delivers}
                 callback={init}
                 pageSize={pageSize}

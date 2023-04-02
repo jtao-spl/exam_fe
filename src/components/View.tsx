@@ -1,11 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import { Routes, Route, BrowserRouter } from 'react-router-dom';
-// import PasswordReset from '../pages/admin/PasswordReset';
-// import TeacherList from '../pages/admin/TeacherList';
-// import AddExamTarget from '../pages/exam/AddExamTarget';
-// import StudentUpload from '../pages/upload/StudentUpload';
 
-import routers, { IRouter, studentRoutes, teacherRouters, unAuthRoutes } from '../router';
+import { unAuthRoutes } from '../router';
 import LayoutComponent from './Layout';
 
 
@@ -32,6 +28,7 @@ const ExamInput = lazy(() => import('../pages/student/ExamInput'));
 const GroupInput = lazy(() => import('../pages/student/GroupInput'));
 const FinalInput = lazy(() => import('../pages/teacher/FinalInput'));
 const ChartStats  = lazy(()=>import('../pages/teacher/ChartStats')) ;
+const ArchivedList = lazy(() => import('../pages/exam/deliver/ArchivedList'));
 export default function View() {
   return (
     <BrowserRouter>
@@ -60,6 +57,7 @@ export default function View() {
                 <Route path=':id/scores/:studentId/edit' element={<Exam role='teacher' />} />
                 <Route path='target/create' element={<AddExamTarget />} />
                 <Route path='deliver' element={<DeliverList />} />
+                <Route path='deliver/archived' element={<ArchivedList />} />
                 <Route path="final/:id" element={<FinalInput />} />
                 <Route path='stats' element={<ChartStats />} />
               </Route>

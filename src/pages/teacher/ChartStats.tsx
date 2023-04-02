@@ -4,6 +4,7 @@ import * as echarts from 'echarts';
 import { Select, Space, Table, TableColumnsType } from 'antd';
 import { IDeliverDistribution, IDeliverSizeStat, IDeliverStat, IExamDeliver } from '../../interfaces/Exam';
 import { getDetailedScoresByDeliverId, getExamDeliverList, getExamDistributionByDeliverId, getExamStatsByDeliverId } from '../../api/exam';
+import { useLocation } from 'react-router-dom';
 
 export default function ChartStats() {
     const [delivers, setDelivers] = useState<IExamDeliver[]>([]);
@@ -12,11 +13,14 @@ export default function ChartStats() {
     const [generalStat, setGeneralStat] = useState<IDeliverStat>();
     const [examDistribution, setExamDistribution] = useState<IDeliverDistribution>();
     const [sizeStats, setSizeStats] = useState<IDeliverSizeStat[]>([]);
+    let location = useLocation();
+
     const init = async (pg: number, limit: number) => {
-        const res = await getExamDeliverList(pg, limit, 3);
+        const res = await getExamDeliverList(pg, limit, true);
         if (!res || res.items.length === 0) return;
         setDelivers(res.items);
     }
+
 
     const getStats = async (id: number) => {
         if (!id) return;
@@ -33,6 +37,10 @@ export default function ChartStats() {
 
     useEffect(() => {
         init(1, 10);
+        if (location.state) {
+            setDeliverId(location.state)
+        }
+
     }, [])
 
     useEffect(() => {
@@ -40,22 +48,24 @@ export default function ChartStats() {
     }, [deliverId])
 
     return (<div>
-        <Space direction='vertical'>
-            <div>请选择：
-                <Select style={{ width: 240 }}
-                    onChange={(value: number) => setDeliverId(value)}
-                >
-                    {
-                        delivers.map((deliver: IExamDeliver) =>
-                            <Select.Option key={deliver.Id} value={deliver.Id}>{deliver.ExamName}</Select.Option>
-                        )
-                    }
-                </Select>
-            </div>
-            <GeneralStats Stats={generalStat} />
-            <ScoreLeveledStats data={examDistribution} />
-            <DetailSizeScore data={sizeStats} />
-        </Space>
+
+        <div>请选择：
+            <Select style={{ width: 240 }}
+                allowClear={true}
+                onChange={(value: number) => setDeliverId(value)}
+                defaultValue={location.state}
+            >
+                {
+                    delivers.map((deliver: IExamDeliver) =>
+                        <Select.Option key={deliver.Id} value={deliver.Id}>{deliver.ExamName}</Select.Option>
+                    )
+                }
+            </Select>
+        </div>
+        <GeneralStats Stats={generalStat} />
+        <ScoreLeveledStats data={examDistribution} />
+        <DetailSizeScore data={sizeStats} />
+
     </div>);
 }
 
@@ -128,6 +138,12 @@ function ScoreLeveledStats(props: { data?: IDeliverDistribution }) {
     }
 
     const option = {
+        title: {
+            text: '各分数段人数',
+            fontWeight: 'nromal',
+            fontSize: 12,
+            textAlign: "auto",
+        },
         grid: {
             left: "5%",
             right: "5%",
@@ -152,7 +168,7 @@ function ScoreLeveledStats(props: { data?: IDeliverDistribution }) {
                 );
             },
         },
-        backgroundColor: "rgb(20,28,52)",
+        backgroundColor: "rgb(255,255,255)",
         xAxis: {
             show: true,
             type: "value",
@@ -163,18 +179,16 @@ function ScoreLeveledStats(props: { data?: IDeliverDistribution }) {
                 inverse: true,
                 axisLabel: {
                     show: true,
-                    textStyle: {
-                        color: "#fff",
-                    },
+
                 },
                 splitLine: {
-                    show: false,
+                    show: true,
                 },
                 axisTick: {
-                    show: false,
+                    show: true,
                 },
                 axisLine: {
-                    show: false,
+                    show: true,
                 },
                 data: ["0-30", "30-40", "40-50", "50-60", "60-70", "70-80", "80-90", "90-100"],
             },
@@ -185,10 +199,7 @@ function ScoreLeveledStats(props: { data?: IDeliverDistribution }) {
                 axisLine: "none",
                 show: true,
                 axisLabel: {
-                    textStyle: {
-                        color: "#ffffff",
-                        fontSize: "12",
-                    },
+                    fontSize: "12",
                 },
                 data: counts,
             },
@@ -199,22 +210,22 @@ function ScoreLeveledStats(props: { data?: IDeliverDistribution }) {
                 type: "bar",
                 zlevel: 1,
                 itemStyle: {
-                    normal: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0,
-                            [
-                                {
-                                    offset: 0,
-                                    color: 'rgba(51, 136, 255, 0.5)',
-                                },
-                                {
-                                    offset: 0.98,
-                                    color: '#3388FF',
-                                },
-                            ],
-                            false,
-                        ),
-                        barBorderRadius: 30,
-                    },
+
+                    color: new echarts.graphic.LinearGradient(0, 0, 1, 0,
+                        [
+                            {
+                                offset: 0,
+                                color: 'rgba(255,128,0, 0.5)',
+                            },
+                            {
+                                offset: 0.98,
+                                color: '#FF8800',
+                            },
+                        ],
+                        false,
+                    ),
+                    borderRadius: 30,
+
                 },
                 barWidth: 10,
                 data: counts,
@@ -237,23 +248,27 @@ function ScoreLeveledStats(props: { data?: IDeliverDistribution }) {
         return columns;
     }
 
-    return (<div>
-        <Table
-            columns={getScoreLeveledStatsColumns()}
-            dataSource={fieldCount}
-            pagination={false}
-            bordered={true}
-            rowKey={record => record.key}
-        />
-        <ReactEcharts
-            option={option}
-            notMerge
-            lazyUpdate />
-    </div>)
+    return (
+        <div>
+            <Table
+                columns={getScoreLeveledStatsColumns()}
+                dataSource={fieldCount}
+                pagination={false}
+                bordered={true}
+                rowKey={record => record.key}
+            />
+            <ReactEcharts
+                option={option}
+                notMerge
+                lazyUpdate />
+        </div>
+    )
 }
 
 function DetailSizeScore(props: { data: IDeliverSizeStat[] }) {
     const { data } = props;
+    const yData = data.map((item: IDeliverSizeStat, index: number) => item.IsSecurity ? `安全文明${index + 1}` : `评分项${index + 1}`);
+    const xData = data.map((item: IDeliverSizeStat) => item.ScoreRate);
     const getDetailItemScoreColumns = () => {
         const columns: TableColumnsType<IDeliverSizeStat> = [
             {
@@ -264,7 +279,10 @@ function DetailSizeScore(props: { data: IDeliverSizeStat[] }) {
                         }
                     },
                     {
-                        title: `评分项`, key: `item`, dataIndex: `SizeId`,
+                        title: `评分项`, key: `item`, render: (_: any, record: IDeliverSizeStat, index: number) => {
+                            if (record.IsSecurity) return `安全文明${index + 1}`;
+                            return `评分项${index + 1}`
+                        }
                     },
                     {
                         title: `分值设置`, key: `total`, dataIndex: `Total`,
@@ -285,6 +303,12 @@ function DetailSizeScore(props: { data: IDeliverSizeStat[] }) {
         return columns;
     }
     const option = {
+        title: {
+            text: '考核项目得分率',
+            fontWeight: 'nromal',
+            fontSize: 12,
+            textAlign: "auto",
+        },
         grid: {
             left: "5%",
             right: "5%",
@@ -304,17 +328,19 @@ function DetailSizeScore(props: { data: IDeliverSizeStat[] }) {
                     "<span style='display:inline-block;margin-right:5px;border-radius:10px;width:9px;height:9px;background-color:rgba(36,207,233,0.9)'></span>" +
                     params[0].seriesName +
                     " : " +
-                    Number(
-                        (params[0].value.toFixed(4) / 10000).toFixed(2)
-                    ).toLocaleString() +
-                    " 万元<br/>"
+                    params[0].value + "%<br/>"
                 );
             },
         },
-        backgroundColor: "rgb(20,28,52)",
+        backgroundColor: "rgb(255,255,255)",
         xAxis: {
-            show: true,
+            show: false,
             type: "value",
+            axisLable: {
+                formatter: function (value: any) {
+                    return value / 100 + "%"
+                }
+            }
         },
         yAxis: [
             {
@@ -322,20 +348,17 @@ function DetailSizeScore(props: { data: IDeliverSizeStat[] }) {
                 inverse: true,
                 axisLabel: {
                     show: true,
-                    textStyle: {
-                        color: "#fff",
-                    },
                 },
                 splitLine: {
-                    show: false,
+                    show: true,
                 },
                 axisTick: {
-                    show: false,
+                    show: true,
                 },
                 axisLine: {
-                    show: false,
+                    show: true,
                 },
-                data: ["0-30", "30-40", "40-50", "50-60", "60-70", "70-80", "80-90", "90-100"],
+                data: yData,
             },
             {
                 type: "category",
@@ -344,39 +367,37 @@ function DetailSizeScore(props: { data: IDeliverSizeStat[] }) {
                 axisLine: "none",
                 show: true,
                 axisLabel: {
-                    textStyle: {
-                        color: "#ffffff",
-                        fontSize: "12",
-                    },
+                    color: "#ffffff",
+                    fontSize: "12",
                 },
                 data: [],
             },
         ],
         series: [
             {
-                name: "金额",
+                name: "得分率",
                 type: "bar",
                 zlevel: 1,
                 itemStyle: {
-                    normal: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 1, 0,
-                            [
-                                {
-                                    offset: 0,
-                                    color: 'rgba(51, 136, 255, 0.5)',
-                                },
-                                {
-                                    offset: 0.98,
-                                    color: '#3388FF',
-                                },
-                            ],
-                            false,
-                        ),
-                        barBorderRadius: 30,
-                    },
+
+                    color: new echarts.graphic.LinearGradient(0, 0, 1, 0,
+                        [
+                            {
+                                offset: 0,
+                                color: '#FF8800',
+                            },
+                            {
+                                offset: 0.98,
+                                color: '#FF8800',
+                            },
+                        ],
+                        false,
+                    ),
+                    borderRadius: 30,
+
                 },
                 barWidth: 10,
-                data: [10, 20, 4, 22, 4],
+                data: xData,
             },
         ],
     };
