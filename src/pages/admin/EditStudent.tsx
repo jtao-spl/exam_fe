@@ -17,17 +17,11 @@ export default function EditStudent(props: IEditStudentProps) {
     }, [])
     const update = async (values: any) => {
         console.log(`更新学生信息:${JSON.stringify(values)}`);
-        const { StudentId, Name, Class } = values;
-        const Grade = Class[0];
-        const arr = Class[1].split('-');
+        const { StudentId, Name } = values;
+        // const Grade = Class[0];
+        // const arr = Class[1].split('-');
 
-        const res = await updateStudentInfo({
-            StudentId: StudentId,
-            Name: Name,
-            Grade: Grade,
-            Major: arr[0],
-            Class: Number.parseInt(arr[1])
-        });
+        const res = await updateStudentInfo(StudentId, Name);
         if (res) callback({})
     }
     if (!student) {
@@ -61,7 +55,7 @@ export default function EditStudent(props: IEditStudentProps) {
                     >
                         <Input max={20} />
                     </Form.Item>
-                    <Form.Item
+                    {/* <Form.Item
                         label='班级'
                         name='Class'
                         initialValue={[`${student.Grade}级`, `${student.Major}-${student.Class}班`]}
@@ -77,7 +71,7 @@ export default function EditStudent(props: IEditStudentProps) {
                             // multiple
                             maxTagCount="responsive"
                             placeholder="请选择班级" />
-                    </Form.Item>
+                    </Form.Item> */}
                     <Form.Item>
                         <Space style={{ float: 'right' }}>
                             <Button type='primary' htmlType='reset'>重置</Button>

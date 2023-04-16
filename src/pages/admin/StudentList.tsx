@@ -21,12 +21,10 @@ export default function StudentList() {
     const resp = await batchGetStudentInfo(req);
     if (!checked) {
       const unClassedStudents = resp.filter((student: IStudentInfo) => student.Class !== 0);
-      console.log(`length of ungrouped studnets: ${unClassedStudents.length}`);
       setStudents(unClassedStudents);
     } else {
       setStudents(resp);
     }
-
   }
 
   const queryGrades = async () => {

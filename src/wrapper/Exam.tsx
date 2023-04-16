@@ -1,7 +1,7 @@
 import { Form, InputNumber, message, Select, TableColumnsType, Tag } from "antd";
 import { getExamCriteriaApi } from "../api/exam";
 import { IComponent, ITool } from "../interfaces/Component";
-import { IDeliverDetail, IExam, IExamDeliverEntity, IExamInput, ITeacherTableItem, ScoreItem, sizeScopeToDelta } from "../interfaces/Exam";
+import { IDeliverDetail, IDeliverSizeStat, IExam, IExamDeliverEntity, IExamInput, ITeacherTableItem, ScoreItem, sizeScopeToDelta } from "../interfaces/Exam";
 import { ICriteria } from "../interfaces/ExamCriteria";
 import { ISize, ISizePrecisionData, ISizeWithScore } from "../interfaces/Size";
 import { IDemoTableItem } from "../pages/teacher/TeacherDemo";

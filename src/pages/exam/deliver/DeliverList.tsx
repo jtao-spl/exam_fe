@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import { getGrades } from '../../../api/admin';
 import { getExamDeliverList, getExamsByIds, getProgessByDeliverIds, updateDeliverStatus } from '../../../api/exam';
-import { batchGetStudentGradeInfo } from '../../../api/student';
+import { batchGetStudentGradeInfo, downloadScoreTable } from '../../../api/student';
 import { IDeleverTableProps, IDeliverProgress, IExam, IExamDeliver, IExamDeliverEntity } from '../../../interfaces/Exam'
 import { IGrade } from '../../../interfaces/Student';
 import { generateStudentDeliverTableColumns, generateTeacherDeliverTableColumns } from '../../../wrapper/Exam';
@@ -122,9 +122,13 @@ export function DeliverTable(props: IDeleverTableProps) {
           return (<Space>
             <Button type='primary'
               onClick={() => navigate(`/student/exam/${record.Id}/${record.DeliverDetailId}`)}
-            // disabled={record.Status !== 0}
+              disabled={record.Status !== 1}
             >去考试</Button>
-
+            <Button type='primary'
+              disabled={record.Status !== 3}
+              onClick={async () => await downloadScoreTable(record.Id)}>
+              下载报告单
+            </Button>
           </Space>)
         }
       }

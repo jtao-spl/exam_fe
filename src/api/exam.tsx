@@ -415,7 +415,7 @@ export const getDeliverDetailById = async (id: number): Promise<IDeliverDetail |
 }
 
 /**
- * 查询考核的统计数据
+ * 查询考核的统计数据,页面展示
  * @param id deliver id
  * @returns 
  */
@@ -472,7 +472,7 @@ export const finishFinalReview = async (id: number): Promise<boolean> => {
  * @param id 
  * @returns 
  */
-export const getDetailedScoresByDeliverId = async(id: number):Promise<IDeliverSizeStat[]> =>{
+export const getDetailedScoresByDeliverId = async (id: number): Promise<IDeliverSizeStat[]> => {
     const res = await request({
         url: `/exam/deliver/${id}/scores`,
         method: 'get'
@@ -482,6 +482,24 @@ export const getDetailedScoresByDeliverId = async(id: number):Promise<IDeliverSi
         message.error(`查询失败，系统错误：${msg}`);
         return [];
     }
-    data.sort((a:IDeliverSizeStat, b:IDeliverSizeStat)=>a.SizeId - b.SizeId)
+    data.sort((a: IDeliverSizeStat, b: IDeliverSizeStat) => a.SizeId - b.SizeId)
     return data;
+}
+
+/**
+ * 下载考核成绩统计详情表
+ * @param id 
+ */
+export const downloadScoreDetail = async (id: number) => {
+    const res = await request({
+        url: `/exam/deliver/${id}/download`,
+        method: 'get',
+        responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'data.xlsx');
+    document.body.appendChild(link);
+    link.click();
 }

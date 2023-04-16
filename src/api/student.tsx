@@ -110,14 +110,15 @@ export const batchGetStudentGradeInfo = async (ids?: number[]): Promise<IGrade[]
 
 /**
  * 更新学生信息
- * @param student 
+ * @param id 学号
+ * @param Name 姓名 
  * @returns 
  */
-export const updateStudentInfo = async (student: IStudentInfo): Promise<boolean> => {
+export const updateStudentInfo = async (id:number,Name: string): Promise<boolean> => {
     const res = await request({
-        url: `/student/${student.StudentId}`,
+        url: `/student/${id}`,
         method: 'patch',
-        data: student
+        data: {Name}
     });
     const { code, msg } = res.data;
     if (code !== 0) {
@@ -191,14 +192,13 @@ export const getGroupInfos = async (): Promise<IGroupInfo[]> => {
  * 分页查询考试列表
  * @param page 
  * @param limit 
- * @param status 
  * @returns 
  */
-export const studentGetDeliverList = async (page: number, limit: number, status: number): Promise<IResp<IExamDeliverEntity> | null> => {
+export const studentGetDeliverList = async (page: number, limit: number): Promise<IResp<IExamDeliverEntity> | null> => {
     const res = await request({
         url: `/student/deliver/list`,
         method: 'get',
-        params: { page, limit, status }
+        params: { page, limit }
     })
     const { code, msg, data, total } = res.data;
     if (code !== 0) {
@@ -253,4 +253,22 @@ export const getDeliverDetailsByDeliverId = async (id: number): Promise<IDeliver
         return [];
     }
     return data;
+}
+
+/**
+ * 下载考核成绩详情
+ * @param id 
+ */
+export const downloadScoreTable = async (id: number) => {
+    const res = await request({
+        url: `/student/deliver/${id}/download`,
+        method: 'get',
+        responseType: 'blob',
+    });
+    const url = window.URL.createObjectURL(new Blob([res.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'data.xlsx');
+    document.body.appendChild(link);
+    link.click();
 }

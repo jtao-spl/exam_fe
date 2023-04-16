@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import ReactEcharts from 'echarts-for-react';
 import * as echarts from 'echarts';
-import { Select, Space, Table, TableColumnsType } from 'antd';
+import { Button, Select, Space, Table, TableColumnsType } from 'antd';
 import { IDeliverDistribution, IDeliverSizeStat, IDeliverStat, IExamDeliver } from '../../interfaces/Exam';
-import { getDetailedScoresByDeliverId, getExamDeliverList, getExamDistributionByDeliverId, getExamStatsByDeliverId } from '../../api/exam';
+import { downloadScoreDetail, getDetailedScoresByDeliverId, getExamDeliverList, getExamDistributionByDeliverId, getExamStatsByDeliverId } from '../../api/exam';
 import { useLocation } from 'react-router-dom';
 
 export default function ChartStats() {
@@ -62,6 +62,11 @@ export default function ChartStats() {
                 }
             </Select>
         </div>
+        <Button
+            type='primary'
+            onClick={async () => await downloadScoreDetail(deliverId)}
+            disabled={deliverId === 0}
+            >下载班级成绩统计</Button>
         <GeneralStats Stats={generalStat} />
         <ScoreLeveledStats data={examDistribution} />
         <DetailSizeScore data={sizeStats} />
