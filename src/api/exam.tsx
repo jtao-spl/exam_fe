@@ -296,19 +296,18 @@ export const getExamsByIds = async (ids: number[]): Promise<IExam[]> => {
  * @param ExamType 考试类型 普通或者正式考试
  * @param ExamDate 考核时间
  * @param StartTime 开始时间
- * @param FinishTime 收卷时间
  * @param Grade 年级
  * @param Major 专业
  * @param Class 班级
  * @param Group 分组
  */
 export const createNewExamDeliver = async (ExamId: number, ExamName: string, ExamType: number, ExamDate: Date,
-    StartTime: string, FinishTime: string, Grade: number, Major: string, Class: number,
+    StartTime: string, Grade: number, Major: string, Class: number,
     Group: string): Promise<boolean> => {
     const res = await request({
         url: `/exam/${ExamId}/deliver`,
         method: 'post',
-        data: { ExamName, ExamType, ExamDate, StartTime, FinishTime, Grade, Major, Class, Group }
+        data: { ExamName, ExamType, ExamDate, StartTime, Grade, Major, Class, Group }
     })
     const { code, msg } = res.data;
     if (code !== 0) {

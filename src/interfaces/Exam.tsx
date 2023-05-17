@@ -162,7 +162,7 @@ export interface IExamDeliver {
     TeacherPhone: string,
     ExamDate: Date,
     StartTime: string,
-    FinishTime: string,
+    // FinishTime: string,
     GradeId: number,
     Class: number,
     GroupName: string,

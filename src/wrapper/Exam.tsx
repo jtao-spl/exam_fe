@@ -72,7 +72,7 @@ export function generateDeliverTableCommonColumns() {
         },
         {
             title: `考核时间`, key: `time`, render: (_: any, record: IExamDeliverEntity) => {
-                return `${record.ExamDate} ${record.StartTime}-${record.FinishTime}`
+                return `${record.ExamDate} ${record.StartTime}`
             }
         }
     ];

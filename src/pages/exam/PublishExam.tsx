@@ -28,13 +28,13 @@ export default function PublishExam(props: IPublishExamProps) {
 
     const onFinish = async (values: any) => {
         console.log(`提交数据：${JSON.stringify(values)}`);
-        const { ExamName, ExamType, ExamDate, StartTime, FinishTime } = values;
+        const { ExamName, ExamType, ExamDate, StartTime } = values;
         const [Grade, Major, Class, Group] = values.Class;
         if(Major === undefined) {
             message.error(`校验失败：专业为必选项`);
             return;
         }
-        const res = await createNewExamDeliver(exam.Id, ExamName, ExamType, ExamDate, StartTime, FinishTime, Grade, Major, Number.parseInt(Class), Group);
+        const res = await createNewExamDeliver(exam.Id, ExamName, ExamType, ExamDate, StartTime, Grade, Major, Number.parseInt(Class), Group);
         if (!res) return;
         callback();
     }
@@ -99,7 +99,7 @@ export default function PublishExam(props: IPublishExamProps) {
                                 format={format}
                             />
                         </Form.Item>
-                        <Form.Item
+                        {/* <Form.Item
                             label="交件时间"
                             name="FinishTime"
                             required={true}
@@ -112,7 +112,7 @@ export default function PublishExam(props: IPublishExamProps) {
                                 minuteStep={10}
                                 format={format}
                             />
-                        </Form.Item>
+                        </Form.Item> */}
                         <Form.Item
                             name="Class"
                             label="发放班级"
