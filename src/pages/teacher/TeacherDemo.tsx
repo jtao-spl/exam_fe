@@ -1,4 +1,4 @@
-import { Button, Form, FormInstance, Input, InputNumber, InputRef, Select, Table, TableColumnsType, Tag } from 'antd';
+import { Button, Form, FormInstance, Image, Input, InputNumber, InputRef, Select, Table, TableColumnsType, Tag } from 'antd';
 import { useForm } from 'antd/lib/form/Form';
 import React, { useContext, useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
@@ -101,7 +101,7 @@ export default function TeacherDemo() {
     const generateImgColumns = () => {
         return [{
             title: '展示图样', key: 'clip', render: (_: any, record: IComponent) => {
-                return <img alt="零件图样" width="100%" src={`${REACT_APP_BASE_API}${record.ClipPath}`} />
+                return <Image alt="零件图样" width="100%" src={`${REACT_APP_BASE_API}${record.ClipPath}`} />
             }
         }]
     }

@@ -236,7 +236,7 @@ export interface ITeacherTableItem {
     criteria?: ICriteria,
     toolId: number,
     result: string | number //单项得分
-    selfTool?: string,
+    // selfTool?: string,
     selfSize?: number,
     selfScore?: number,
     groupSize?: number,
@@ -248,6 +248,7 @@ export interface IDeliverStat{
     Id: number,
     DeliverId: number,
     PartCnt: number,
+    TotalCnt: number,
     AvgScore: number,
     PassRate: number,
     ExclRate: number,

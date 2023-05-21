@@ -1,18 +1,16 @@
-import { Button, Form, message, Table } from 'antd';
+import { Button, Form, Image, message, Table } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom';
 import { getComponentById } from '../../api/comp';
 import { getDeliverDetailById, getExamById, getExamDeliverById } from '../../api/exam';
 import { submitExamResult } from '../../api/score';
-import { getToolList } from '../../api/tool';
+// import { getToolList } from '../../api/tool';
 import { REACT_APP_BASE_API } from '../../config/default';
-import { IComponent, ITool } from '../../interfaces/Component';
-import { IDeliverDetail, IExamInput, ITeacherTableItem, ScoreItem } from '../../interfaces/Exam';
-import { ICriteria } from '../../interfaces/ExamCriteria';
-import { ISize } from '../../interfaces/Size';
+import { IComponent } from '../../interfaces/Component';
+import { IExamInput, ITeacherTableItem } from '../../interfaces/Exam';
+
 import { get } from '../../utils/storage';
-import { getSizesByComponentId } from '../../wrapper/Component';
-import { filterCriteriaForSize, generateStudentExamTableColumns, generateTableItem, generateTeacherExamTableColumns, getCalculatedSizeForExam, getMeasureScore, getSummary, getTotalScore } from '../../wrapper/Exam';
+import { generateStudentExamTableColumns, generateTableItem, generateTeacherExamTableColumns, getMeasureScore, getTotalScore } from '../../wrapper/Exam';
 
 
 export default function ExamInput() {
@@ -27,7 +25,7 @@ export default function ExamInput() {
         detailId = Number.parseInt(params.detailId);
     }
     const [component, setComponent] = useState<IComponent>();
-    const [tools, setTools] = useState<ITool[]>([]);
+    // const [tools, setTools] = useState<ITool[]>([]);
     const [items, setItems] = useState<ITeacherTableItem[]>([]);
     const [totalScore, setTotalScore] = useState<string>('');
     const [selfScore, setSelfScore] = useState<number>();
@@ -38,16 +36,16 @@ export default function ExamInput() {
     const generateImgColumns = () => {
         return [{
             title: '展示图样', key: 'clip', render: (_: any, record: IComponent) => {
-                return <img alt="零件图样" width="100%" src={`${REACT_APP_BASE_API}${record.ClipPath}`} />
+                return <Image alt="零件图样" width="100%" src={`${REACT_APP_BASE_API}${record.ClipPath}`} />
             }
         }]
     }
 
     const init = async () => {
-        const res = await getToolList(1, 1000);
-        if (res) {
-            setTools(res.items);
-        }
+        // const res = await getToolList(1, 1000);
+        // if (res) {
+        //     setTools(res.items);
+        // }
         const deliver = await getExamDeliverById(id);
         if (!deliver) return;
         const exam = await getExamById(deliver.ExamId);
@@ -67,7 +65,7 @@ export default function ExamInput() {
             if (!detail) return;
             setSelfScore(detail.SelfScore);
             setGroupScore(detail.GroupScore);
-            const items = await generateTableItem(component, exam, detail, res?.items);
+            const items = await generateTableItem(component, exam, detail);
             setItems(items);
             form.setFieldsValue({
                 table: items
@@ -80,7 +78,6 @@ export default function ExamInput() {
 
     const onUpdateResult = (values: any) => {
         console.log(`values: ${JSON.stringify(values)}`);
-        //更新测量工具时：[{"touched":true,"validating":false,"errors":[],"warnings":[],"name":["Sizes",2,"Tool"],"value":4}]
         //更新测量尺寸时：[{"touched":true,"validating":false,"errors":[],"warnings":[],"name":["Sizes",2,"size"],"value":1}]
         const [_, index, inputType] = values[0].name;
         if (inputType === 'size') {
@@ -124,7 +121,7 @@ export default function ExamInput() {
                 sizeId: item.id,
                 score: typeof item.result === "string" ? Number.parseFloat(item.result) : item.result,
                 value: Inputs[index].size,
-                toolId: Inputs[index].tool
+                // toolId: Inputs[index].tool
             }
         })
         const res = await submitExamResult(rawInput, totalScore, detailId);
@@ -156,7 +153,7 @@ export default function ExamInput() {
                             size="small"
                             bordered={true}
                             rowKey={record => record.id}
-                            columns={role === '3' ? generateStudentExamTableColumns(tools) : generateTeacherExamTableColumns()}
+                            columns={role === '3' ? generateStudentExamTableColumns() : generateTeacherExamTableColumns()}
                             dataSource={items}
                             pagination={false}
                             scroll={{y: 400, x: 1300}}
@@ -164,7 +161,7 @@ export default function ExamInput() {
                                 if (role === "3") return (
                                     <Table.Summary fixed>
                                         <Table.Summary.Row style={{ textAlign: 'center' }}>
-                                            <Table.Summary.Cell index={0} colSpan={8}>得分</Table.Summary.Cell>
+                                            <Table.Summary.Cell index={0} colSpan={7}>得分</Table.Summary.Cell>
                                             <Table.Summary.Cell index={1}>{totalScore}</Table.Summary.Cell>
                                         </Table.Summary.Row>
                                     </Table.Summary>
@@ -172,7 +169,7 @@ export default function ExamInput() {
                                 return (
                                     <Table.Summary fixed>
                                         <Table.Summary.Row style={{ textAlign: 'center' }}>
-                                            <Table.Summary.Cell index={0} colSpan={8}>得分</Table.Summary.Cell>
+                                            <Table.Summary.Cell index={0} colSpan={7}>得分</Table.Summary.Cell>
                                             <Table.Summary.Cell index={1}>{selfScore}</Table.Summary.Cell>
                                             <Table.Summary.Cell index={2}></Table.Summary.Cell>
                                             <Table.Summary.Cell index={3}>{groupScore}</Table.Summary.Cell>

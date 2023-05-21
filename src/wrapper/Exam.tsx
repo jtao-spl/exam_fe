@@ -1,7 +1,7 @@
-import { Form, InputNumber, message, Select, TableColumnsType, Tag } from "antd";
+import { Form, InputNumber, message, TableColumnsType, Tag } from "antd";
 import { getExamCriteriaApi } from "../api/exam";
 import { IComponent, ITool } from "../interfaces/Component";
-import { IDeliverDetail, IDeliverSizeStat, IExam, IExamDeliverEntity, IExamInput, ITeacherTableItem, ScoreItem, sizeScopeToDelta } from "../interfaces/Exam";
+import { IDeliverDetail,  IExam, IExamDeliverEntity, IExamInput, ITeacherTableItem, ScoreItem, sizeScopeToDelta } from "../interfaces/Exam";
 import { ICriteria } from "../interfaces/ExamCriteria";
 import { ISize, ISizePrecisionData, ISizeWithScore } from "../interfaces/Size";
 import { IDemoTableItem } from "../pages/teacher/TeacherDemo";
@@ -568,34 +568,35 @@ const commonHeader = {
  * 提交数据页表头
  * @returns 
  */
-export const generateStudentExamTableColumns = (tools: ITool[]) => {
+export const generateStudentExamTableColumns = () => {
+// export const generateStudentExamTableColumns = (tools: ITool[]) => {
     const columns: TableColumnsType<ITeacherTableItem> = [
         {
             title: '学生测量（自测/互测）评分模块', key: 'studentExam', children: [
                 commonHeader,
                 {
                     title: '检测结果', key: 'result', children: [
-                        {
-                            title: '测量工具', key: 'tool', width: 130, fixed: "right",render: (_: any, record: ITeacherTableItem, index: number) => {
-                                if ([0, 1, 2].includes(record.size.FirstType)) {
-                                    return <Form.Item name={['Sizes', index, "tool"]}
-                                        required={true}
-                                        rules={[{
-                                            required: true,
-                                            message: '请选择'
-                                        }]}>
-                                        <Select>
-                                            {
-                                                tools.map((tool: ITool) =>
-                                                    (<Select.Option key={tool.Id} value={tool.Id}>{tool.Name}</Select.Option>)
-                                                )
-                                            }
-                                        </Select>
-                                    </Form.Item>
-                                }
-                                return ''
-                            }
-                        },
+                        // {
+                        //     title: '测量工具', key: 'tool', width: 130, fixed: "right",render: (_: any, record: ITeacherTableItem, index: number) => {
+                        //         if ([0, 1, 2].includes(record.size.FirstType)) {
+                        //             return <Form.Item name={['Sizes', index, "tool"]}
+                        //                 required={true}
+                        //                 rules={[{
+                        //                     required: true,
+                        //                     message: '请选择'
+                        //                 }]}>
+                        //                 <Select>
+                        //                     {
+                        //                         tools.map((tool: ITool) =>
+                        //                             (<Select.Option key={tool.Id} value={tool.Id}>{tool.Name}</Select.Option>)
+                        //                         )
+                        //                     }
+                        //                 </Select>
+                        //             </Form.Item>
+                        //         }
+                        //         return ''
+                        //     }
+                        // },
                         {
                             title: '测量尺寸/数量', key: 'input', width: 130, fixed: "right", render: (_: any, record: ITeacherTableItem, index: number) => {
                                 return <Form.Item name={['Sizes', index, "size"]}
@@ -633,9 +634,9 @@ export const generateTeacherExamTableColumns = () => {
                     title: '检测结果', key: 'result', children: [
                         {
                             title: `学生自测`, key: `selfData`, children: [
-                                {
-                                    title: `测量工具`, key: `selfTool`, dataIndex: 'selfTool',
-                                },
+                                // {
+                                //     title: `测量工具`, key: `selfTool`, dataIndex: 'selfTool',
+                                // },
                                 {
                                     title: `测量尺寸`, key: `selfSize`, dataIndex: `selfSize`,
                                 },

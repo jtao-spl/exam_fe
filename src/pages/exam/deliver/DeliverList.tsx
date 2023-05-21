@@ -123,7 +123,7 @@ export function DeliverTable(props: IDeleverTableProps) {
             <Button type='primary'
               onClick={() => navigate(`/student/exam/${record.Id}/${record.DeliverDetailId}`)}
               disabled={record.Status !== 1}
-            >去考试</Button>
+            >{record.DeliverDetailStatus === 1? '重新提交':'去考试'}</Button>
             <Button type='primary'
               disabled={record.Status !== 3}
               onClick={async () => await downloadScoreTable(record.Id)}>

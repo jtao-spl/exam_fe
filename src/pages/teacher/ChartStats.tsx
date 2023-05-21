@@ -86,6 +86,9 @@ function GeneralStats(props: { Stats?: IDeliverStat }) {
                         title: `参考人数`, key: `PartCnt`, dataIndex: 'PartCnt',
                     },
                     {
+                        title: `总人数`, key: `TotalCnt`, dataIndex: 'TotalCnt',
+                    },
+                    {
                         title: `平均分`, key: `AvgScore`, render: (_: any, record: IDeliverStat) => {
                             return record.AvgScore / 100
                         }

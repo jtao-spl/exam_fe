@@ -1,4 +1,4 @@
-import { Space, Table, Tag } from 'antd';
+import { Image, Space, Table, Tag } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom';
 import { getComponentById } from '../../api/comp';
@@ -49,7 +49,7 @@ export default function ComponentDetail() {
             </Space>
             <Space direction='vertical'>
                 <div>零件图样</div>
-                <img alt="零件图样" src={`${REACT_APP_BASE_API}${component?.ClipPath}`} />
+                <Image alt="零件图样" src={`${REACT_APP_BASE_API}${component?.ClipPath}`} />
             </Space>
             <Space direction='vertical'>
                 <div>尺寸数据</div>

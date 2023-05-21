@@ -3,7 +3,7 @@ import { message } from 'antd';
 import { IDeliverDetail, IDeliverDistribution, IDeliverProgress, IDeliverSizeStat, IDeliverStat, IExam, IExamDeliver, IExamListResp, IExamTarget, IResp, ISizeScore } from '../interfaces/Exam';
 import { ISizePrecisionData } from '../interfaces/Size';
 import { ICriteria } from '../interfaces/ExamCriteria';
-import { get } from '../utils/storage';
+// import { get } from '../utils/storage';
 
 //exam: 概念上指考卷，与之相关联的是考核零件，考核标准和尺寸配分。exam与deliver是1对多的关系，即一张考卷可以用于多场考试中。
 //deliver: 概念上是指考试，与之相关的是考试时间，考试教师，考试所用的考卷。

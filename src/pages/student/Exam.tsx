@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from "react-router-dom";
-import { Button, Card, Collapse, Form, InputNumber, message, Space, Table, TableColumnsType, Tag } from 'antd';
+import { Button, Card, Collapse, Form, Image, InputNumber, message, Space, Table, TableColumnsType, Tag } from 'antd';
 import { getExamById, getExamCriteriaApi } from '../../api/exam';
 import { getComponentById } from '../../api/comp';
 import { REACT_APP_BASE_API } from '../../config/default';
@@ -208,7 +208,7 @@ function ExamCard(props: IExamCardProps) {
           {/* 考核基本信息 */}
         </Card>
         <Card title='考核图样'
-          cover={<img alt="考核图样" src={`${REACT_APP_BASE_API}${component.ClipPath}`} />}
+          cover={<Image alt="考核图样" src={`${REACT_APP_BASE_API}${component.ClipPath}`} />}
         >
           {/* 考核图样 */}
         </Card>
@@ -387,7 +387,7 @@ function ExamDetail(props: IExamCardProps) {
           {/* 考核基本信息 */}
         </Card>
         <Card title='考核图样'
-          cover={<img alt="考核图样" src={`${REACT_APP_BASE_API}${component.ClipPath}`} />}
+          cover={<Image alt="考核图样" src={`${REACT_APP_BASE_API}${component.ClipPath}`} />}
         >
           {/* 考核图样 */}
         </Card>

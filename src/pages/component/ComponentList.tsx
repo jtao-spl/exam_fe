@@ -1,7 +1,8 @@
-import { Button, Space, Table, Tag } from 'antd'
+import { Button, Image, Space, Table, Tag } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { getComponentList } from '../../api/comp'
+import { REACT_APP_BASE_API } from '../../config/default'
 import { IComponent } from '../../interfaces/Component'
 import DeleteComponentFC from './DeleteComponent'
 
@@ -49,6 +50,10 @@ export default function ComponentList() {
       >
         <Table.Column title={'零件ID'} dataIndex={'Id'} />
         <Table.Column title={'零件名称'} dataIndex={'ComponentName'} />
+        <Table.Column title={"示意图"} render={(_: any, record: IComponent) => {
+          if (record.ClipPath === '') return <Tag color='yellow'>待编辑上传</Tag>
+          return <Image alt="示意图" src={`${REACT_APP_BASE_API}${record.ClipPath}`} />
+        }} />
         <Table.Column title={'状态'} render={(_: any, component: IComponent) => {
           if (component.Status !== 5) {
             return <Tag color='yellow'>待校正</Tag>

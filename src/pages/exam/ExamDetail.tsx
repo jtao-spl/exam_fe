@@ -1,4 +1,4 @@
-import { Modal, Table, TableColumnsType } from 'antd';
+import { Image, Modal, Table, TableColumnsType } from 'antd';
 import React from 'react'
 import { REACT_APP_BASE_API } from '../../config/default';
 import { IExam } from '../../interfaces/Exam';
@@ -53,7 +53,7 @@ export default function ExamDetail(props: IExamDetailProps) {
             >
                 {component &&
                     <Table
-                        dataSource={[{ Clip: <img alt="考核图样" width="100%" src={`${REACT_APP_BASE_API}${component.ClipPath}`} /> }]}
+                        dataSource={[{ Clip: <Image alt="考核图样" width="100%" src={`${REACT_APP_BASE_API}${component.ClipPath}`} /> }]}
                         columns={generateClipTable()}
                         pagination={false}
                     />
