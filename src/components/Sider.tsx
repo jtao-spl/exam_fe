@@ -46,10 +46,10 @@ export default function SiderLayout() {
       let match = matchPath(r.path, path)
       if (match || path.includes(r.path)) {
         if (r.children) {
-          setDefaultSelectedKeys([r.key]);
+          setDefaultOpenKeys([r.key])
         }
         else {
-          setDefaultOpenKeys([r.key])
+          setDefaultSelectedKeys([r.key]);
         }
       }
       if (r.children) {
@@ -76,7 +76,10 @@ export default function SiderLayout() {
   }
 
   return (
-    <Sider width={200} className="site-layout-background">
+    <Sider
+      width={200}
+      className="site-layout-background"
+    >
       {
         defaultSelectedKeys && defaultSelectedKeys.length > 0 ?
           <Menu

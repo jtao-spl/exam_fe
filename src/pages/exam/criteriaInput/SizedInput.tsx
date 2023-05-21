@@ -1,6 +1,6 @@
 import { Form, InputNumber, Space, Tag } from 'antd'
 import React from 'react'
-import { IEntity } from '../CriteriaV2'
+import { IEntity } from '../../../interfaces/ExamCriteria';
 interface IProps {
     SizedEntity:IEntity[]
 }
@@ -24,7 +24,7 @@ export default function SizedInput(props:IProps) {
                                 name={[name, 'SizeDelta']}
                                 rules={[{ required: true, message: '请输入' }]}
                             >
-                                <InputNumber min={0.01} max={1} step={0.01} />
+                                <InputNumber min={0.01} step={0.01} />
                             </Form.Item>
                             扣
                             <Form.Item

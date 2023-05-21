@@ -1,40 +1,21 @@
 import { Button, Form, InputNumber, message, Space, Tag } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { batchUpdateSizePrecision, getExamById } from '../../api/exam';
-import { getSizeList } from '../../api/size';
-import { ISize } from '../size/SizeList';
+import { IEditPrecisionProps, ISize, ISizePrecisionData } from '../../interfaces/Size';
+import { getSizesByComponentId } from '../../wrapper/Component';
 
 
-interface IProps {
-    examId: number,
-    level: number,
-    callback: () => void
-}
-
-export interface ISizePrecisionData {
-    Id: number,
-    UpSize: number,
-    BottomSize: number
-}
-
-export default function EditPrecision(props: IProps) {
+export default function EditPrecision(props: IEditPrecisionProps) {
     const { examId, level, callback } = props;
     const [form] = Form.useForm();
     const [sizes, setSizes] = useState<ISize[]>();
     const getSizedSizes = async (examId: number) => {
-        const res = await getExamById(examId);
-        const { code, msg, data } = res.data;
-        if (code !== 0) {
-            message.error(`获取考核信息失败,系统错误：${msg}`);
-            return
-        }
+        const exam = await getExamById(examId);
+        if(!exam) return;
 
-        const sizes = await getSizeList(1, 100, data.ExamComponent);
-        if (sizes.data.code !== 0) {
-            message.error(`查询尺寸数据失败，系统错误:${sizes.data.msg}`);
-            return;
-        }
-        const sizedItem = sizes.data.data.filter((s: ISize) => s.FirstType === 0);
+        const sizes = await getSizesByComponentId(exam.ExamComponent);
+        if (!sizes) return;
+        const sizedItem = sizes.filter((s: ISize) => s.FirstType === 0);
         form.setFieldsValue({
             "table": sizedItem
         })
@@ -46,27 +27,32 @@ export default function EditPrecision(props: IProps) {
     }, [])
 
     const onFinish = async(values: any) => {
-        console.log(`请求: ${JSON.stringify(values)}`);
         const sizes:any = values.table;
-        const req = sizes.map((size:any)=>({
+        const req:ISizePrecisionData[] = sizes.map((size:any)=>({
             Id: size.Id,
             UpSize: size.UpSize,
             BottomSize: size.BottomSize
         }))
-        const res = await batchUpdateSizePrecision(examId, req);
-        const {code, msg, data} = res.data;
-        if(code !== 0){
-            message.error(`保存失败，系统错误：${msg}, 请稍后重试`);
-            return
+        const invalidInput = req.filter((item:ISizePrecisionData)=>item.UpSize < item.BottomSize);
+        if(invalidInput.length >0){
+            message.error(`校验失败：输入中存在上偏差小于下偏差，请修正后重新提交`);
+            return;
         }
-        message.info(`保存成功`);
+        const res = await batchUpdateSizePrecision(examId, req);
+        if(!res) return;
+        callback()
+    }
+
+    const onFinishMini = async()=>{
+        const res = await batchUpdateSizePrecision(examId, []);
+        if(!res) return;
         callback()
     }
 
     if (level !== 4) {
         return (<div>
             创建考核时已选择具体的线性尺寸公差等级，此处无需编辑。
-            <Button type='primary' onClick={callback}>下一步</Button>
+            <Button type='primary' onClick={onFinishMini}>下一步</Button>
         </div>)
     }
     return (
@@ -94,7 +80,7 @@ function PrecisionInput(props: IProps2) {
     const { sizes } = props;
     return (
         <div>
-            <Tag color="red">下偏差需要输入有效负数或0，默认值为系统解析的原始偏差数据。</Tag>
+            <Tag color="blue">默认值为系统解析的原始偏差数据。</Tag>
             <Form.List name="table" >
                 {(fields) => (
                     <React.Fragment>
@@ -109,7 +95,7 @@ function PrecisionInput(props: IProps2) {
                                 name={[name, 'UpSize']}
                                 rules={[{ required: true, message: '请输入' }]}
                             >
-                                <InputNumber min={0} max={99.99}/>
+                                <InputNumber min={0} />
                             </Form.Item>
                             下偏差
                             <Form.Item
@@ -117,7 +103,7 @@ function PrecisionInput(props: IProps2) {
                                 name={[name, 'BottomSize']}
                                 rules={[{ required: true, message: '请输入' }]}
                             >
-                                <InputNumber max={0} min={-99.99} />
+                                <InputNumber />
                             </Form.Item>
                         </Space>)
 

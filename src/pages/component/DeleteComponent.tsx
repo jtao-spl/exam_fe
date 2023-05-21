@@ -1,21 +1,13 @@
 import { Button, message, Popconfirm } from 'antd'
-import React, { Component } from 'react'
+import React from 'react'
 import { deleteComponent } from '../../api/comp';
-interface IProps {
-  ComponentId: number,
-  onDelete: (id: number) => void
+import { IDeleteComponentProps } from '../../interfaces/Component';
 
-}
-
-export default function DeleteComponentFC(props:IProps) {
+export default function DeleteComponentFC(props:IDeleteComponentProps) {
   const {ComponentId, onDelete} = props;
   const confirmDeleteComponent = async()=>{
     const res = await deleteComponent(ComponentId);
-      const { msg } = res.data;
-      if (msg !== "success") {
-        message.error(`删除零件失败:${msg}`);
-        return
-      }
+      if(!res) return;
       onDelete(ComponentId);//通知父组件删除
   }
   const cancel = ()=>{

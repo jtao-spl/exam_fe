@@ -1,36 +1,26 @@
 import { Button, Form, Input, InputNumber, message, Modal, Space, Tag } from 'antd'
 import React from 'react'
-import { ISize } from './SizeList';
 
 import './font.css';
 import { updateSize } from '../../api/size';
+import { IEditSizeProps } from '../../interfaces/Size';
 
 
-interface IProps {
-    size?: ISize,
-    cancel: (refersh?: boolean) => void,
-    visible: boolean,
-}
-
-
-export default function EditSize(props:IProps) {
+export default function EditSize(props:IEditSizeProps) {
     const {size, cancel,visible} = props;
     const onCancel = () => {
         cancel()
     }
     const updateSizeFunc = async (values: any) => {
-        console.log(`更新尺寸： values ${JSON.stringify(values)}`)
         if (!size) {
             message.error(`更新零件尺寸异常：当前未指定任何尺寸`);
             return
         }
         const res = await updateSize(size, values);
-        if (res.data.code === 0){
-            message.success('更新尺寸数据成功');
+        if(res){
             cancel(true);
             return;
         }
-        message.error(`保存失败，错误详情：${res.data.msg}`);
     }
 
 

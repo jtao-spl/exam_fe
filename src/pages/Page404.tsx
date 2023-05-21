@@ -15,6 +15,9 @@ export default function Page404() {
         if (get('role') === '2') {
           navigate('/teacher/component/list')
         }
+        else if (get('role') === '1') {
+          navigate('/admin/teacher/list')
+        }
         else {
           navigate('/student/exams')
         }

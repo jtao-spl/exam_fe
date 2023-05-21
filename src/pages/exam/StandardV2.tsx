@@ -3,59 +3,42 @@ import { Button, Form, InputNumber, message, Table, TableColumnsType } from 'ant
 import React, { useEffect } from 'react'
 import { getExamById, getExamCriteriaApi, saveExamScores } from '../../api/exam';
 
-import { getSizeList } from '../../api/size';
-import { generateSizeTableColumns, ISize } from '../size/SizeList'
-import { ICriteria } from './CriteriaV2';
-import { getCalculatedSizeForExam, IExam, sizeScopeToDelta } from './ExamList';
-interface IPropsInput {
-    ExamId: number
-    callback: () => void
-}
-interface DataType extends ISize {
-    key: React.Key
-}
+import { IExam, ISizeScore, IStandardProps, sizeScopeToDelta } from '../../interfaces/Exam';
+import { ICriteria } from '../../interfaces/ExamCriteria';
+import { ISize, ISizeExtended } from '../../interfaces/Size';
+import { getSizesByComponentId } from '../../wrapper/Component';
+import { getCalculatedSizeForExam } from '../../wrapper/Exam';
+import { generateSizeTableColumns } from '../../wrapper/Size';
 
-interface ISizeExtended extends ISize {
-    defaultScore?: number
-}
-
-export default function StandardV2(props: IPropsInput) {
+export default function StandardV2(props: IStandardProps) {
     const { ExamId, callback } = props;
     const [form] = Form.useForm();
     const onFinish = async (values: any) => {
         const Sizes: { Score: number }[] = values.Sizes;
         const table: ISize[] = values.table;
-        const total = Sizes.reduce((a, b) => ({ Score: a.Score + b.Score }));
+        const total = Sizes.reduce((a, b) =>({ Score: a.Score + b.Score }));
         if (total.Score !== 100) {
             message.error(`分数总和不为100. 当前总和为:${total.Score}.请修改.`);
             return
         }
-        let SizeScore: { SizeId: number, Score: number }[] = [];
+        let SizeScore: ISizeScore[] = [];
         table.map((size, index: number) => {
             SizeScore.push({ SizeId: size.Id, Score: Sizes[index].Score });
         })
         const res = await saveExamScores(SizeScore, ExamId);
-        const { code, msg } = res.data;
-        if (code !== 0) {
-            message.error(`保存配分失败，系统错误: ${msg}`);
-            return
-        }
-        message.info(`保存成功`);
+        if (!res) return;
         setTimeout(callback, 1000)
-
     }
 
     const getSizeWithDefaultScore = async (exam: IExam, sizes: ISize[]): Promise<ISizeExtended[]> => {
         const res = await getExamCriteriaApi(exam.CriteriaId);
-        const { code, msg, data } = res.data;
-        if (code !== 0) {
-            message.error(`获取考核标准失败，系统错误：${msg}`);
+        if (res.length === 0) {
             return sizes;
         }
         //存在未注倒角时，更新count
         const unDeclaredChamfer = sizes.filter((item: ISize) => item.FirstType === 3);
         if (unDeclaredChamfer.length > 0) {
-            const criteria = data.filter((item: ICriteria) => item.FirstType === 3);
+            const criteria = res.filter((item: ICriteria) => item.FirstType === 3);
             if (criteria.length > 0) {
                 const other = sizes.filter((item: ISize) => item.FirstType !== 3);
                 const newUnDeclaredChamfer = unDeclaredChamfer.map((item: ISize) => ({ ...item, UnDeclaredChamferCount: criteria[0].UnDeclaredChamferCount, UnDeclaredChamferTotalVal: criteria[0].UnDeclaredChamferTotalVal }));
@@ -63,12 +46,15 @@ export default function StandardV2(props: IPropsInput) {
             }
         }
         //存在表面粗糙度时， 更新默认值。
-        const surfCrit = data.filter((item: ICriteria) => item.FirstType === 2);
+        const surfCrit = res.filter((item: ICriteria) => item.FirstType === 2);
         const nonSurf = sizes.filter((size: ISize) => size.FirstType !== 2);
         let result: ISizeExtended[] = [];
-        surfCrit.map((item: { SurfaceRoughnessVal: string, SurfaceRoughnessScore: string }) => {
+        surfCrit.map((item) => {
             const surfs = sizes.filter((size: ISize) => size.SurfaceRoughnessVal === item.SurfaceRoughnessVal);
-            const surfWithScore = surfs.map((size: ISize) => ({ ...size, defaultScore: Number.parseFloat(item.SurfaceRoughnessScore) }));
+            const surfWithScore = surfs.map((size: ISize) => {
+                if (item.SurfaceRoughnessScore) return ({ ...size, defaultScore: item.SurfaceRoughnessScore });
+                return size;
+            });
             result.push(...surfWithScore);
         })
         if (result.length > 0) {
@@ -84,30 +70,13 @@ export default function StandardV2(props: IPropsInput) {
         if (ExamId === 0) {
             return;
         }
-        const examRes = await getExamById(ExamId);
+        const exam = await getExamById(ExamId);
 
-        if (examRes.data.code !== 0) {
-            message.error(`查询考核信息失败，系统错误:${examRes.data.msg}`);
-            return;
-        }
-        const exam = examRes.data.data;
-        const sizes = await getSizeList(1, 100, exam.ExamComponent);
-        let { code, msg, data } = sizes.data;
-        if (code !== 0) {
-            message.error(`查询尺寸数据失败，系统错误:${msg}`);
-            return;
-        }
-
-        const sizeList = data.map((size: ISize) => {
-            size.Color = size?.FirstType === 0 ? 'blue' : size?.FirstType === 1 ? 'red' : size?.FirstType === 2 ? 'green' : 'grey';
-            // if (size.FirstType === 3) {
-            //     size.UnDeclaredChamferCount = '***';
-            // }
-            return size
-        })
-        sizeList.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType });
-        const newSizes = getCalculatedSizeForExam(exam, sizeList, sizeScopeToDelta);
+        if(!exam) return;
+        const sizes = await getSizesByComponentId(exam.ExamComponent, false);
+        const newSizes = getCalculatedSizeForExam(exam, sizes);
         const SizeExt = await getSizeWithDefaultScore(exam, newSizes);
+        SizeExt.sort((a:ISizeExtended, b:ISizeExtended)=> a.FirstType - b.FirstType)
         form.resetFields(["table"]);
         form.setFieldsValue({
             table: SizeExt
@@ -116,7 +85,7 @@ export default function StandardV2(props: IPropsInput) {
 
     const generateStandardColumns = () => {
         const fullColumns = generateSizeTableColumns();
-        const columns: TableColumnsType<DataType> = [
+        const columns: TableColumnsType<ISize> = [
             ...fullColumns,
             {
                 title: '配分',

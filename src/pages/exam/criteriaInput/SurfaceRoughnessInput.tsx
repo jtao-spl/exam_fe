@@ -1,7 +1,6 @@
-import { Form, Input, InputNumber, Space, Tag } from 'antd'
-import { FormInstance } from 'antd/es/form/Form'
+import { Form, InputNumber, Space, Tag } from 'antd'
 import React from 'react'
-import { IEntityRequired } from '../CriteriaV2'
+import { IEntityRequired } from '../../../interfaces/ExamCriteria';
 
 interface IProps {
   surfaceRoughness: IEntityRequired[]

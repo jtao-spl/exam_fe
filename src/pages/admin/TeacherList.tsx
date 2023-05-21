@@ -1,45 +1,35 @@
-import { Button, message, Switch, Space, Table, TableColumnsType, Tag } from 'antd';
+import { Button, Switch, Space, Table, TableColumnsType, Tag } from 'antd';
 import React, { useEffect, useState } from 'react'
+import { getTeacherList, toggleStatus } from '../../api/admin';
 
-import { getTeacherList, toggleTeacherStatus } from '../../api/admin';
+import { ITeacher, ITeacherTableProps, ITeacherWithKey } from '../../interfaces/Teacher';
 import AddTeacherModal from './AddTeacherModal';
-interface ITeacher {
-    Id: number,
-    Name: string,
-    Phone: number,
-    Deleted: boolean
-}
-interface DataType extends ITeacher {
-    key: React.Key
-}
+
 export default function TeacherList() {
     const [teachers, setTeachers] = useState<ITeacher[]>();
     const [pageSize, setPageSize] = useState(10);
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [switchLoading, setSwitchLoading] = useState(true);
+    const [switchLoading, setSwitchLoading] = useState(false);
     const [switchChecked, setSwitchChecked] = useState(true);
     const [showAddTeacherModal, setShowAddTeacherModal] = useState(false);
-    const getTeachers = async (pg: number = 1, lmt: number = 10, containDeleted: boolean = true) => {
-        const res = await getTeacherList(pg, lmt, containDeleted);
-        const { code, msg, data, total } = res.data;
-        if (code !== 0) {
-            message.error(`获取教师列表失败，系统错误：${msg}`);
-            return
+    const queryTeachers = async (pg: number = 1, lmt: number = 10, containDeleted: boolean = true) => {
+        setSwitchLoading(true);
+        const resp = await getTeacherList(pg, lmt, containDeleted);
+        if (resp) {
+            setTeachers(resp.teachers);
+            setPageSize(resp.pageSize);
+            setTotal(resp.total);
+            setLoading(false);
+            setSwitchLoading(false);
         }
-        setTeachers(data);
-        setPageSize(lmt);
-        setTotal(total);
-        setLoading(false);
-        setSwitchLoading(false);
-        return data;
     }
     useEffect(() => {
-        getTeachers()
+        queryTeachers()
     }, [])
     const onChange = async (checked: boolean) => {
         setSwitchChecked(checked);
-        getTeachers(1, 10, checked);
+        queryTeachers(1, 10, checked);
     }
     return (<div>
         <Space direction='vertical'>
@@ -53,43 +43,31 @@ export default function TeacherList() {
         </Space>
         {teachers && <TeacherTable
             teachers={teachers}
-            callback={() => getTeachers()}
+            callback={() => queryTeachers()}
             pageSize={pageSize}
             total={total}
             loading={loading}
-            refreshCallback={async (id: number) => getTeachers(id, 10, switchChecked)}
+            refreshCallback={async (id: number) => queryTeachers(id, 10, switchChecked)}
         />}
         <AddTeacherModal
             open={showAddTeacherModal}
             callback={() => {
                 setShowAddTeacherModal(false);
-                getTeachers()
+                queryTeachers()
             }}
         />
     </div>)
 }
 
-interface IProps {
-    teachers: ITeacher[],
-    callback: () => void,
-    pageSize: number,
-    total: number,
-    loading: boolean,
-    refreshCallback: (pageNum: number) => void, //换页时的回调
 
-}
-function TeacherTable(props: IProps) {
+function TeacherTable(props: ITeacherTableProps) {
     const { teachers, callback, pageSize, total, loading, refreshCallback } = props;
 
-    const toggleAccountStatus = async (Id: number) => {
-        const res = await toggleTeacherStatus(Id);
-        const { code, msg } = res.data;
-        if (code !== 0) {
-            message.error(`切换教师状态失败，系统错误:${msg}`);
-            return
+    const toggleAccountStatus = async (Id: string) => {
+        const result = await toggleStatus(Id, 2);
+        if(result){
+            callback();
         }
-        message.info(`操作成功`);
-        callback();
     }
     const generateTeacherTableColumns = () => {
         const coloums: TableColumnsType<any> = [
@@ -97,16 +75,15 @@ function TeacherTable(props: IProps) {
             { title: '姓名', key: 'Name', dataIndex: 'Name' },
             { title: '联系电话', key: 'Phone', dataIndex: 'Phone' },
             {
-                title: '当前状态', key: 'status', render: (_: any, record: DataType) => {
+                title: '当前状态', key: 'status', render: (_: any, record: ITeacherWithKey) => {
                     return (<Tag color={record.Deleted ? 'red' : 'green'}>{record.Deleted ? '已禁用' : '有效'}</Tag>)
                 }
             },
             {
-                title: '操作', key: 'operation', render: (_: any, record: DataType) => {
+                title: '操作', key: 'operation', render: (_: any, record: ITeacherWithKey) => {
                     return (<Space direction='vertical'>
-                        <Button type='primary' disabled={!record.Deleted} onClick={() => toggleAccountStatus(record.Id)}>启用</Button>
-                        <Button>修改联系电话</Button>
-                        <Button type='primary' disabled={record.Deleted} danger onClick={() => toggleAccountStatus(record.Id)}>禁用</Button>
+                        <Button type='primary' disabled={!record.Deleted} onClick={() => toggleAccountStatus(record.Phone)}>启用</Button>
+                        <Button type='primary' disabled={record.Deleted} danger onClick={() => toggleAccountStatus(record.Phone)}>禁用</Button>
                     </Space>)
                 }
             },

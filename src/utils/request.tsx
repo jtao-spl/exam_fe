@@ -36,11 +36,12 @@ service.interceptors.response.use(
         NProgress.done();
         if (response.status === 200) {
             // console.log(`response in axios interceptor: ${JSON.stringify(response)}`);
-            const { code, msg, token, role, Id } = response.data;
+            const { code, msg, token, role, Id,Name } = response.data;
             if (token) {
                 set(`user_token`, token);
                 set(`role`, role);
                 set(`Id`, Id)
+                set(`Name`, Name)
             }
             if (code === 6) {
                 message.warning(`${msg}`);

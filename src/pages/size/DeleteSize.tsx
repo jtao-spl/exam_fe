@@ -1,27 +1,16 @@
 import { Button, message, Popconfirm } from 'antd'
 import React from 'react'
 import { deleteSize } from '../../api/size'
-import { ISize } from './SizeList'
-interface IProps {
-  size?: ISize
-  refresh: (id: number) => void
-  isAggSizeDeletable: boolean
-}
-export default function DeleteSize(props: IProps) {
+import { IDelteSizeProps } from '../../interfaces/Size';
+
+export default function DeleteSize(props: IDelteSizeProps) {
   const { size, refresh, isAggSizeDeletable } = props;
   const confirmDeleteSize = async () => {
     if (!size?.Id) {
       message.error(`删除失败，无法确定删除的尺寸id`);
       return
     }
-    const res = await deleteSize(size.Id);
-    const { code, msg } = res.data;
-    if (code === 0) {
-      message.success('删除成功');
-    }
-    else {
-      message.error(`删除失败，系统错误：${msg}`);
-    }
+    await deleteSize(size.Id);
     refresh(size.Id);
   }
   const cancel = () => {

@@ -1,32 +1,19 @@
 import { Button, Space, Table, TableColumnsType } from 'antd'
 import React from 'react'
-export interface IStudentInfo {
-    Grade: number,
-    Major: string,
-    Class: number,
-    Name: string,
-    StudentId: number
-}
-interface DataType extends IStudentInfo{
-    key: React.Key
-}
+import { IStudentPreviewProps, IStudentUpload } from '../../interfaces/Student';
 
 const generateStudentTableColumn = ()=>{
-    const columns: TableColumnsType<IStudentInfo> = [
-        { title: "年级", key: 'Grade', dataIndex: 'Grade' },
-        { title: "专业", key: 'Major', dataIndex: 'Major' },
-        { title: "班级", key: 'Class', dataIndex: 'Class' },
+    const columns: TableColumnsType<IStudentUpload> = [
+        // { title: "年级", key: 'Grade', dataIndex: 'Grade' },
+        // { title: "专业", key: 'Major', dataIndex: 'Major' },
+        // { title: "班级", key: 'Class', dataIndex: 'Class' },
         { title: "姓名", key: 'Name', dataIndex: 'Name' },
         { title: "学号", key: 'StudentId', dataIndex: 'StudentId' },
     ]
     return columns;
 }
 
-interface IProps{
-    studentInfoList: IStudentInfo[],
-    onDelete: (id:number)=>void
-}
-export default function StudentPreview(props: IProps) {
+export default function StudentPreview(props: IStudentPreviewProps) {
     const {studentInfoList, onDelete} = props;
 
     const onDeleteSingleStudentInfo = (id:number)=>{
@@ -34,9 +21,9 @@ export default function StudentPreview(props: IProps) {
     }
 
     const generateStudentTable = ()=>{
-        const columns = [
+        const columns:TableColumnsType<IStudentUpload> = [
             ...generateStudentTableColumn(),
-            {title:'操作', key:'op', render: (_:any, record:IStudentInfo)=>(
+            {title:'操作', key:'op', render: (_:any, record:IStudentUpload)=>(
                 <Space>
                     <Button type='primary' danger
                     onClick={()=>onDeleteSingleStudentInfo(record.StudentId)}

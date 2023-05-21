@@ -1,7 +1,6 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-import type { MenuProps } from 'antd';
-import { Breadcrumb, Layout, Menu } from 'antd';
+import { Layout } from 'antd';
 import { Outlet } from 'react-router-dom';
 import SiderLayout from './Sider';
 import SubTitle from './SubTitle';
@@ -9,17 +8,12 @@ import { ShowLoginUser } from '../pages/Login';
 
 const { Header, Content } = Layout;
 
-const items1: MenuProps['items'] = ['1', '2', '3'].map(key => ({
-  key,
-  label: `nav ${key}`,
-}));
-
-
 export default function LayoutComponent() {
 
   return (
     <Layout>
-      <Header>
+      <Header style={{ backgroundColor: "#0088FF" }}>
+        <div style={{ float: "left", fontSize: 18 }}>LOGO&系统名称</div>
         <ShowLoginUser />
       </Header>
       <Layout>
@@ -29,9 +23,8 @@ export default function LayoutComponent() {
           <Content
             className="site-layout-background"
             style={{
-              padding: 24,
               margin: 0,
-              minHeight: 280,
+              minHeight: 80,
             }}
           >
             <Outlet />

@@ -1,14 +1,17 @@
-import { Button, Form, message, Space, Tag, Upload } from 'antd';
+import { Button, Form, Space, Tag, Upload } from 'antd';
 import React, { useState } from 'react'
 import { UploadOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
-import StudentPreview, { IStudentInfo } from './StudentPreview';
+import StudentPreview from './StudentPreview';
 import { saveStudents } from '../../api/student';
+import { IStudentUpload } from '../../interfaces/Student';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 
 export default function StudentUpload() {
-
-    const [students, setStudents] = useState<IStudentInfo[]>();
+    const navigate = useNavigate();
+    const location = useLocation();
+    const [students, setStudents] = useState<IStudentUpload[]>([]);
 
     const beforeUpload = (file: any) => {
         const info =
@@ -17,9 +20,8 @@ export default function StudentUpload() {
                 const arr = res.map((item: any) => {
                     // 利用时间戳+索引，生成唯一的ID，也可以直接使用index
                     const newItem = {
-                        Grade: item['年级'],
-                        Major: item['专业'],
-                        Class: item['班级'],
+                        // Grade: item['年级'],
+                        // Major: item['专业'],
                         Name: String(item['姓名']),
                         StudentId: item['学号']
                     }
@@ -34,22 +36,20 @@ export default function StudentUpload() {
         return false;
     }
 
-    const saveStudentInfo = async()=>{
-        if(!students){
+    const saveStudentInfo = async () => {
+        if (students.length === 0) {
             return;
         }
-        console.log(`学生信息：${JSON.stringify(students)}`)
-        const res = await  saveStudents(students);
-        const {code, msg} = res.data;
-        if(code !== 0){
-            message.error(`保存学生信息失败，系统错误：${msg}`);
-            return
-        }
-        message.info(`保存学生信息成功`);
-
+        await saveStudents(location.state.grade.Id, students);
+        setTimeout(() => {
+            navigate(-1);
+        }, 500);
     }
-
+    if(!location.state) return (<div>未选定年级专业，请从学生列表页点击【导入学生信息】跳转本页面。
+        <Button type="primary" onClick={()=>navigate('/admin/student/list')}>go</Button>
+    </div>)
     return (<div>
+        当前：<Tag>{location.state.grade.Grade}级{location.state.grade.Major}专业</Tag>
         <Form>
             <Form.Item>
                 {<Space>请点击<Tag color='green'>上传并预览学生信息</Tag>进行数据预览，确认无误后需点击【确认】进行保存。</Space>}
@@ -73,7 +73,7 @@ export default function StudentUpload() {
             {students ? <StudentPreview
                 studentInfoList={students}
                 onDelete={(id: number) => {
-                    const newStudents = students.filter((item: IStudentInfo) => item.StudentId !== id);
+                    const newStudents = students.filter((item: IStudentUpload) => item.StudentId !== id);
                     setStudents(newStudents)
                 }} /> : "待上传"}
         </div>

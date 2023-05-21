@@ -1,27 +1,18 @@
-import { Button, Input, message, Modal, Space } from 'antd';
+import { Button, Input, Modal, Space } from 'antd';
 import React from 'react'
 import { Form } from 'antd';
+import { IAddTeacherProps } from '../../interfaces/Teacher';
 import { createTeacher } from '../../api/admin';
 
-
-interface Iprops {
-  open: boolean,
-  callback: () => void
-}
-export default function AddTeacherModal(props: Iprops) {
+export default function AddTeacherModal(props: IAddTeacherProps) {
   const { open, callback } = props;
 
-  const saveTeacher = async(values: any) => {
-    console.log(`接收到请求: values: ${JSON.stringify(values)}`)
-    const {Name, Phone} = values;
-    const res = await createTeacher(Name,Phone);
-    const {code, msg} = res.data;
-    if(code !==0){
-      message.error(`录入教师信息失败，系统错误: ${msg}`);
-      return
+  const saveTeacher = async (values: any) => {
+    const { Name, Phone } = values;
+    const resp = await createTeacher(Name, Phone);
+    if (resp) {
+      callback()
     }
-    message.info(`录入成功`);
-    callback()
   }
 
   return (
@@ -30,7 +21,7 @@ export default function AddTeacherModal(props: Iprops) {
         title="录入教师"
         open={open}
         footer={null}
-        onCancel={()=>callback()}
+        onCancel={() => callback()}
       >
         <Form
           onFinish={saveTeacher}

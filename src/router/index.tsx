@@ -10,8 +10,15 @@ const Page404 = lazy(() => import('../pages/Page404'));
 const ExamList = lazy(() => import('../pages/exam/ExamList'));
 const Exams = lazy(() => import('../pages/student/Exams'));
 const TeacherList = lazy(() => import('../pages/admin/TeacherList'));
-const StudentUpload = lazy(()=>import('../pages/upload/StudentUpload'));
-const StudentList = lazy(()=>import('../pages/admin/StudentList'));
+const StudentList = lazy(() => import('../pages/admin/StudentList'));
+const ToolList = lazy(() => import('../pages/teacher/ToolList'));
+const TeacherStuList = lazy(() => import('../pages/teacher/StudentList'));
+const ExamAudit = lazy(() => import('../pages/admin/ExamAudit'));
+const DeliverList = lazy(() => import('../pages/exam/deliver/DeliverList'));
+const Delivers = lazy(() => import('../pages/student/Delivers'));
+const GroupInput = lazy(() => import('../pages/student/GroupInput'));
+const ChartStats = lazy(() => import('../pages/teacher/ChartStats'));
+const ArchivedList = lazy(() => import('../pages/exam/deliver/ArchivedList'));
 export interface IRouter {
     title: React.ReactNode,
     path: string,
@@ -37,21 +44,66 @@ export const teacherRouters: IRouter[] = [
                 icon: <PartitionOutlined />,
                 element: <ComponentList />
             },
+            {
+                title: <Link to='/teacher/component/tools'>工具列表</Link>,
+                // title: 'etst',
+                path: '/teacher/component/tools',
+                key: 'tools',
+                icon: <PartitionOutlined />,
+                element: <ToolList />
+            },
         ]
     },
     {
-        title: '考核管理',
+        title: '学生管理',
+        path: '/teacher/student',
+        key: 'student',
+        icon: <InfoCircleOutlined />,
+        children: [
+            {
+                title: <Link to='/teacher/student/list'>分组管理</Link>,
+                path: '/teacher/student/list',
+                key: 'students',
+                icon: <PartitionOutlined />,
+                element: <TeacherStuList />
+            }
+        ]
+    },
+
+    {
+        title: '考试管理',
         path: '/teacher/exam',
         key: 'exam',
         icon: <InfoCircleOutlined />,
         children: [
             {
-                title: <Link to='/teacher/exam/list'>考核列表</Link>,
+                title: <Link to='/teacher/exam/list'>考卷列表</Link>,
                 path: '/teacher/exam/list',
                 key: 'exams',
                 icon: <PartitionOutlined />,
                 element: <ExamList />
-            }
+            },
+            {
+                title: <Link to='/teacher/exam/deliver'>考核列表</Link>,
+                path: '/teacher/exam/deliver',
+                key: 'deliver',
+                icon: <PartitionOutlined />,
+                element: <DeliverList />
+            },
+            {
+                title: <Link to='/teacher/exam/deliver/archived'>归档列表</Link>,
+                path: '/teacher/exam/deliver/archived',
+                key: 'archived',
+                icon: <PartitionOutlined />,
+                element: <ArchivedList />
+            },
+            {
+                title: <Link to='/teacher/exam/stats'>成绩分析</Link>,
+                path: '/teacher/exam/stats',
+                key: 'stats',
+                icon: <PartitionOutlined />,
+                element: <ChartStats />
+            },
         ]
     },
     {
@@ -112,6 +164,13 @@ const routers: IRouter[] = [
 ]
 export const unAuthRoutes: IRouter[] = [
     {
+        title: '首页',
+        path: '/',
+        key: 'home',
+        icon: <LoginOutlined />,
+        element: <Login />
+    },
+    {
         title: '登录',
         path: '/login',
         key: 'login',
@@ -135,10 +194,17 @@ export const studentRoutes: IRouter[] = [
         children: [
             {
                 title: <Link to='/student/exams'>考核列表</Link>,
-                path: 'exams',
+                path: '/student/exams',
                 key: 'student_exams',
                 icon: <PartitionOutlined />,
-                element: <Exams />
+                element: <Delivers />
+            },
+            {
+                title: <Link to='/student/partner'>小组互测</Link>,
+                path: '/student/partner',
+                key: 'student_exams_partner',
+                icon: <PartitionOutlined />,
+                element: <GroupInput />
             },
         ]
     },
@@ -180,13 +246,45 @@ export const adminRoutes: IRouter[] = [
                 icon: <PartitionOutlined />,
                 element: <StudentList />
             },
+            // {
+            //     title: <Link to='/admin/student/upload'>学生上传</Link>,
+            //     path: '/admin/student/upload',
+            //     key: 'stuUpload',
+            //     icon: <PartitionOutlined />,
+            //     element: <StudentUpload />
+            // }
+        ]
+    },
+    {
+        title: '工具管理',
+        path: '/admin/tool',
+        key: 'tool',
+        icon: <PartitionOutlined />,
+        children: [
             {
-                title: <Link to='/admin/student/upload'>学生上传</Link>,
-                path: '/admin/student/upload',
-                key: 'stuUpload',
+                title: <Link to='/admin/tool/list'>工具列表</Link>,
+                // title: 'etst',
+                path: '/admin/tool/list',
+                key: 'tools',
                 icon: <PartitionOutlined />,
-                element: <StudentUpload />
-            }
+                element: <ToolList />
+            },
+        ]
+    },
+    {
+        title: '考卷审核',
+        path: '/admin/exam',
+        key: 'exams',
+        icon: <PartitionOutlined />,
+        children: [
+            {
+                title: <Link to='/admin/exam/list'>待审列表</Link>,
+                // title: 'etst',
+                path: '/admin/exam/list',
+                key: 'exam',
+                icon: <PartitionOutlined />,
+                element: <ExamAudit />
+            },
         ]
     },
     {

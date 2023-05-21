@@ -1,9 +1,10 @@
-import { Button, message, Space, Table, TableColumnsType } from 'antd';
+import { Button, Space, Table, TableColumnsType } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import { getExamList } from '../../api/exam';
 import { isExamSubmitted } from '../../api/score';
-import { generateExamTableColomns, IExam } from '../exam/ExamList';
+import { IExam, IStudentExamProps } from '../../interfaces/Exam';
+import { generateExamTableColomns } from '../../wrapper/Exam';
 
 export default function Exams() {
     const [exams, setExams] = useState<IExam[]>([]);
@@ -12,17 +13,12 @@ export default function Exams() {
     const [loading, setLoading] = useState(true);
     const getList = async (pg: number = 1, lim: number = 10, ExamComponent: number = 0) => {
         const res = await getExamList(pg, lim, ExamComponent);
-        const { code, msg, data, total, limit } = res.data;
-        if (code !== 0) {
-            message.error(`获取考核列表失败，系统错误：${msg}`);
-            return;
-        }
-        const visibleExams = data.filter((exam: IExam) => exam.Status !== 0);
+        if(!res) return;
+        const visibleExams = res.exams.filter((exam: IExam) => exam.Status !== 0);
         setExams(visibleExams);
-        setTotal(total);
-        setPageSize(limit);
+        setTotal(res.total);
+        setPageSize(res.pageSize);
         setLoading(false);
-
     }
 
     useEffect(() => {
@@ -41,30 +37,12 @@ export default function Exams() {
     )
 }
 
-interface IProps {
-    exams: IExam[],
-    total: number,
-    pageSize: number,
-    loading: boolean,
-    pageChangeCallback: (page: number) => void
-}
-export const checkExamSubmitted = async (Id: number) => {
-    const res = await isExamSubmitted(Id);
-    const { code, data } = res.data;
-    if (code !== 0) {
-        return false;
-    }
-    const { isSubmitted } = data;
-    return isSubmitted
-}
-
-
-function StudentExam(props: IProps) {
+function StudentExam(props: IStudentExamProps) {
     const navigate = useNavigate();
     const { exams, total, pageSize, loading, pageChangeCallback } = props;
 
     const viewExam = async (exam: IExam) => {
-        const isSubmitted = await checkExamSubmitted(exam.Id);
+        const isSubmitted = await isExamSubmitted(exam.Id);
 
         if (isSubmitted) {
             navigate(`/student/exam/${exam.Id}/detail`);
@@ -75,7 +53,7 @@ function StudentExam(props: IProps) {
 
 
     const generateTableColumns = () => {
-        const columns: TableColumnsType<any> = [
+        const columns: TableColumnsType<IExam> = [
             ...generateExamTableColomns(),
             {
                 title: "操作", key: "operation", render: (_: any, exam: IExam) => {

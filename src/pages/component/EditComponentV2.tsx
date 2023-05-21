@@ -1,38 +1,18 @@
-import { Button, Form, Input, message, Space, Steps, Table, TableColumnsType, Upload } from 'antd';
+import { Button, Form, Input, message, Radio, Space, Steps, Table, Divider, TableColumnsType, Tag, Upload } from 'antd';
 import React, { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { getComponentById, saveComponentClip, SaveComponentName, updateComponentStatus } from '../../api/comp';
 import { UploadOutlined } from '@ant-design/icons';
-import {  generateSizeTableColumns, ISize } from '../size/SizeList';
-import { getSizeList } from '../../api/size';
+
 import DeleteSize from '../size/DeleteSize';
 import AddSizeV2 from '../size/AddSizeV2';
 import EditSize from '../size/EditSize';
 import ComponentDetail from './ComponentDetail';
-
-
-export const getSizesByComponentId = async (id: number) => {
-    const res = await getSizeList(1, 100, id);
-    const { code, msg, data } = res.data;
-    if (code !== 0) {
-        message.error(`查询尺寸列表失败，系统错误${msg}`);
-        return
-    }
-    data.map((size: ISize) => {
-        size.Color = size?.FirstType === 0 ? 'blue' : size?.FirstType === 1 ? 'red' : size?.FirstType === 2 ? 'green' : 'grey';
-        return size
-    })
-    return data;
-}
-export const getComponent = async (id: number) => {
-    const res = await getComponentById(id);
-    const { code, msg, data } = res.data;
-    if (code !== 0) {
-        message.error(`查询零件编辑状态失败，系统错误${msg}`);
-        return
-    }
-    return data;
-}
+import { IDiameterType, IShowSizeListProps, ISize } from '../../interfaces/Size';
+import { getSizesByComponentId } from '../../wrapper/Component';
+import { IComponent, IDiameterConfigProps, IEditComponentProps } from '../../interfaces/Component';
+import { generateSizeTableColumns } from '../../wrapper/Size';
+import { updateDiameterType } from '../../api/size';
 
 
 export default function EditComponentV2() {
@@ -44,19 +24,34 @@ export default function EditComponentV2() {
         id = Number.parseInt(params.id);
     }
     const [current, setCurrent] = useState(0);
-    const [sizeList, setSizeList] = useState<ISize[]>();
+    const [sizeList, setSizeList] = useState<ISize[]>([]);
+    // const [component, setComponent] = useState<IComponent>();
     const [showUpdateSizeModal, setShowUpdateSizeModal] = useState(false);
     const [showAddSieModal, setShowAddSieModal] = useState(false);
     const [size, setSize] = useState<ISize>();
 
+    /**
+     * 获取尺寸列表
+     * @param id 组件id
+     * @returns 
+     */
     const getSizes = async (id: number) => {
         const res = await getSizesByComponentId(id)
         setSizeList(res);
         return res
     }
 
+    // const refreshComponent = async () => {
+    //     const component = await getComponentById(id);
+    //     setComponent(component);
+
+    // }
+    /**
+     * 通过组件的状态确定当前在编辑组件的哪一步
+     * @param id 
+     */
     const setCurrentByComponentStatus = async (id: number) => {
-        const res = await getComponent(id);
+        const res = await getComponentById(id);
         if (res) {
             setCurrent(res.Status - 1)
         }
@@ -66,21 +61,17 @@ export default function EditComponentV2() {
         const sizes = await getSizesByComponentId(id);
         setSizeList(sizes);
     }
-    const onFinish = async () => {
-        const res = await updateComponentStatus(id, 4);
-        const { code, msg } = res.data;
-        if (code !== 0) {
-            message.error(`确认出错，系统错误${msg}`);
-            return
-        }
-        message.success(`数据修正完成`);
-        setTimeout(() => navigate('/teacher/component/list'), 1000);
-    }
+    // const onFinish = async () => {
+    //     const res = await updateComponentStatus(id, 4);
+    //     if (!res) return;
+    //     setTimeout(() => navigate('/teacher/component/list'), 1000);
+    // }
+
     const displayUpdateSizeModal = (size: ISize) => {
-        console.log(`show modal, size: ${JSON.stringify(size)}`);
         setShowUpdateSizeModal(true);
         setSize(size);
     }
+
     const hideUpdateSizeModal = (refresh?: boolean) => {
         if (refresh) {
             getSizes(id);
@@ -105,10 +96,12 @@ export default function EditComponentV2() {
         setCurrent(current - 1);
     };
     useEffect(() => {
-        setCurrentByComponentStatus(id)
         getSizes(id);
-
-    }, [])
+        setCurrentByComponentStatus(id)
+    }, []);
+    // useEffect(() => {
+    //     refreshComponent();
+    // }, [current])
     const steps = [
         {
             title: '零件重命名',
@@ -134,11 +127,26 @@ export default function EditComponentV2() {
                     cancel={hideUpdateSizeModal}
                 />
                 <ShowSizeList
+                    id={id}
                     sizeList={sizeList}
                     deleteCallback={onDelete}
                     displayUpdateSizeModal={displayUpdateSizeModal}
+                    callback={next}
                 />
             </div>)
+        },
+        {
+            title: '直径配置',
+            component: <DiameterConfig
+                id={id}
+                refreshSizeCallback={() => getSizes(id)}
+                sizes={sizeList}
+                callback={async () => {
+                    const res = await updateComponentStatus(id, 5);
+                    if (!res) return;
+                    setTimeout(() => navigate('/teacher/component/list'), 1000);
+                }}
+            />
         }
     ]
     const items = steps.map((item) => ({ key: item.title, title: item.title }));
@@ -149,23 +157,25 @@ export default function EditComponentV2() {
             {current >= steps.length && <ComponentDetail />}
             {current < steps.length && <>
                 < Steps current={current} items={items} />
+                <Divider />
                 <div className="steps-content">{steps[current].component}</div>
+                <Divider />
                 <div className="steps-action">
                     {current > 0 && (
                         <Button style={{ margin: '0 8px' }} onClick={() => prev()}>
                             上一步
                         </Button>
                     )}
-                    {current < steps.length - 1 && (
-                        <Button type="primary" onClick={() => next()}>
+                    {/* {current < steps.length - 1 && (
+                        <Button type="primary" disabled={component ? current < component.Status : false} onClick={() => next()}>
                             下一步
                         </Button>
-                    )}
-                    {current === steps.length - 1 && (
+                    )} */}
+                    {/* {current === steps.length - 1 && (
                         <Button type="primary" onClick={onFinish}>
                             完成
                         </Button>
-                    )}
+                    )} */}
 
                 </div>
             </>
@@ -176,16 +186,14 @@ export default function EditComponentV2() {
 const tailLayout = {
     wrapperCol: { offset: 8, span: 16 },
 };
-interface IProps {
-    componentId: number,
-    callback: () => void
-}
+
+
 /**
  * 零件重命名
  * @param props 
  * @returns 
  */
-function RenameComponent(props: IProps) {
+function RenameComponent(props: IEditComponentProps) {
     const { componentId, callback } = props;
     const saveComponent = async (values: any) => {
         if (!componentId) {
@@ -193,17 +201,12 @@ function RenameComponent(props: IProps) {
             return;
         }
         const res = await SaveComponentName(values.ComponentName, componentId);
-        const { code, msg } = res.data;
-        if (code !== 0) {
-            message.error(`零件重命名失败，系统错误：${msg}`);
-            return
-        }
+        if (!res) return;
         callback()
     }
     return (<Form
         onFinish={saveComponent}
     >
-
         <Form.Item
             name='ComponentName'
             shouldUpdate={(prevValues, curValues) => prevValues.additional !== curValues.additional}
@@ -231,7 +234,7 @@ function RenameComponent(props: IProps) {
  * @param props 
  * @returns 
  */
-function UploadClip(props: IProps) {
+function UploadClip(props: IEditComponentProps) {
     const { componentId, callback } = props;
     const beforeUpload = (file: any) => {
         const allowFormat = file.type === 'image/jpeg' || file.type === 'image/png';
@@ -246,7 +249,6 @@ function UploadClip(props: IProps) {
     }
 
     const handleChange = (info: any) => {
-        // console.info(`handle change info: ${JSON.stringify(info)}`);
         if (info.file.status === 'done') {
             message.success('上传成功');
 
@@ -262,11 +264,7 @@ function UploadClip(props: IProps) {
             return;
         }
         const res = await saveComponentClip(option.file, componentId)
-        const { code, msg } = res.data;
-        if (code !== 0) {
-            message.error(`上传失败，系统错误：${msg}`);
-            return
-        }
+        if (!res) return;
         option.onSuccess();
         callback()
     }
@@ -293,27 +291,25 @@ function UploadClip(props: IProps) {
     </Form>)
 }
 
-interface DataType extends ISize {
-    key: React.Key
-}
-interface IProps2 {
-    sizeList?: ISize[],
-    deleteCallback: () => void,
-    displayUpdateSizeModal: (size: ISize) => void
-}
 /**
  * 尺寸列表
  * @param props 
  */
-function ShowSizeList(props: IProps2) {
-    const { sizeList, deleteCallback, displayUpdateSizeModal } = props;
+function ShowSizeList(props: IShowSizeListProps) {
+    const { id, sizeList, deleteCallback, displayUpdateSizeModal, callback } = props;
     const onDelete = () => {
         deleteCallback()
     }
+
+    const onConfirm = async () => {
+        const res = await updateComponentStatus(id, 4);
+        if (res) callback()
+    }
+
     const generateSizeTable = (sizes: any) => {
         const allColumns = generateSizeTableColumns();
         const OmitComponentIdColumns = allColumns.filter((item: any) => item.key !== 'ComponentId')
-        const columns: TableColumnsType<DataType> = [
+        const columns: TableColumnsType<ISize> = [
             ...OmitComponentIdColumns,
             {
                 title: "操作", key: "operation", render: (_: any, size: ISize) => (
@@ -321,62 +317,98 @@ function ShowSizeList(props: IProps2) {
                         <Button type='primary'
                             onClick={() => displayUpdateSizeModal(size)}
                         >编辑</Button>
-                        <DeleteSize size={size} refresh={onDelete} isAggSizeDeletable={true}/>
+                        <DeleteSize size={size} refresh={onDelete} isAggSizeDeletable={true} />
                     </Space>
                 )
             }
         ];
-        sizes.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType })
-        return <Table
-            rowKey={record=>record.Id}
+        return (<Table
+            rowKey={record => record.Id}
             dataSource={sizes}
             columns={columns}
             pagination={false}
             scroll={{ y: 400 }}
-        />
+        />)
     }
 
     return (
         <div>
             {sizeList && generateSizeTable(sizeList)}
+            <Button type="primary" onClick={onConfirm}>确认校验完成</Button>
         </div>
     )
 }
 
-// function ShowSizeAggList(props: IProps3){
-//     const { sizeList, deleteCallback, displayUpdateSizeModal } = props;
-//     const onDelete = () => {
-//         deleteCallback()
-//     }
-//     const generateSizeTable = (sizes: any) => {
-//         const allColumns = generateAggreatedSizeTableColumns();
-//         const OmitComponentIdColumns = allColumns.filter((item: any) => item.key !== 'ComponentId')
-//         const columns: TableColumnsType<DataTypeExt> = [
-//             ...OmitComponentIdColumns,
-//             {
-//                 title: "操作", key: "operation", render: (_: any, size: ISize) => (
-//                     <Space>
-//                         <Button type='primary'
-//                             onClick={() => displayUpdateSizeModal(size)}
-//                         >编辑</Button>
-//                         <DeleteSize size={size} refresh={onDelete} isAggSizeDeletable={false} />
-//                     </Space>
-//                 )
-//             }
-//         ];
-//         sizes.sort((a: ISize, b: ISize) => { return a.FirstType - b.FirstType })
-//         return <Table
-//             rowKey={record=>record.Id}
-//             dataSource={sizes}
-//             columns={columns}
-//             pagination={false}
-//             scroll={{ y: 400 }}
-//         />
-//     }
+/**
+ * 指定内外半径
+ * @param props 
+ * @returns 
+ */
+function DiameterConfig(props: IDiameterConfigProps) {
+    const navigate = useNavigate();
+    const { id, sizes, callback } = props;
+    const [form] = Form.useForm();
+    const [diameters, setDiameters] = useState<ISize[]>([]);
 
-//     return (
-//         <div>
-//             {sizeList && generateSizeTable(sizeList)}
-//         </div>
-//     )
-// }
+    const init = () => {
+        const diameters = sizes.filter((size: ISize) => size.FirstType === 0 && size.SecondType && size.SecondType === 1);
+        setDiameters(diameters);
+        form.setFieldsValue({
+            "diameters": diameters
+        });
+    }
+
+    useEffect(() => {
+        init()
+    }, [])
+    const setDiamterConfig = async (values: any) => {
+        console.log(`存储内外经：${JSON.stringify(values)}`);
+        const sizes = values.diameters;
+        const request: IDiameterType[] = sizes.map((size: any) => ({ id: size.Id, type: size.type }));
+        const res = await updateDiameterType(request);
+        if (!res) return;
+        const res2 = await updateComponentStatus(id, 5);
+        if (!res2) return;
+        setTimeout(() => navigate('/teacher/component/list'), 1000);
+    }
+    if (diameters.length === 0) {
+        return (<Space direction='vertical'>
+            <div>未检测到直径尺寸，请返回上一步再次确认。</div>
+            <Button type='primary' onClick={callback}>确认并结束</Button>
+        </Space>)
+    }
+    return (<div>
+        <Form form={form} name="dynamic_form_nest_item" onFinish={setDiamterConfig} autoComplete="off"
+        >
+            <Form.List name="diameters" >
+                {(fields) => (
+                    <React.Fragment>
+                        {fields.map(({ key, name, ...restField }) =>
+                        (<Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                            尺寸id: <Tag>{diameters.at(key)?.Id}</Tag>
+                            基准值: <Tag>{diameters.at(key)?.BaseSize}</Tag>
+                            上偏差: <Tag>{diameters.at(key)?.UpSize}</Tag>
+                            下偏差: <Tag>{diameters.at(key)?.BottomSize}</Tag>
+                            类型:
+                            <Form.Item
+                                {...restField}
+                                name={[name, 'type']}
+                                rules={[{ required: true, message: '请选择' }]}
+                            >
+                                <Radio.Group value={1}>
+                                    <Radio value={1}>内径</Radio>
+                                    <Radio value={2}>外径</Radio>
+                                </Radio.Group>
+                            </Form.Item>
+                        </Space>)
+                        )}
+                    </React.Fragment>
+                )
+                }
+            </Form.List>
+            <Form.Item>
+                <Button type="primary" htmlType="submit">保存并完成</Button>
+            </Form.Item>
+        </Form>
+    </div>)
+}

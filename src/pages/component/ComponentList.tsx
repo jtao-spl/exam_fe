@@ -1,15 +1,10 @@
-import { Button, Space, Table, Tag } from 'antd'
+import { Button, Image, Space, Table, Tag } from 'antd'
 import React, { useEffect, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { getComponentList } from '../../api/comp'
+import { REACT_APP_BASE_API } from '../../config/default'
+import { IComponent } from '../../interfaces/Component'
 import DeleteComponentFC from './DeleteComponent'
-export interface IComponent {
-  Id: number,
-  ComponentName: string,
-  Status: number,
-  Deleted: boolean,
-  ClipPath: string
-}
 
 export default function ComponentList() {
   const [componentList, setComponentList] = useState<IComponent[]>();
@@ -25,11 +20,12 @@ export default function ComponentList() {
    */
   const getComponents = async (pg: number = 1, lim: number = 10) => {
     const res = await getComponentList(pg, lim);
-    const { data, total } = res.data;
-    setComponentList(data);
-    setPageSize(lim);
-    setTotal(total);
-    setLoading(false);
+    if (res) {
+      setComponentList(res.components);
+      setPageSize(res.pageSize);
+      setTotal(res.total);
+      setLoading(false);
+    }
   }
   /**
    * 零件列表换页处理
@@ -54,30 +50,32 @@ export default function ComponentList() {
       >
         <Table.Column title={'零件ID'} dataIndex={'Id'} />
         <Table.Column title={'零件名称'} dataIndex={'ComponentName'} />
+        <Table.Column title={"示意图"} render={(_: any, record: IComponent) => {
+          if (record.ClipPath === '') return <Tag color='yellow'>待编辑上传</Tag>
+          return <Image alt="示意图" src={`${REACT_APP_BASE_API}${record.ClipPath}`} />
+        }} />
         <Table.Column title={'状态'} render={(_: any, component: IComponent) => {
-          if (component.Status !== 4) {
+          if (component.Status !== 5) {
             return <Tag color='yellow'>待校正</Tag>
           } else {
             return <Tag color='green'>可用</Tag>
           }
         }} />
-        <Table.Column title={'操作'} render={(component: IComponent) => (<Space>
-          <Button type="primary"
-            disabled={component.Status ===4}
-            onClick={() => navigate(`/teacher/component/${component.Id}`)}
-          >编辑</Button>
-          <Button type="primary"
-            disabled={component.Status !==4}
-            onClick={() => navigate(`/teacher/component/${component.Id}`)}
-          >查看详情</Button>
-          <Button type="primary" disabled={component.Status !== 4}
-            onClick={() => { navigate('/teacher/exam/create', {state: {id: component.Id}}) }}
-          >新建考核</Button>
-          <Button type="primary" disabled={component.Status !== 4}
-          onClick={() => { navigate('/teacher/exam/demo', {state: {id: component.Id}}) }}
-           >教师展示</Button>
-          <DeleteComponentFC ComponentId={component.Id} onDelete={onChange} />
-        </Space>
+        <Table.Column title={'操作'} render={(component: IComponent) => (
+          <Space direction='vertical'>
+            <Button type="primary"
+              disabled={component.Status === 5}
+              onClick={() => navigate(`/teacher/component/${component.Id}`)}
+            >编辑</Button>
+            <Button type="primary"
+              disabled={component.Status !== 5}
+              onClick={() => navigate(`/teacher/component/${component.Id}`)}
+            >查看详情</Button>
+            <Button type="primary" disabled={component.Status !== 5}
+              onClick={() => { navigate('/teacher/exam/create', { state: { id: component.Id } }) }}
+            >新建考卷</Button>
+            <DeleteComponentFC ComponentId={component.Id} onDelete={onChange} />
+          </Space>
 
         )} />
       </Table>
