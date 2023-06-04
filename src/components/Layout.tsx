@@ -1,10 +1,11 @@
 import React from 'react';
 
-import { Layout } from 'antd';
+import { Image, Layout } from 'antd';
 import { Outlet } from 'react-router-dom';
 import SiderLayout from './Sider';
 import SubTitle from './SubTitle';
 import { ShowLoginUser } from '../pages/Login';
+import { REACT_APP_BASE_API } from '../config/default';
 
 const { Header, Content } = Layout;
 
@@ -12,8 +13,10 @@ export default function LayoutComponent() {
 
   return (
     <Layout>
-      <Header style={{ backgroundColor: "#0088FF" }}>
-        <div style={{ float: "left", fontSize: 18 }}>LOGO&系统名称</div>
+      <Header style={{ backgroundColor: "rgba(0, 84, 138, 0.77)" }}>
+        <div style={{ float: "left", fontSize: 18 }}>
+          <Image alt="零件图样" preview={false} src={`${REACT_APP_BASE_API}/images/logo5.png`} />
+        </div>
         <ShowLoginUser />
       </Header>
       <Layout>
